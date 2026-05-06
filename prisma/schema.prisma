@@ -1,0 +1,43 @@
+
+
+generator client {
+  provider = "prisma-client-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Worker {
+  id              String    @id @default(uuid())
+  nombre          String
+  mail            String    @unique
+  telefono        String?
+  estado          String    // online/offline
+  rating_promedio Float     @default(0)
+  categoria       String
+  trabajos        Trabajo[]
+  ganancias       Ganancia[]
+}
+
+model Trabajo {
+  id                String    @id @default(uuid())
+  worker            Worker    @relation(fields: [id_worker], references: [id])
+  id_worker         String
+  id_cliente        String
+  tipo_servicio     String
+  descripcion       String?
+  direccion         String
+  estado            String    // pendiente, aceptado, en_camino, etc.
+  fecha_creacion    DateTime  @default(now())
+  fecha_finalizacion DateTime?
+}
+
+model Ganancia {
+  id          String   @id @default(uuid())
+  worker      Worker   @relation(fields: [id_worker], references: [id])
+  id_worker   String
+  id_cliente  String
+  monto       Float
+  fecha       DateTime @default(now())
+}
