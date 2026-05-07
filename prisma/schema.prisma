@@ -1,43 +1,61 @@
-
-
 generator client {
-  provider = "prisma-client-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
 }
 
-model Worker {
-  id              String    @id @default(uuid())
-  nombre          String
-  mail            String    @unique
-  telefono        String?
-  estado          String    // online/offline
-  rating_promedio Float     @default(0)
-  categoria       String
-  trabajos        Trabajo[]
-  ganancias       Ganancia[]
+model Driver {
+  id            String        @id @default(cuid())
+  nombre        String
+  email         String        @unique
+  telefono      String?
+  status        DriverStatus  @default(OFFLINE)
+  trabajos      Trabajo[]
+  creadoEn      DateTime      @default(now())
+  actualizadoEn DateTime      @updatedAt
+}
+
+enum DriverStatus {
+  OFFLINE
+  ONLINE
+  EN_TRABAJO
 }
 
 model Trabajo {
-  id                String    @id @default(uuid())
-  worker            Worker    @relation(fields: [id_worker], references: [id])
-  id_worker         String
-  id_cliente        String
-  tipo_servicio     String
-  descripcion       String?
-  direccion         String
-  estado            String    // pendiente, aceptado, en_camino, etc.
-  fecha_creacion    DateTime  @default(now())
-  fecha_finalizacion DateTime?
+  id               String            @id @default(cuid())
+  driverId         String
+  driver           Driver            @relation(fields: [driverId], references: [id])
+  riderId          String
+  tipoServicio     String
+  descripcion      String?
+  direccion        String
+  latitud          Float?
+  longitud         Float?
+  estado           TrabajoEstado     @default(PENDIENTE)
+  montoEstimado    Decimal           @db.Decimal(10, 2)
+  historialEstados HistorialEstado[]
+  creadoEn         DateTime          @default(now())
+  actualizadoEn    DateTime          @updatedAt
 }
 
-model Ganancia {
-  id          String   @id @default(uuid())
-  worker      Worker   @relation(fields: [id_worker], references: [id])
-  id_worker   String
-  id_cliente  String
-  monto       Float
-  fecha       DateTime @default(now())
+enum TrabajoEstado {
+  PENDIENTE
+  ACEPTADO
+  RECHAZADO
+  EN_CAMINO
+  EN_SERVICIO
+  FINALIZADO
+  CANCELADO
+}
+
+model HistorialEstado {
+  id             String         @id @default(cuid())
+  trabajoId      String
+  trabajo        Trabajo        @relation(fields: [trabajoId], references: [id])
+  estadoAnterior TrabajoEstado?
+  estadoNuevo    TrabajoEstado
+  motivo         String?
+  creadoEn       DateTime       @default(now())
 }
