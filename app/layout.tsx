@@ -1,28 +1,38 @@
 import type { Metadata } from "next";
-import { Montserrat } from "next/font/google"; 
+import { Montserrat } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
   subsets: ["latin"],
-  weight: ["400", "500", "700"], // Diferentes grosores para títulos y cuerpo
+  weight: ["400", "500", "700"],
 });
 
 export const metadata: Metadata = {
   title: "RepairDash | Dashboard",
-  description: "Sistema de gestión con Next.js y Tailwind v4",
+  description: "Sistema de gestion con Next.js y TailwindCSS",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="es" className={`${montserrat.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-primary text-highlight font-sans">
-        {children}
-      </body>
-    </html>
+    <ClerkProvider
+      signInUrl="/login"
+      signUpUrl="/sign-up"
+      signInFallbackRedirectUrl="/"
+      signUpFallbackRedirectUrl="/"
+      signInForceRedirectUrl="/"
+      signUpForceRedirectUrl="/"
+    >
+      <html lang="es" className={`${montserrat.variable} h-full antialiased`}>
+        <body className="min-h-full bg-primary text-highlight font-sans">
+          {children}
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
