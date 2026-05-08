@@ -7,14 +7,15 @@ datasource db {
 }
 
 model Driver {
-  id            String        @id @default(cuid())
+  id            String               @id @default(cuid())
   nombre        String
-  email         String        @unique
+  email         String               @unique
   telefono      String?
-  status        DriverStatus  @default(OFFLINE)
+  status        DriverStatus         @default(OFFLINE)
   trabajos      Trabajo[]
-  creadoEn      DateTime      @default(now())
-  actualizadoEn DateTime      @updatedAt
+  tiposServicio DriverTipoServicio[]
+  creadoEn      DateTime             @default(now())
+  actualizadoEn DateTime             @updatedAt
 }
 
 enum DriverStatus {
@@ -28,7 +29,8 @@ model Trabajo {
   driverId         String
   driver           Driver            @relation(fields: [driverId], references: [id])
   riderId          String
-  tipoServicio     String
+  tipoServicioId   String
+  tipoServicio     TipoServicio      @relation(fields: [tipoServicioId], references: [id])
   descripcion      String?
   direccion        String
   latitud          Float?
@@ -38,6 +40,11 @@ model Trabajo {
   historialEstados HistorialEstado[]
   creadoEn         DateTime          @default(now())
   actualizadoEn    DateTime          @updatedAt
+
+  @@index([driverId])
+  @@index([riderId])
+  @@index([tipoServicioId])
+  @@index([estado])
 }
 
 enum TrabajoEstado {
@@ -58,4 +65,30 @@ model HistorialEstado {
   estadoNuevo    TrabajoEstado
   motivo         String?
   creadoEn       DateTime       @default(now())
+
+  @@index([trabajoId])
+}
+
+model TipoServicio {
+  id              String               @id @default(cuid())
+  nombre          String               @unique
+  descripcion     String
+  precioBase      Decimal              @db.Decimal(10, 2)
+  creadoEn        DateTime             @default(now())
+  actualizadoEn   DateTime             @updatedAt
+  driverServicios DriverTipoServicio[] @ignore
+  trabajos        Trabajo[]            @ignore
+}
+
+model DriverTipoServicio {
+  id             String       @id @default(cuid())
+  driverId       String
+  driver         Driver       @relation(fields: [driverId], references: [id])
+  tipoServicioId String
+  tipoServicio   TipoServicio @relation(fields: [tipoServicioId], references: [id])
+  creadoEn       DateTime     @default(now())
+
+  @@unique([driverId, tipoServicioId])
+  @@index([driverId])
+  @@index([tipoServicioId])
 }
