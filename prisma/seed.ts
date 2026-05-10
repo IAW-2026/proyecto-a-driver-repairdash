@@ -1,6 +1,6 @@
-import { Prisma, PrismaClient, TrabajoEstado } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import "dotenv/config";
+import { Prisma, TrabajoEstado } from "@prisma/client";
+import { prisma } from "../lib/prisma";
 
 async function main() {
   const servicios = await Promise.all([
