@@ -11,6 +11,7 @@ export type DriverDashboardProfile = {
   id: string;
   nombre: string;
   status: DriverAvailability;
+  role: "DRIVER" | "ADMIN";
   servicios: ServiceTypeDto[];
 };
 

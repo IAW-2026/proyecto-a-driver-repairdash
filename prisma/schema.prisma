@@ -8,14 +8,21 @@ datasource db {
 
 model Driver {
   id            String               @id @default(cuid())
+  clerkUserId   String               @unique
   nombre        String
   email         String               @unique
   telefono      String?
+  role          UserRole             @default(DRIVER)
   status        DriverStatus         @default(OFFLINE)
   trabajos      Trabajo[]
   tiposServicio DriverTipoServicio[]
   creadoEn      DateTime             @default(now())
   actualizadoEn DateTime             @updatedAt
+}
+
+enum UserRole {
+  DRIVER
+  ADMIN
 }
 
 enum DriverStatus {
@@ -76,8 +83,8 @@ model TipoServicio {
   precioBase      Decimal              @db.Decimal(10, 2)
   creadoEn        DateTime             @default(now())
   actualizadoEn   DateTime             @updatedAt
-  driverServicios DriverTipoServicio[] @ignore
-  trabajos        Trabajo[]            @ignore
+  driverServicios DriverTipoServicio[] 
+  trabajos        Trabajo[]           
 }
 
 model DriverTipoServicio {
