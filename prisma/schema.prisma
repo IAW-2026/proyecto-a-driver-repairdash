@@ -10,6 +10,8 @@ model Driver {
   id            String               @id @default(cuid())
   clerkUserId   String               @unique
   nombre        String
+  imagenURL     String?
+  bio           String?
   email         String               @unique
   telefono      String?
   role          UserRole             @default(DRIVER)

@@ -10,6 +10,9 @@ export type ServiceTypeDto = {
 export type DriverDashboardProfile = {
   id: string;
   nombre: string;
+  telefono: string | null;
+  bio: string | null;
+  imagenURL: string | null;
   status: DriverAvailability;
   role: "DRIVER" | "ADMIN";
   servicios: ServiceTypeDto[];

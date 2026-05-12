@@ -5,30 +5,20 @@ import type { DriverDashboardProfile } from "@/types/dashboard";
 export async function getCurrentDriverProfile(): Promise<DriverDashboardProfile> {
   const user = await currentUser();
 
-  if (!user) {
-    throw new Error("Unauthorized");
-  }
+  if (!user) throw new Error("Unauthorized");
 
   const email = user.emailAddresses[0]?.emailAddress;
-
-  if (!email) {
-    throw new Error("User email not found");
-  }
+  if (!email) throw new Error("User email not found");
 
   let driver = await prisma.driver.findUnique({
-    where: {
-      clerkUserId: user.id,
-    },
+    where: { clerkUserId: user.id },
     include: {
       tiposServicio: {
-        include: {
-          tipoServicio: true,
-        },
+        include: { tipoServicio: true },
       },
     },
   });
 
-  // Primer login → crear automáticamente
   if (!driver) {
     driver = await prisma.driver.create({
       data: {
@@ -42,9 +32,7 @@ export async function getCurrentDriverProfile(): Promise<DriverDashboardProfile>
       },
       include: {
         tiposServicio: {
-          include: {
-            tipoServicio: true,
-          },
+          include: { tipoServicio: true },
         },
       },
     });
@@ -53,15 +41,20 @@ export async function getCurrentDriverProfile(): Promise<DriverDashboardProfile>
   return {
     id: driver.id,
     nombre: driver.nombre,
+    telefono: driver.telefono ?? null,
+    bio: driver.bio ?? null,
+    imagenURL: driver.imagenURL ?? null,
     status: driver.status,
     role: driver.role,
-    servicios: driver.tiposServicio.map((service) => ({
-      id: service.tipoServicio.id,
-      nombre: service.tipoServicio.nombre,
-      descripcion: service.tipoServicio.descripcion,
-      precioBase: Number(service.tipoServicio.precioBase),
-      creadoEn: service.tipoServicio.creadoEn,
-      actualizadoEn: service.tipoServicio.actualizadoEn,
+    servicios: driver.tiposServicio.map((ds) => ({
+      id: ds.tipoServicio.id,
+      nombre: ds.tipoServicio.nombre,
+      descripcion: ds.tipoServicio.descripcion,
+      precioBase: Number(ds.tipoServicio.precioBase),
     })),
   };
+}
+
+export async function getAllServiceTypes() {
+  return prisma.tipoServicio.findMany({ orderBy: { nombre: "asc" } });
 }
