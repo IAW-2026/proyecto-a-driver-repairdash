@@ -1,11 +1,20 @@
 "use client";
 
+import {
+  ShieldCheck,
+  UserRound,
+  ChevronRight,
+} from "lucide-react";
+import { EditableField } from "./editable-field";
+import { EditableServices } from "./editable-services";
+import { EditableAvatar } from "./editable-avatar";
+import { EditablePhoneField } from "./editable-phone-field";
+import { useClerk } from "@clerk/nextjs";
+import Link from "next/link";
 import { useState } from "react";
-import Image from "next/image";
-import { SignOutButton } from "@clerk/nextjs";
-import { DriverDrawer } from "@/components/dashboard/driver-drawer";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
-import { EditProfilePanel } from "@/components/profile/edit-profile-panel";
+import { DriverDrawer } from "@/components/dashboard/driver-drawer";
+import { AccountSidebar } from "./account-sidebar";
 import type {
   DriverDashboardProfile,
   FeedbackReviewResponse,
@@ -20,182 +29,325 @@ type ProfilePageProps = {
   allServices: ServiceTypeDto[];
 };
 
+
+
 export function ProfilePage({
   driver,
   feedback,
-  payments,
   allServices,
+  payments,
 }: ProfilePageProps) {
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] =
+    useState(false);
+
+  const { openUserProfile } =
+  useClerk();
+
+  const [activeSection, setActiveSection] =
+  useState<
+    "resumen" | "informacion" | "seguridad"
+  >("resumen");
 
   return (
-    <main className="min-h-screen overflow-hidden bg-primary text-highlight">
+    <main className="min-h-screen bg-primary text-highlight">
       <DriverDrawer
         isOpen={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
+        onClose={() =>
+          setIsDrawerOpen(false)
+        }
       />
 
-      {isEditOpen && (
-        <EditProfilePanel
-          driver={driver}
-          allServices={allServices}
-          onClose={() => setIsEditOpen(false)}
-        />
-      )}
+      <div className="mx-auto max-w-7xl px-4 pb-16 pt-5 sm:px-6 lg:px-8">
 
-      <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 pb-20 pt-5 sm:px-6 lg:px-8">
-        <DashboardHeader
-          driverName={driver.nombre}
-          notificationCount={0}
-          onMenuClick={() => setIsDrawerOpen(true)}
-        />
+        <Link
+          href="/"
+          className="mt-6 inline-flex text-sm font-medium text-highlight/65 transition hover:text-highlight"
+        >
+          ← Volver al inicio
+        </Link>
 
-        <section className="mx-auto mt-8 w-full max-w-5xl">
-          <div className="grid gap-5 lg:grid-cols-[380px_minmax(0,1fr)]">
-            {/* LEFT SIDE */}
-            <aside className="rounded-[28px] border border-highlight/10 bg-highlight/[0.04] p-6 shadow-2xl shadow-black/20">
-              <div className="flex flex-col items-center text-center">
-                {/* Avatar */}
-                <div className="relative">
-                  <div className="h-28 w-28 overflow-hidden rounded-full border border-accent/20 bg-accent/10 shadow-xl shadow-accent/10">
-                    {driver.imagenURL ? (
-                      <Image
-                        src={driver.imagenURL}
-                        alt={driver.nombre}
-                        width={112}
-                        height={112}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-4xl font-bold text-highlight">
-                        {driver.nombre.charAt(0).toUpperCase()}
+        <div className="mt-8 flex flex-col gap-6 lg:flex-row">
+          <AccountSidebar
+            activeSection={activeSection}
+            onChange={setActiveSection}
+          />
+
+          <section className="min-w-0 flex-1 rounded-[32px] border border-highlight/10 bg-highlight/[0.04] p-8 shadow-2xl shadow-black/20">
+            {/* Header Uber */}
+            <div className="flex flex-col items-center">
+              <EditableAvatar
+                imageUrl={
+                  driver.imagenURL
+                }
+                name={
+                  driver.nombre
+                }
+              />
+
+              <h1 className="mt-5 text-4xl font-bold text-highlight">
+                {driver.nombre}
+              </h1>
+
+              <p className="mt-2 text-highlight/65">
+                {driver.email}
+              </p>
+
+              <div className="mt-8 flex w-full justify-center">
+                <div className="grid w-full max-w-2xl gap-4 md:grid-cols-2">
+                  <QuickCard
+                    title="Información personal"
+                    icon={
+                      <UserRound className="h-5 w-5" />
+                    }
+                    onClick={() =>
+                      setActiveSection(
+                        "informacion",
+                      )
+                    }
+                    active={
+                      activeSection ===
+                      "informacion"
+                    }
+                  />
+
+                  <QuickCard
+                    title="Seguridad"
+                    icon={
+                      <ShieldCheck className="h-5 w-5" />
+                    }
+                    onClick={() =>
+                      setActiveSection(
+                        "seguridad",
+                      )
+                    }
+                    active={
+                      activeSection ===
+                      "seguridad"
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Dynamic Content */}
+            <div className="mt-10">
+              {activeSection ===
+                "resumen" && (
+                <div className="space-y-6">
+                </div>
+              )}
+
+              {activeSection === "informacion" && (
+                <SectionCard title="Información personal">
+                  <div className="space-y-4">
+
+                    <EditableField
+                      label="Nombre"
+                      field="nombre"
+                      value={driver.nombre}
+                    />
+
+                    <div className="rounded-3xl border border-highlight/10 bg-highlight/[0.03] p-5">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="text-xs uppercase tracking-[0.2em] text-highlight/40">
+                            Email
+                          </p>
+
+                          <p className="mt-2 text-base font-medium text-highlight">
+                            {driver.email}
+                          </p>
+
+                          <p className="mt-2 text-sm text-highlight/45">
+                            Gestionado por Clerk
+                          </p>
+                        </div>
+
+                        <span className="rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
+                          Solo lectura
+                        </span>
                       </div>
-                    )}
+                    </div>
+
+                    <EditablePhoneField
+                      value={
+                        driver.telefono
+                      }
+                    />
+
+                    <EditableField
+                      label="Bio"
+                      field="bio"
+                      value={driver.bio}
+                      multiline
+                    />
+
+                    <InfoRow
+                      label="Estado"
+                      value={driver.status}
+                    />
+
+                    <div className="rounded-3xl border border-highlight/10 bg-highlight/[0.03] p-5">
+                      <EditableServices
+                        currentServices={
+                          driver.servicios
+                        }
+                        allServices={
+                          allServices
+                        }
+                      />
+                    </div>
                   </div>
-                </div>
+                </SectionCard>
+              )}
 
-                <h1 className="mt-5 text-3xl font-bold">{driver.nombre}</h1>
+              {activeSection ===
+                "seguridad" && (
+                <SectionCard title="Seguridad">
+                  <div className="space-y-4">
+                    <SecurityCard
+                      title="Cambiar contraseña"
+                      description="Actualiza tu contraseña de acceso."
+                      onClick={() =>
+                        openUserProfile()
+                      }
+                    />
 
-                {driver.bio && (
-                  <p className="mt-2 text-sm text-highlight/50 leading-relaxed px-2">
-                    {driver.bio}
-                  </p>
-                )}
-
-                <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-                  <span className="rounded-full border border-accent/25 bg-accent/10 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-highlight">
-                    {driver.role}
-                  </span>
-                  <span
-                    className={`rounded-full px-4 py-1 text-xs font-semibold uppercase tracking-wide ${
-                      driver.status === "ONLINE"
-                        ? "bg-emerald-500/15 text-emerald-300"
-                        : driver.status === "EN_TRABAJO"
-                          ? "bg-yellow-500/15 text-yellow-300"
-                          : "bg-zinc-500/15 text-zinc-300"
-                    }`}
-                  >
-                    {driver.status.replace("_", " ")}
-                  </span>
-                </div>
-
-                <div className="mt-8 grid w-full grid-cols-3 gap-3">
-                  <StatCard value={payments.trabajosLiquidados} label="Trabajos" />
-                  <StatCard value={`★ ${feedback.valoracion}`} label="Rating" />
-                  <StatCard
-                    value={`$${payments.ingresosDelDia.toLocaleString()}`}
-                    label="Hoy"
-                  />
-                </div>
-              </div>
-            </aside>
-
-            {/* RIGHT SIDE */}
-            <section className="space-y-5">
-              {/* Personal Info */}
-              <div className="rounded-[28px] border border-highlight/10 bg-highlight/[0.04] p-6 shadow-2xl shadow-black/20">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">
-                  Información personal
-                </p>
-                <div className="mt-6 grid gap-5 sm:grid-cols-2">
-                  <InfoItem label="Nombre" value={driver.nombre} />
-                  <InfoItem
-                    label="Teléfono"
-                    value={driver.telefono ?? "No configurado"}
-                  />
-                  <InfoItem label="Estado" value={driver.status} />
-                  <InfoItem label="ID Driver" value={driver.id} />
-                </div>
-              </div>
-
-              {/* Services */}
-              <div className="rounded-[28px] border border-highlight/10 bg-highlight/[0.04] p-6 shadow-2xl shadow-black/20">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">
-                  Servicios habilitados
-                </p>
-                <div className="mt-5 flex flex-wrap gap-3">
-                  {driver.servicios.length > 0 ? (
-                    driver.servicios.map((service) => (
-                      <span
-                        key={service.id}
-                        className="rounded-full border border-accent/20 bg-accent/10 px-4 py-2 text-sm font-semibold text-highlight transition hover:scale-105"
-                      >
-                        {service.nombre}
-                      </span>
-                    ))
-                  ) : (
-                    <p className="text-sm text-highlight/40">
-                      No tenés servicios habilitados aún
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="rounded-[28px] border border-highlight/10 bg-highlight/[0.04] p-6 shadow-2xl shadow-black/20">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">
-                  Cuenta
-                </p>
-                <div className="mt-5 flex flex-col gap-3">
-                  <button
-                    onClick={() => setIsEditOpen(true)}
-                    className="flex h-14 items-center justify-between rounded-2xl border border-highlight/10 bg-highlight/[0.05] px-5 text-left font-semibold transition hover:border-accent/30 hover:bg-highlight/[0.08]"
-                  >
-                    Editar perfil
-                    <span className="text-accent">›</span>
-                  </button>
-
-                  <SignOutButton>
-                    <button className="flex h-14 items-center justify-between rounded-2xl border border-red-500/10 bg-red-500/10 px-5 text-left font-semibold text-red-300 transition hover:bg-red-500/15">
-                      Cerrar sesión
-                      <span>↗</span>
-                    </button>
-                  </SignOutButton>
-                </div>
-              </div>
-            </section>
-          </div>
-        </section>
+                    <SecurityCard
+                      title="Gestionar email"
+                      description="Modificar tu dirección de correo."
+                      onClick={() =>
+                        openUserProfile()
+                      }
+                    />
+                  </div>
+                </SectionCard>
+              )}
+            </div>
+          </section>
+        </div>
       </div>
     </main>
   );
 }
 
-function StatCard({ value, label }: { value: string | number; label: string }) {
+function QuickCard({
+  title,
+  icon,
+  onClick,
+  active,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  onClick?: () => void;
+  active?: boolean;
+}) {
   return (
-    <div className="rounded-2xl border border-highlight/10 bg-highlight/[0.05] p-4 text-center">
-      <p className="text-lg font-bold">{value}</p>
-      <p className="text-xs text-highlight/60">{label}</p>
+    <button
+      onClick={
+        onClick
+      }
+      className={`group rounded-[28px] border p-6 text-left transition ${
+        active
+          ? "border-accent/40 bg-accent/10"
+          : "border-highlight/10 bg-highlight/[0.03] hover:border-highlight/20 hover:bg-highlight/[0.06]"
+      }`}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div
+            className={`grid h-12 w-12 place-items-center rounded-2xl ${
+              active
+                ? "bg-accent text-primary"
+                : "bg-highlight/[0.06] text-highlight"
+            }`}
+          >
+            {icon}
+          </div>
+
+          <p className="font-semibold text-highlight">
+            {title}
+          </p>
+        </div>
+
+        <ChevronRight
+          className={`h-5 w-5 transition ${
+            active
+              ? "text-accent"
+              : "text-highlight/40 group-hover:translate-x-1"
+          }`}
+        />
+      </div>
+    </button>
+  );
+}
+
+function SectionCard({
+  title,
+  children,
+}: React.PropsWithChildren<{
+  title: string;
+}>) {
+  return (
+    <div className="rounded-[28px] border border-highlight/10 bg-highlight/[0.03] p-6">
+      <h2 className="text-2xl font-bold">
+        {title}
+      </h2>
+
+      <div className="mt-6 space-y-4">
+        {children}
+      </div>
     </div>
   );
 }
 
-function InfoItem({ label, value }: { label: string; value: string }) {
+function InfoRow({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
   return (
     <div className="rounded-2xl border border-highlight/10 bg-highlight/[0.03] p-4">
-      <p className="text-xs uppercase tracking-wide text-highlight/45">{label}</p>
-      <p className="mt-2 text-sm font-semibold">{value}</p>
+      <p className="text-xs uppercase tracking-wide text-highlight/40">
+        {label}
+      </p>
+
+      <p className="mt-2 font-medium">
+        {value}
+      </p>
     </div>
+  );
+}
+
+function SecurityCard({
+  title,
+  description,
+  onClick,
+}: {
+  title: string;
+  description: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={
+        onClick
+      }
+      className="group flex w-full items-center justify-between rounded-[28px] border border-highlight/10 bg-highlight/[0.03] p-5 text-left transition hover:border-highlight/20 hover:bg-highlight/[0.06]"
+    >
+      <div>
+        <h3 className="font-semibold text-highlight">
+          {title}
+        </h3>
+
+        <p className="mt-1 text-sm text-highlight/55">
+          {description}
+        </p>
+      </div>
+
+      <ChevronRight className="h-5 w-5 text-highlight/40 transition group-hover:translate-x-1" />
+    </button>
   );
 }

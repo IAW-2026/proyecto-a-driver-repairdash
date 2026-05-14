@@ -39,20 +39,39 @@ export async function getCurrentDriverProfile(): Promise<DriverDashboardProfile>
   }
 
   return {
-    id: driver.id,
-    nombre: driver.nombre,
-    telefono: driver.telefono ?? null,
-    bio: driver.bio ?? null,
-    imagenURL: driver.imagenURL ?? null,
-    status: driver.status,
-    role: driver.role,
-    servicios: driver.tiposServicio.map((ds) => ({
-      id: ds.tipoServicio.id,
-      nombre: ds.tipoServicio.nombre,
-      descripcion: ds.tipoServicio.descripcion,
-      precioBase: Number(ds.tipoServicio.precioBase),
-    })),
-  };
+  id: driver.id,
+  nombre: driver.nombre,
+  email: driver.email,
+  telefono:
+    driver.telefono ??
+    null,
+  bio:
+    driver.bio ??
+    null,
+  imagenURL:
+    driver.imagenURL ??
+    null,
+  status:
+    driver.status,
+  role:
+    driver.role,
+  servicios:
+    driver.tiposServicio.map(
+      (ds) => ({
+        id:
+          ds.tipoServicio.id,
+        nombre:
+          ds.tipoServicio.nombre,
+        descripcion:
+          ds.tipoServicio.descripcion,
+        precioBase:
+          Number(
+            ds.tipoServicio
+              .precioBase,
+          ),
+      }),
+    ),
+};
 }
 
 export async function getAllServiceTypes() {

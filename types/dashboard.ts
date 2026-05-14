@@ -13,6 +13,7 @@ export type DriverDashboardProfile = {
   telefono: string | null;
   bio: string | null;
   imagenURL: string | null;
+  email: string
   status: DriverAvailability;
   role: "DRIVER" | "ADMIN";
   servicios: ServiceTypeDto[];

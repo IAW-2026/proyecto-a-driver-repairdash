@@ -9,8 +9,8 @@ type DriverDrawerProps = {
 
 const menuItems = [
   {
-    label: "Perfil",
-    href: "/profile",
+    label: "Administrar cuenta",
+    href: "/cuenta",
   },
   {
     label: "Ingresos",
