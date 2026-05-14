@@ -1,0 +1,89 @@
+"use client";
+
+type AccountSidebarProps = {
+  activeSection: "resumen" | "informacion" | "seguridad";
+  onChange: (
+    section:
+      | "resumen"
+      | "informacion"
+      | "seguridad",
+  ) => void;
+};
+
+const items = [
+  {
+    id: "resumen",
+    label: "Resumen",
+  },
+  {
+    id: "informacion",
+    label: "Información personal",
+  },
+  {
+    id: "seguridad",
+    label: "Seguridad",
+  },
+] as const;
+
+export function AccountSidebar({
+  activeSection,
+  onChange,
+}: AccountSidebarProps) {
+  return (
+    <>
+      {/* Desktop */}
+      <aside className="hidden w-[280px] shrink-0 lg:block">
+        <div className="rounded-[28px] border border-highlight/10 bg-highlight/[0.04] p-3 shadow-2xl shadow-black/20">
+          <h2 className="px-4 py-3 text-lg font-bold text-highlight">
+            Cuenta RepairDash
+          </h2>
+
+          <nav className="mt-2 space-y-1">
+            {items.map((item) => {
+              const isActive =
+                activeSection === item.id;
+
+              return (
+                <button
+                  key={item.id}
+                  disabled={isActive}
+                  onClick={() => onChange(item.id)}
+                  className={`flex w-full items-center rounded-2xl px-4 py-4 text-left text-sm font-semibold transition ${
+                    isActive
+                      ? "cursor-default bg-highlight text-primary shadow-lg"
+                      : "text-highlight/70 hover:bg-highlight/[0.06] hover:text-highlight"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+      </aside>
+
+      {/* Mobile */}
+      <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-2 lg:hidden">
+        {items.map((item) => {
+          const isActive =
+            activeSection === item.id;
+
+          return (
+            <button
+              key={item.id}
+              disabled={isActive}
+              onClick={() => onChange(item.id)}
+              className={`whitespace-nowrap rounded-2xl px-5 py-3 text-sm font-semibold transition ${
+                isActive
+                  ? "cursor-default bg-highlight text-primary"
+                  : "border border-highlight/10 bg-highlight/[0.04] text-highlight"
+              }`}
+            >
+              {item.label}
+            </button>
+          );
+        })}
+      </div>
+    </>
+  );
+}
