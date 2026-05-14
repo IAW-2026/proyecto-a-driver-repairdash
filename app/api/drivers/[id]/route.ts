@@ -1,9 +1,11 @@
+
 import {
   NextRequest,
   NextResponse,
 } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { validateApiKey } from "@/lib/auth/api-key";
+import { validateApiKey } from "@/lib/auth/api-key"
+export const dynamic = "force-dynamic";;
 
 export async function GET(
   req: NextRequest,
