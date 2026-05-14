@@ -7,14 +7,12 @@ import { validateApiKey } from "@/lib/auth/api-key";
 
 export async function GET(
   req: NextRequest,
-  {
-    params,
-  }: {
-    params: {
+  context: {
+    params: Promise<{
       id: string;
-    };
+    }>;
   },
-) {
+): Promise<Response> {
   try {
     const authorized =
       validateApiKey(req, [
@@ -35,11 +33,14 @@ export async function GET(
       );
     }
 
+    const { id } =
+      await context.params;
+
     const driver =
       await prisma.driver.findUnique(
         {
           where: {
-            id: params.id,
+            id,
           },
         },
       );
