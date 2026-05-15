@@ -105,9 +105,9 @@ export function EditableField({
   return (
     <div
       ref={wrapperRef}
-      className="rounded-3xl border border-highlight/10 bg-highlight/[0.03] p-5 transition hover:border-highlight/20"
+      className="rounded-2xl border border-highlight/10 bg-highlight/[0.03] p-4 transition hover:border-highlight/20 sm:rounded-3xl sm:p-5"
     >
-      <p className="text-xs uppercase tracking-[0.2em] text-highlight/40">
+      <p className="text-[11px] uppercase tracking-[0.2em] text-highlight/40 sm:text-xs">
         {label}
       </p>
 
@@ -116,15 +116,15 @@ export function EditableField({
           onClick={() =>
             setEditing(true)
           }
-          className="mt-2 w-full text-left"
+          className="mt-1.5 w-full text-left sm:mt-2"
         >
-          <p className="font-medium text-highlight">
+          <p className="text-sm font-medium text-highlight sm:text-base">
             {savedValue ||
               "No configurado"}
           </p>
         </button>
       ) : (
-        <div className="mt-4 space-y-4">
+        <div className="mt-3 space-y-3 sm:mt-4 sm:space-y-4">
           {multiline ? (
             <textarea
               value={draft}
@@ -136,7 +136,7 @@ export function EditableField({
               onKeyDown={
                 handleKeyDown
               }
-              className="min-h-[120px] w-full rounded-2xl border border-highlight/10 bg-primary p-4 text-highlight outline-none"
+              className="min-h-[100px] w-full rounded-2xl border border-highlight/10 bg-primary p-3 text-sm text-highlight outline-none sm:min-h-[120px] sm:p-4 sm:text-base"
               autoFocus
             />
           ) : (
@@ -150,12 +150,12 @@ export function EditableField({
               onKeyDown={
                 handleKeyDown
               }
-              className="w-full rounded-2xl border border-highlight/10 bg-primary p-4 text-highlight outline-none"
+              className="w-full rounded-2xl border border-highlight/10 bg-primary p-3 text-sm text-highlight outline-none sm:p-4 sm:text-base"
               autoFocus
             />
           )}
 
-          <div className="flex gap-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
             <button
               onClick={
                 handleSave
@@ -163,7 +163,7 @@ export function EditableField({
               disabled={
                 isPending
               }
-              className="rounded-2xl bg-magenta px-5 py-3 font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
+              className="w-full rounded-2xl bg-magenta px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60 sm:w-auto"
             >
               {isPending
                 ? "Guardando..."
@@ -174,7 +174,7 @@ export function EditableField({
               onClick={
                 handleCancel
               }
-              className="rounded-2xl border border-highlight/10 bg-highlight/[0.05] px-5 py-3 font-semibold text-highlight transition hover:bg-highlight/[0.08]"
+              className="w-full rounded-2xl border border-highlight/10 bg-highlight/[0.05] px-5 py-3 text-sm font-semibold text-highlight transition hover:bg-highlight/[0.08] sm:w-auto"
             >
               Cancelar
             </button>

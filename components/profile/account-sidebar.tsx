@@ -63,7 +63,7 @@ export function AccountSidebar({
       </aside>
 
       {/* Mobile */}
-      <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-2 lg:hidden">
+      <div className="flex gap-1 overflow-x-auto rounded-2xl bg-highlight/[0.06] p-1 pb-1 lg:hidden">
         {items.map((item) => {
           const isActive =
             activeSection === item.id;
@@ -73,10 +73,10 @@ export function AccountSidebar({
               key={item.id}
               disabled={isActive}
               onClick={() => onChange(item.id)}
-              className={`whitespace-nowrap rounded-2xl px-5 py-3 text-sm font-semibold transition ${
+              className={`flex-1 whitespace-nowrap rounded-xl px-4 py-2.5 text-center text-sm font-semibold transition ${
                 isActive
-                  ? "cursor-default bg-highlight text-primary"
-                  : "border border-highlight/10 bg-highlight/[0.04] text-highlight"
+                  ? "cursor-default bg-primary text-highlight shadow-sm"
+                  : "text-highlight/60 hover:text-highlight/80"
               }`}
             >
               {item.label}

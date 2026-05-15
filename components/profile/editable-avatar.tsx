@@ -93,15 +93,12 @@ export function EditableAvatar({
             formData,
           );
 
-          setPreview(
-            null,
-          );
+          setPreview(null);
+          setFile(null);
 
-          setFile(
-            null,
-          );
-
-          router.refresh();
+          setTimeout(() => {
+            router.refresh();
+          }, 250);
         } catch (error) {
           console.error(
             error,
@@ -127,13 +124,11 @@ export function EditableAvatar({
         >
           {imageSrc ? (
             <Image
-              src={
-                imageSrc
-              }
-              alt={
-                name
-              }
+              src={imageSrc}
+              alt={name}
               fill
+              unoptimized
+              sizes="112px"
               className="object-cover"
             />
           ) : (

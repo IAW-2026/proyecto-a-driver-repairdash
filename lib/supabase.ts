@@ -1,26 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl =
-  process.env
-    .NEXT_PUBLIC_SUPABASE_URL!;
+  process.env.NEXT_PUBLIC_SUPABASE_URL!;
 
 const supabaseServiceKey =
-  process.env
-    .SUPABASE_SERVICE_ROLE_KEY!;
+  process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-console.log(
-  "SUPABASE URL:",
-  process.env
-    .NEXT_PUBLIC_SUPABASE_URL,
-);
-
-console.log(
-  "SUPABASE KEY EXISTS:",
-  !!process.env
-    .SUPABASE_SERVICE_ROLE_KEY,
-);
-
-// Cliente con service role
 export const supabaseAdmin =
   createClient(
     supabaseUrl,
@@ -35,21 +20,17 @@ export async function uploadAvatar(
   file: File,
 ): Promise<string> {
   const ext =
-    file.name
-      .split(".")
-      .pop() ?? "jpg";
+    file.name.split(".").pop() ??
+    "jpg";
 
   const path = `drivers/${driverId}/avatar.${ext}`;
 
   const { error } =
     await supabaseAdmin.storage
-      .from(
-        AVATARS_BUCKET,
-      )
+      .from(AVATARS_BUCKET)
       .upload(path, file, {
         upsert: true,
-        contentType:
-          file.type,
+        contentType: file.type,
       });
 
   if (error) {
@@ -58,12 +39,15 @@ export async function uploadAvatar(
     );
   }
 
-  const { data } =
+  // URL PUBLICA (NO SIGNED)
+  const {
+    data: { publicUrl },
+  } =
     supabaseAdmin.storage
       .from(
         AVATARS_BUCKET,
       )
       .getPublicUrl(path);
 
-  return `${data.publicUrl}?t=${Date.now()}`;
+  return `${publicUrl}?t=${Date.now()}`;
 }

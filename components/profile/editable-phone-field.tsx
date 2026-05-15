@@ -90,8 +90,8 @@ export function EditablePhoneField({
   }
 
   return (
-    <div className="rounded-3xl border border-highlight/10 bg-highlight/[0.03] p-5">
-      <p className="text-xs uppercase tracking-[0.2em] text-highlight/40">
+    <div className="rounded-2xl border border-highlight/10 bg-highlight/[0.03] p-4 sm:rounded-3xl sm:p-5">
+      <p className="text-[11px] uppercase tracking-[0.2em] text-highlight/40 sm:text-xs">
         Teléfono
       </p>
 
@@ -100,16 +100,16 @@ export function EditablePhoneField({
           onClick={() =>
             setEditing(true)
           }
-          className="mt-2 w-full text-left"
+          className="mt-1.5 w-full text-left sm:mt-2"
         >
-          <p className="text-base font-medium text-highlight transition hover:text-accent">
+          <p className="text-sm font-medium text-highlight transition hover:text-accent sm:text-base">
             {value ??
               "Agregar teléfono"}
           </p>
         </button>
       ) : (
-        <div className="mt-4">
-          <div className="rounded-2xl border border-highlight/10 bg-primary px-4 py-3">
+        <div className="mt-3 sm:mt-4">
+          <div className="rounded-2xl border border-highlight/10 bg-primary px-3 py-2.5 sm:px-4 sm:py-3">
             <PhoneInput
               international
               defaultCountry="AR"
@@ -120,16 +120,16 @@ export function EditablePhoneField({
               onKeyDown={
                 handleKeyDown
               }
-              className="text-highlight"
+              className="text-sm text-highlight sm:text-base"
             />
           </div>
 
-          <div className="mt-4 flex gap-3">
+          <div className="mt-3 flex flex-col gap-2 sm:mt-4 sm:flex-row sm:gap-3">
             <button
               onClick={
                 cancelEdit
               }
-              className="flex-1 rounded-2xl border border-highlight/10 bg-highlight/[0.05] px-5 py-3 font-semibold text-highlight"
+              className="w-full rounded-2xl border border-highlight/10 bg-highlight/[0.05] px-5 py-3 text-sm font-semibold text-highlight sm:w-auto"
             >
               Cancelar
             </button>
@@ -141,7 +141,7 @@ export function EditablePhoneField({
               disabled={
                 isPending
               }
-              className="flex-1 rounded-2xl bg-magenta px-5 py-3 font-semibold text-white"
+              className="w-full rounded-2xl bg-magenta px-5 py-3 text-sm font-semibold text-white sm:w-auto"
             >
               {isPending
                 ? "Guardando..."

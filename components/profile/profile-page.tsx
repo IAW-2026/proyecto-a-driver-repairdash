@@ -72,7 +72,7 @@ export function ProfilePage({
             onChange={setActiveSection}
           />
 
-          <section className="min-w-0 flex-1 rounded-[32px] border border-highlight/10 bg-highlight/[0.04] p-8 shadow-2xl shadow-black/20">
+          <section className="min-w-0 flex-1 rounded-[28px] border border-highlight/10 bg-highlight/[0.04] p-4 shadow-2xl shadow-black/20 sm:p-6 lg:rounded-[32px] lg:p-8">
             {/* Header Uber */}
             <div className="flex flex-col items-center">
               <EditableAvatar
@@ -147,14 +147,14 @@ export function ProfilePage({
                       value={driver.nombre}
                     />
 
-                    <div className="rounded-3xl border border-highlight/10 bg-highlight/[0.03] p-5">
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
+                    <div className="rounded-3xl border border-highlight/10 bg-highlight/[0.03] p-4 sm:p-5">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0 flex-1">
                           <p className="text-xs uppercase tracking-[0.2em] text-highlight/40">
                             Email
                           </p>
 
-                          <p className="mt-2 text-base font-medium text-highlight">
+                          <p className="mt-2 overflow-hidden text-sm font-medium leading-6 text-highlight break-words sm:text-base">
                             {driver.email}
                           </p>
 
@@ -163,7 +163,7 @@ export function ProfilePage({
                           </p>
                         </div>
 
-                        <span className="rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
+                        <span className="shrink-0 self-start rounded-full border border-accent/20 bg-accent/10 px-2.5 py-1 text-[11px] font-semibold text-accent sm:px-3 sm:text-xs">
                           Solo lectura
                         </span>
                       </div>
