@@ -1,10 +1,17 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import {
+  clerkMiddleware,
+  createRouteMatcher,
+} from "@clerk/nextjs/server";
 
-const isPublicRoute = createRouteMatcher([
-  "/login(.*)",
-  "/sign-up(.*)",
-  "/__clerk(.*)",
-]);
+const isPublicRoute =
+  createRouteMatcher([
+    "/login(.*)",
+    "/sign-up(.*)",
+    "/__clerk(.*)",
+
+    // Webhook Clerk
+    "/api/webhooks/clerk",
+  ]);
 
 export default clerkMiddleware(
   async (auth, req) => {
@@ -13,7 +20,11 @@ export default clerkMiddleware(
     }
   },
   {
-    clockSkewInMs: process.env.NODE_ENV === "production" ? 5_000 : 5 * 60_000,
+    clockSkewInMs:
+      process.env.NODE_ENV ===
+      "production"
+        ? 5_000
+        : 5 * 60_000,
   },
 );
 
