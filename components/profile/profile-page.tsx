@@ -40,8 +40,10 @@ export function ProfilePage({
   const [isDrawerOpen, setIsDrawerOpen] =
     useState(false);
 
-  const { openUserProfile } =
-  useClerk();
+  const {
+  openUserProfile,
+  signOut,
+} = useClerk();
 
   const [activeSection, setActiveSection] =
   useState<
@@ -220,8 +222,20 @@ export function ProfilePage({
                         openUserProfile()
                       }
                     />
+
+                    <SecurityCard
+                      title="Cerrar sesión"
+                      description="Salir de tu cuenta en este dispositivo."
+                      destructive
+                      onClick={() =>
+                        signOut({
+                          redirectUrl: "/",
+                        })
+                      }
+                    />
                   </div>
                 </SectionCard>
+                
               )}
             </div>
           </section>
@@ -325,20 +339,30 @@ function SecurityCard({
   title,
   description,
   onClick,
+  destructive = false,
 }: {
   title: string;
   description: string;
   onClick: () => void;
+  destructive?: boolean;
 }) {
   return (
     <button
-      onClick={
-        onClick
-      }
-      className="group flex w-full items-center justify-between rounded-[28px] border border-highlight/10 bg-highlight/[0.03] p-5 text-left transition hover:border-highlight/20 hover:bg-highlight/[0.06]"
+      onClick={onClick}
+      className={`group flex w-full items-center justify-between rounded-[28px] border p-5 text-left transition ${
+        destructive
+          ? "border-red-500/20 bg-red-500/[0.04] hover:border-red-500/30 hover:bg-red-500/[0.06]"
+          : "border-highlight/10 bg-highlight/[0.03] hover:border-highlight/20 hover:bg-highlight/[0.06]"
+      }`}
     >
       <div>
-        <h3 className="font-semibold text-highlight">
+        <h3
+          className={`font-semibold ${
+            destructive
+              ? "text-red-400"
+              : "text-highlight"
+          }`}
+        >
           {title}
         </h3>
 
@@ -347,7 +371,13 @@ function SecurityCard({
         </p>
       </div>
 
-      <ChevronRight className="h-5 w-5 text-highlight/40 transition group-hover:translate-x-1" />
+      <ChevronRight
+        className={`h-5 w-5 transition group-hover:translate-x-1 ${
+          destructive
+            ? "text-red-400/70"
+            : "text-highlight/40"
+        }`}
+      />
     </button>
   );
 }

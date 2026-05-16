@@ -1,21 +1,26 @@
-import { redirect } from "next/navigation";
-import { getCurrentDriverProfile } from "@/lib/services/driver.service";
-import { getServiceTypes } from "@/lib/services/admin/service-tipos-de-servicios";
+import {
+  requireAdmin,
+} from "@/lib/auth/roles";
+
+import {
+  getServiceTypes,
+} from "@/lib/services/admin/service-tipos-de-servicios";
+
 import {
   createServiceType,
   deleteServiceType,
   updateServiceType,
 } from "./actions";
-import { ServiceCard } from "./service-card";
+
+import {
+  ServiceCard,
+} from "./service-card";
 
 export default async function AdminServiciosPage() {
-  const driver = await getCurrentDriverProfile();
+  await requireAdmin();
 
-  if (driver.role !== "ADMIN") {
-    redirect("/");
-  }
-
-  const services = await getServiceTypes();
+  const services =
+    await getServiceTypes();
 
   return (
     <div className="p-10">
@@ -25,8 +30,10 @@ export default async function AdminServiciosPage() {
         </h1>
 
         <form
-          action={createServiceType}
-          className="mb-8 rounded-xl border p-4 space-y-3"
+          action={
+            createServiceType
+          }
+          className="mb-8 space-y-3 rounded-xl border p-4"
         >
           <h2 className="font-bold">
             Crear servicio
@@ -64,33 +71,50 @@ export default async function AdminServiciosPage() {
       </div>
 
       <div className="space-y-4">
-        {services.map((service) => (
-          <div key={service.id} className="flex gap-4">
-            <div className="flex-1">
-              <ServiceCard
-                service={service}
-                onUpdate={async (id, formData) => {
-                  "use server";
-                  await updateServiceType(id, formData);
-                }}
-              />
-            </div>
-
-            <form
-              action={async () => {
-                "use server";
-                await deleteServiceType(service.id);
-              }}
+        {services.map(
+          (service) => (
+            <div
+              key={service.id}
+              className="flex gap-4"
             >
-              <button
-                type="submit"
-                className="rounded bg-red-500 px-4 py-2 text-white"
+              <div className="flex-1">
+                <ServiceCard
+                  service={
+                    service
+                  }
+                  onUpdate={async (
+                    id,
+                    formData,
+                  ) => {
+                    "use server";
+
+                    await updateServiceType(
+                      id,
+                      formData,
+                    );
+                  }}
+                />
+              </div>
+
+              <form
+                action={async () => {
+                  "use server";
+
+                  await deleteServiceType(
+                    service.id,
+                  );
+                }}
               >
-                Eliminar
-              </button>
-            </form>
-          </div>
-        ))}
+                <button
+                  type="submit"
+                  className="rounded bg-red-500 px-4 py-2 text-white"
+                >
+                  Eliminar
+                </button>
+              </form>
+            </div>
+          ),
+        )}
       </div>
     </div>
   );

@@ -2,74 +2,132 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { getCurrentDriverProfile } from "@/lib/services/driver.service";
+import { requireAdmin } from "@/lib/auth/roles";
 
-async function ensureAdmin() {
-  const driver = await getCurrentDriverProfile();
+export async function createServiceType(
+  formData: FormData,
+) {
+  await requireAdmin();
 
-  if (driver.role !== "ADMIN") {
-    throw new Error("Unauthorized");
-  }
-}
+  const nombre =
+    formData
+      .get("nombre")
+      ?.toString()
+      .trim();
 
-export async function createServiceType(formData: FormData) {
-  await ensureAdmin();
+  const descripcion =
+    formData
+      .get(
+        "descripcion",
+      )
+      ?.toString()
+      .trim();
 
-  const nombre = formData.get("nombre")?.toString().trim();
-  const descripcion = formData.get("descripcion")?.toString().trim();
-  const precioBase = Number(formData.get("precioBase"));
+  const precioBase =
+    Number(
+      formData.get(
+        "precioBase",
+      ),
+    );
 
-  if (!nombre || !descripcion || Number.isNaN(precioBase)) {
-    throw new Error("Datos inválidos");
-  }
-
-  await prisma.tipoServicio.create({
-    data: {
-      nombre,
-      descripcion,
+  if (
+    !nombre ||
+    !descripcion ||
+    Number.isNaN(
       precioBase,
-    },
-  });
+    )
+  ) {
+    throw new Error(
+      "Datos inválidos",
+    );
+  }
 
-  revalidatePath("/admin/servicios");
+  await prisma.tipoServicio.create(
+    {
+      data: {
+        nombre,
+        descripcion,
+        precioBase,
+      },
+    },
+  );
+
+  revalidatePath(
+    "/admin/servicios",
+  );
 }
 
-export async function deleteServiceType(id: string) {
-  await ensureAdmin();
+export async function deleteServiceType(
+  id: string,
+) {
+  await requireAdmin();
 
-  await prisma.tipoServicio.delete({
-    where: {
-      id,
+  await prisma.tipoServicio.delete(
+    {
+      where: {
+        id,
+      },
     },
-  });
+  );
 
-  revalidatePath("/admin/servicios");
+  revalidatePath(
+    "/admin/servicios",
+  );
 }
 
 export async function updateServiceType(
   id: string,
   formData: FormData,
 ) {
-  await ensureAdmin();
+  await requireAdmin();
 
-  const nombre = formData.get("nombre")?.toString().trim();
-  const descripcion = formData.get("descripcion")?.toString().trim();
-  const precioBase = Number(formData.get("precioBase"));
+  const nombre =
+    formData
+      .get("nombre")
+      ?.toString()
+      .trim();
 
-  if (!nombre || !descripcion || Number.isNaN(precioBase)) {
-    throw new Error("Datos inválidos");
+  const descripcion =
+    formData
+      .get(
+        "descripcion",
+      )
+      ?.toString()
+      .trim();
+
+  const precioBase =
+    Number(
+      formData.get(
+        "precioBase",
+      ),
+    );
+
+  if (
+    !nombre ||
+    !descripcion ||
+    Number.isNaN(
+      precioBase,
+    )
+  ) {
+    throw new Error(
+      "Datos inválidos",
+    );
   }
 
-  await prisma.tipoServicio.update({
-    where: {
-      id,
+  await prisma.tipoServicio.update(
+    {
+      where: {
+        id,
+      },
+      data: {
+        nombre,
+        descripcion,
+        precioBase,
+      },
     },
-    data: {
-      nombre,
-      descripcion,
-      precioBase,
-    },
-  });
+  );
 
-  revalidatePath("/admin/servicios");
+  revalidatePath(
+    "/admin/servicios",
+  );
 }
