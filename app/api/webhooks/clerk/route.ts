@@ -90,71 +90,75 @@ export async function POST(req: Request) {
   }
 
   // USER CREATED
-  if (
-    evt.type ===
-    "user.created"
-  ) {
-    const user =
-      evt.data;
+  if (evt.type === "user.created") {
+  const user = evt.data;
 
-    const clerkUserId =
-      user.id;
+  const clerkUserId = user.id;
 
-    const email =
-      user.email_addresses?.[0]
-        ?.email_address ??
-      "";
+  const email =
+    user.email_addresses?.[0]
+      ?.email_address ?? "";
 
-    const firstName =
-      user.first_name ??
-      "Driver";
+  const firstName =
+    user.first_name ??
+    "Driver";
 
-    try {
-      // Crear driver en DB
-      await prisma.driver.create({
-        data: {
-            clerkUserId,
-            email,
-            nombre:
-            firstName ??
-            "Usuario",
-            role:
-            UserRole.DRIVER,
-            status:
-            DriverStatus.OFFLINE,
-        },
-        });
-
-      // Guardar role en Clerk
-      const clerk =
-        await clerkClient();
-
-      await clerk.users.updateUserMetadata(
+  try {
+    // Crear driver (idempotente)
+    await prisma.driver.upsert({
+      where: {
         clerkUserId,
-        {
-          publicMetadata:
-            {
-              role:
-                "driver",
-            },
-        },
-      );
-    } catch (error) {
-      console.error(
-        error,
+      },
+      update: {},
+      create: {
+        clerkUserId,
+        email,
+        nombre:
+          firstName ??
+          "Usuario",
+        role:
+          UserRole.DRIVER,
+        status:
+          DriverStatus.OFFLINE,
+      },
+    });
+
+    // Clerk client
+    const clerk =
+      await clerkClient();
+
+    // Merge metadata existente
+    const currentUser =
+      await clerk.users.getUser(
+        clerkUserId,
       );
 
-      return NextResponse.json(
-        {
-          error:
-            "Error creando driver",
+    await clerk.users.updateUserMetadata(
+      clerkUserId,
+      {
+        publicMetadata: {
+          ...currentUser.publicMetadata,
+          role:
+            "driver",
         },
-        {
-          status: 500,
-        },
-      );
-    }
+      },
+    );
+  } catch (error) {
+    console.error(
+      error,
+    );
+
+    return NextResponse.json(
+      {
+        error:
+          "Error creando driver",
+      },
+      {
+        status: 500,
+      },
+    );
   }
+}
 
   return NextResponse.json(
     {
