@@ -5,6 +5,8 @@ import {
 } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { validateApiKey } from "@/lib/auth/api-key"
+
+
 export const dynamic = "force-dynamic";;
 
 export async function GET(
@@ -72,7 +74,7 @@ export async function GET(
           nombre:
             driver.nombre,
           rating_promedio:
-            4.7,
+            4.7,//TODO: calcular rating promedio
           estado:
             driver.status.toLowerCase(),
         },
