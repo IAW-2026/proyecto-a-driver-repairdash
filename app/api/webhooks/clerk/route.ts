@@ -1,6 +1,6 @@
 import { Webhook } from "svix";
 import { headers } from "next/headers";
-import { clerkClient } from "@clerk/nextjs/server";
+import { createClerkClient } from "@clerk/backend";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import {
@@ -148,7 +148,11 @@ export async function POST(
       );
 
       const clerk =
-        await clerkClient();
+        createClerkClient({
+          secretKey:
+            process.env
+              .CLERK_SECRET_KEY,
+        });
 
       console.log(
         "🛠 Actualizando metadata Clerk",
