@@ -8,14 +8,19 @@ const isPublicRoute =
     "/login(.*)",
     "/sign-up(.*)",
     "/__clerk(.*)",
-
-    // Webhook Clerk
-    "/api/webhooks/clerk",
+    "/api/webhooks(.*)",
   ]);
 
 export default clerkMiddleware(
-  async (auth, req) => {
-    if (!isPublicRoute(req)) {
+  async (
+    auth,
+    req,
+  ) => {
+    if (
+      !isPublicRoute(
+        req,
+      )
+    ) {
       await auth.protect();
     }
   },
