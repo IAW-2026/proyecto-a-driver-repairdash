@@ -20,7 +20,27 @@ export async function getCurrentDriverProfile(): Promise<DriverDashboardProfile>
   });
 
   if (!driver) {
-    driver = await prisma.driver.create({
+    driver = await prisma.driver.findUnique({
+      where: { email },
+      include: {
+        tiposServicio: {
+          include: { tipoServicio: true },
+        },
+      },
+    });
+
+    if (driver) {
+      driver = await prisma.driver.update({
+        where: { id: driver.id },
+        data: { clerkUserId: user.id },
+        include: {
+          tiposServicio: {
+            include: { tipoServicio: true },
+          },
+        },
+      });
+    } else {
+      driver = await prisma.driver.create({
       data: {
         clerkUserId: user.id,
         nombre:
@@ -36,6 +56,7 @@ export async function getCurrentDriverProfile(): Promise<DriverDashboardProfile>
         },
       },
     });
+    }
   }
 
   return {
