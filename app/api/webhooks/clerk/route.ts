@@ -19,16 +19,8 @@ export async function POST(
     !WEBHOOK_SECRET
   ) {
     return NextResponse.json(
-      {
-        ok: false,
-        step:
-          "missing_secret",
-        error:
-          "Falta CLERK_WEBHOOK_SECRET",
-      },
-      {
-        status: 500,
-      },
+      { ok: false },
+      { status: 500 },
     );
   }
 
@@ -56,16 +48,8 @@ export async function POST(
     !svixSignature
   ) {
     return NextResponse.json(
-      {
-        ok: false,
-        step:
-          "missing_headers",
-        error:
-          "Headers faltantes",
-      },
-      {
-        status: 400,
-      },
+      { ok: false },
+      { status: 400 },
     );
   }
 
@@ -99,16 +83,8 @@ export async function POST(
     };
   } catch (err: any) {
     return NextResponse.json(
-      {
-        ok: false,
-        step:
-          "verify_webhook",
-        error:
-          err?.message,
-      },
-      {
-        status: 400,
-      },
+      { ok: false },
+      { status: 400 },
     );
   }
 
@@ -117,13 +93,7 @@ export async function POST(
     "user.created"
   ) {
     return NextResponse.json(
-      {
-        ok: true,
-        step:
-          "ignored_event",
-        type:
-          evt.type,
-      },
+      { ok: true },
     );
   }
 
@@ -143,83 +113,42 @@ export async function POST(
     "Driver";
 
   try {
-    // STEP 1
-    await prisma.driver.upsert({
-    where: {
-        email,
-    },
-    update: {
-        clerkUserId,
-        nombre:
-        firstName ??
-        "Usuario",
-    },
-    create: {
+    await prisma.driver.create({
+      data: {
         clerkUserId,
         email,
         nombre:
-        firstName ??
-        "Usuario",
+          firstName ??
+          "Usuario",
         role:
-        UserRole.DRIVER,
+          UserRole.DRIVER,
         status:
-        DriverStatus.OFFLINE,
-    },
+          DriverStatus.OFFLINE,
+      },
     });
 
-    // STEP 2
     const c =
       await clerkClient();
 
-    // STEP 3
-    const updatedUser =
-      await c.users.updateUser(
-        clerkUserId,
-        {
-          publicMetadata:
-            {
-              role:
-                "driver",
-            },
-        },
-      );
+    await c.users.updateUser(
+      clerkUserId,
+      {
+        publicMetadata:
+          {
+            role:
+              "driver",
+          },
+      },
+    );
 
     return NextResponse.json(
-      {
-        ok: true,
-        step:
-          "metadata_updated",
-        publicMetadata:
-          updatedUser.publicMetadata,
-      },
-      {
-        status: 200,
-      },
+      { ok: true },
+      { status: 200 },
     );
   } catch (error: any) {
     return NextResponse.json(
-      {
-        ok: false,
-        step:
-          "create_driver_or_update_metadata",
-        error:
-          error?.message ??
-          "Unknown error",
-        name:
-          error?.name,
-        cause:
-          error?.cause ??
-          null,
-        stack:
-          process.env
-            .NODE_ENV ===
-          "development"
-            ? error?.stack
-            : undefined,
-      },
-      {
-        status: 500,
-      },
+      { ok: false },
+      { status: 500 },
     );
   }
 }
