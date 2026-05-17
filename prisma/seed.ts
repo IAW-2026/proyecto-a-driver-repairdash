@@ -1,6 +1,21 @@
 import "dotenv/config";
-import { Prisma, TrabajoEstado } from "@prisma/client";
-import { prisma } from "../lib/prisma";
+import { Prisma, PrismaClient, TrabajoEstado } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
+
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL environment variable is not set");
+}
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+const adapter = new PrismaPg(pool);
+
+const prisma = new PrismaClient({
+  adapter,
+});
 
 async function main() {
   const servicios = await Promise.all([
@@ -57,19 +72,22 @@ async function main() {
   const [plomeria, electricidad, gas] = servicios;
 
   const driver = await prisma.driver.upsert({
-    where: { email: "manuel.driver@repairdash.local" },
-    update: {
-      nombre: "Manuel",
-      telefono: "+54 11 5555-0101",
-      status: "ONLINE",
-    },
-    create: {
-      nombre: "Manuel",
-      email: "manuel.driver@repairdash.local",
-      telefono: "+54 11 5555-0101",
-      status: "ONLINE",
-    },
-  });
+  where: {
+    clerkUserId: "clerk_demo_manuel",
+  },
+  update: {
+    nombre: "Manuel",
+    telefono: "+54 11 5555-0101",
+    status: "ONLINE",
+  },
+  create: {
+    clerkUserId: "clerk_demo_manuel",
+    nombre: "Manuel",
+    email: "manuel.driver@repairdash.local",
+    telefono: "+54 11 5555-0101",
+    status: "ONLINE",
+  },
+});
 
   await Promise.all(
     [plomeria, electricidad, gas].map((tipoServicio) =>
