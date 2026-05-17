@@ -104,6 +104,7 @@ export async function POST(req: Request) {
     "Driver";
 
   try {
+    // Crear driver (idempotente)
     await prisma.driver.upsert({
         where: {
         clerkUserId,
@@ -122,37 +123,32 @@ export async function POST(req: Request) {
         },
     });
 
-    console.log(
-        "Driver creado en DB",
-    );
-
+    // Clerk client
     const clerk =
         await clerkClient();
 
-    console.log(
-        "Clerk client OK",
-    );
-
-    const result =
-        await clerk.users.updateUserMetadata(
+    // Merge metadata existente
+    const currentUser =
+      await clerk.users.getUser(
         clerkUserId,
-        {
-            publicMetadata: {
-            role:
-                "driver",
-            },
-        },
-        );
+      );
 
-    console.log(
-        "Metadata actualizada",
-        result.publicMetadata,
+    await clerk.users.updateUserMetadata(
+      clerkUserId,
+      {
+        publicMetadata: {
+          ...currentUser.publicMetadata,
+          role:
+            "driver",
+        },
+      },
     );
     } catch (error) {
     console.error(
         "ERROR WEBHOOK:",
         error,
     );
+<<<<<<< Updated upstream
 
     return NextResponse.json(
         {
@@ -163,7 +159,7 @@ export async function POST(req: Request) {
         status: 500,
         },
     );
-    }
+  }
 }
 
   return NextResponse.json(
