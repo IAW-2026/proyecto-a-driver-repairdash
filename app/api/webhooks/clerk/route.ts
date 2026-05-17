@@ -1,6 +1,6 @@
 import { Webhook } from "svix";
 import { headers } from "next/headers";
-import { clerkClient } from "@clerk/nextjs/server";
+import { createClerkClient } from "@clerk/backend";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import {
@@ -128,7 +128,7 @@ export async function POST(
     });
 
     const c =
-      await clerkClient();
+      createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 
     await c.users.updateUser(
       clerkUserId,
