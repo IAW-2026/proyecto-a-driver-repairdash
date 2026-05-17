@@ -8,9 +8,12 @@ import {
   DriverStatus,
 } from "@prisma/client";
 
-export async function POST(req: Request) {
+export async function POST(
+  req: Request,
+) {
   const WEBHOOK_SECRET =
-    process.env.CLERK_WEBHOOK_SECRET;
+    process.env
+      .CLERK_WEBHOOK_SECRET;
 
   if (!WEBHOOK_SECRET) {
     throw new Error(
@@ -22,7 +25,9 @@ export async function POST(req: Request) {
     await headers();
 
   const svixId =
-    headerPayload.get("svix-id");
+    headerPayload.get(
+      "svix-id",
+    );
 
   const svixTimestamp =
     headerPayload.get(
@@ -77,7 +82,7 @@ export async function POST(req: Request) {
     };
   } catch (err) {
     console.error(
-      "Webhook inválido",
+      "❌ Webhook inválido",
       err,
     );
 
@@ -89,109 +94,99 @@ export async function POST(req: Request) {
     );
   }
 
-  // USER CREATED
-  if (evt.type === "user.created") {
-  const user = evt.data;
+  console.log(
+    "✅ Webhook recibido:",
+    evt.type,
+  );
 
-  const clerkUserId = user.id;
+  if (
+    evt.type ===
+    "user.created"
+  ) {
+    const user =
+      evt.data;
 
-  const email =
-    user.email_addresses?.[0]
-      ?.email_address ?? "";
+    const clerkUserId =
+      user.id;
 
-  const firstName =
-    user.first_name ??
-    "Driver";
+    const email =
+      user.email_addresses?.[0]
+        ?.email_address ??
+      "";
 
-  try {
-<<<<<<< Updated upstream
-    // Crear driver (idempotente)
-=======
-    console.log(
-        "Creando driver..."
-    );
+    const firstName =
+      user.first_name ??
+      "Driver";
 
->>>>>>> Stashed changes
-    await prisma.driver.upsert({
-      where: {
-        clerkUserId,
-      },
-      update: {},
-      create: {
-        clerkUserId,
-        email,
-        nombre:
-          firstName ??
-          "Usuario",
-        role:
-          UserRole.DRIVER,
-        status:
-          DriverStatus.OFFLINE,
-      },
-    });
-
-<<<<<<< Updated upstream
-    // Clerk client
-=======
-    console.log(
-        "Driver OK"
-    );
-
->>>>>>> Stashed changes
-    const clerk =
-      await clerkClient();
-
-<<<<<<< Updated upstream
-    // Merge metadata existente
-    const currentUser =
-      await clerk.users.getUser(
-=======
-    console.log(
-        "Clerk client OK"
-    );
-
-    const response =
-        await clerk.users.updateUserMetadata(
->>>>>>> Stashed changes
+    try {
+      console.log(
+        "🛠 Creando driver:",
         clerkUserId,
       );
 
-<<<<<<< Updated upstream
-    await clerk.users.updateUserMetadata(
-      clerkUserId,
-      {
-        publicMetadata: {
-          ...currentUser.publicMetadata,
-          role:
-            "driver",
+      await prisma.driver.upsert(
+        {
+          where: {
+            clerkUserId,
+          },
+          update: {},
+          create: {
+            clerkUserId,
+            email,
+            nombre:
+              firstName,
+            role:
+              UserRole.DRIVER,
+            status:
+              DriverStatus.OFFLINE,
+          },
         },
-      },
-=======
-    console.log(
-        "Metadata OK:",
-        response.publicMetadata,
->>>>>>> Stashed changes
-    );
-  } catch (error) {
-    console.error(
-      error,
-    );
-<<<<<<< Updated upstream
+      );
 
-    return NextResponse.json(
-      {
-        error:
-          "Error creando driver",
-      },
-      {
-        status: 500,
-      },
-    );
-  }
-=======
+      console.log(
+        "✅ Driver creado",
+      );
+
+      const clerk =
+        await clerkClient();
+
+      console.log(
+        "🛠 Actualizando metadata Clerk",
+      );
+
+      const updatedUser =
+        await clerk.users.updateUserMetadata(
+          clerkUserId,
+          {
+            publicMetadata:
+              {
+                role:
+                  "driver",
+              },
+          },
+        );
+
+      console.log(
+        "✅ Metadata actualizada:",
+        updatedUser.publicMetadata,
+      );
+    } catch (error) {
+      console.error(
+        "❌ Error webhook:",
+        error,
+      );
+
+      return NextResponse.json(
+        {
+          error:
+            "Error creando driver",
+        },
+        {
+          status: 500,
+        },
+      );
     }
->>>>>>> Stashed changes
-}
+  }
 
   return NextResponse.json(
     {
