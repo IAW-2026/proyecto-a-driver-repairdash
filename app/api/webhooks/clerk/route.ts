@@ -18,8 +18,17 @@ export async function POST(
   if (
     !WEBHOOK_SECRET
   ) {
-    throw new Error(
-      "Falta CLERK_WEBHOOK_SECRET",
+    return NextResponse.json(
+      {
+        ok: false,
+        step:
+          "missing_secret",
+        error:
+          "Falta CLERK_WEBHOOK_SECRET",
+      },
+      {
+        status: 500,
+      },
     );
   }
 
@@ -46,8 +55,14 @@ export async function POST(
     !svixTimestamp ||
     !svixSignature
   ) {
-    return new Response(
-      "Headers faltantes",
+    return NextResponse.json(
+      {
+        ok: false,
+        step:
+          "missing_headers",
+        error:
+          "Headers faltantes",
+      },
       {
         status: 400,
       },
@@ -82,14 +97,15 @@ export async function POST(
       type: string;
       data: any;
     };
-  } catch (err) {
-    console.error(
-      "Webhook inválido",
-      err,
-    );
-
-    return new Response(
-      "Error verificando webhook",
+  } catch (err: any) {
+    return NextResponse.json(
+      {
+        ok: false,
+        step:
+          "verify_webhook",
+        error:
+          err?.message,
+      },
       {
         status: 400,
       },
@@ -97,45 +113,58 @@ export async function POST(
   }
 
   if (
-    evt.type ===
+    evt.type !==
     "user.created"
   ) {
-    const user =
-      evt.data;
+    return NextResponse.json(
+      {
+        ok: true,
+        step:
+          "ignored_event",
+        type:
+          evt.type,
+      },
+    );
+  }
 
-    const clerkUserId =
-      user.id;
+  const user =
+    evt.data;
 
-    const email =
-      user.email_addresses?.[0]
-        ?.email_address ??
-      "";
+  const clerkUserId =
+    user.id;
 
-    const firstName =
-      user.first_name ??
-      "Driver";
+  const email =
+    user.email_addresses?.[0]
+      ?.email_address ??
+    "";
 
-    try {
-      // Crear driver en DB
-      await prisma.driver.create(
-        {
-          data: {
-            clerkUserId,
-            email,
-            nombre:
-              firstName,
-            role:
-              UserRole.DRIVER,
-            status:
-              DriverStatus.OFFLINE,
-          },
+  const firstName =
+    user.first_name ??
+    "Driver";
+
+  try {
+    // STEP 1
+    await prisma.driver.create(
+      {
+        data: {
+          clerkUserId,
+          email,
+          nombre:
+            firstName,
+          role:
+            UserRole.DRIVER,
+          status:
+            DriverStatus.OFFLINE,
         },
-      );
+      },
+    );
 
-      // Guardar role en Clerk publicMetadata
-      const c =
-        await clerkClient();
+    // STEP 2
+    const c =
+      await clerkClient();
 
+    // STEP 3
+    const updatedUser =
       await c.users.updateUser(
         clerkUserId,
         {
@@ -146,27 +175,43 @@ export async function POST(
             },
         },
       );
-    } catch (error) {
-      console.error(
-        "Error creando driver o actualizando metadata:",
-        error,
-      );
 
-      return NextResponse.json(
-        {
-          error:
-            "Error creando driver",
-        },
-        {
-          status: 500,
-        },
-      );
-    }
+    return NextResponse.json(
+      {
+        ok: true,
+        step:
+          "metadata_updated",
+        publicMetadata:
+          updatedUser.publicMetadata,
+      },
+      {
+        status: 200,
+      },
+    );
+  } catch (error: any) {
+    return NextResponse.json(
+      {
+        ok: false,
+        step:
+          "create_driver_or_update_metadata",
+        error:
+          error?.message ??
+          "Unknown error",
+        name:
+          error?.name,
+        cause:
+          error?.cause ??
+          null,
+        stack:
+          process.env
+            .NODE_ENV ===
+          "development"
+            ? error?.stack
+            : undefined,
+      },
+      {
+        status: 500,
+      },
+    );
   }
-
-  return NextResponse.json(
-    {
-      success: true,
-    },
-  );
 }
