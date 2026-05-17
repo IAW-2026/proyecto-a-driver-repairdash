@@ -144,20 +144,28 @@ export async function POST(
 
   try {
     // STEP 1
-    await prisma.driver.create(
-      {
-        data: {
-          clerkUserId,
-          email,
-          nombre:
-            firstName,
-          role:
-            UserRole.DRIVER,
-          status:
-            DriverStatus.OFFLINE,
-        },
-      },
-    );
+    await prisma.driver.upsert({
+    where: {
+        email,
+    },
+    update: {
+        clerkUserId,
+        nombre:
+        firstName ??
+        "Usuario",
+    },
+    create: {
+        clerkUserId,
+        email,
+        nombre:
+        firstName ??
+        "Usuario",
+        role:
+        UserRole.DRIVER,
+        status:
+        DriverStatus.OFFLINE,
+    },
+    });
 
     // STEP 2
     const c =
