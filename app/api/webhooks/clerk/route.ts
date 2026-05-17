@@ -104,7 +104,14 @@ export async function POST(req: Request) {
     "Driver";
 
   try {
+<<<<<<< Updated upstream
     // Crear driver (idempotente)
+=======
+    console.log(
+        "Creando driver..."
+    );
+
+>>>>>>> Stashed changes
     await prisma.driver.upsert({
       where: {
         clerkUserId,
@@ -123,16 +130,33 @@ export async function POST(req: Request) {
       },
     });
 
+<<<<<<< Updated upstream
     // Clerk client
+=======
+    console.log(
+        "Driver OK"
+    );
+
+>>>>>>> Stashed changes
     const clerk =
       await clerkClient();
 
+<<<<<<< Updated upstream
     // Merge metadata existente
     const currentUser =
       await clerk.users.getUser(
+=======
+    console.log(
+        "Clerk client OK"
+    );
+
+    const response =
+        await clerk.users.updateUserMetadata(
+>>>>>>> Stashed changes
         clerkUserId,
       );
 
+<<<<<<< Updated upstream
     await clerk.users.updateUserMetadata(
       clerkUserId,
       {
@@ -142,11 +166,17 @@ export async function POST(req: Request) {
             "driver",
         },
       },
+=======
+    console.log(
+        "Metadata OK:",
+        response.publicMetadata,
+>>>>>>> Stashed changes
     );
   } catch (error) {
     console.error(
       error,
     );
+<<<<<<< Updated upstream
 
     return NextResponse.json(
       {
@@ -158,6 +188,9 @@ export async function POST(req: Request) {
       },
     );
   }
+=======
+    }
+>>>>>>> Stashed changes
 }
 
   return NextResponse.json(
