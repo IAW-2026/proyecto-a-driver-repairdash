@@ -124,24 +124,23 @@ export async function POST(
         clerkUserId,
       );
 
-      await prisma.driver.upsert(
-        {
-          where: {
+      await prisma.driver.upsert({
+        where: {
             clerkUserId,
-          },
-          update: {},
-          create: {
+        },
+        update: {},
+        create: {
             clerkUserId,
             email,
             nombre:
-              firstName,
+            firstName ??
+            "Usuario",
             role:
-              UserRole.DRIVER,
+            UserRole.DRIVER,
             status:
-              DriverStatus.OFFLINE,
-          },
+            DriverStatus.OFFLINE,
         },
-      );
+        });
 
       console.log(
         "✅ Driver creado",
