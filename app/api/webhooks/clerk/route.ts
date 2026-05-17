@@ -1,6 +1,6 @@
 import { Webhook } from "svix";
 import { headers } from "next/headers";
-import { createClerkClient } from "@clerk/backend";
+import { clerkClient } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import {
@@ -15,7 +15,9 @@ export async function POST(
     process.env
       .CLERK_WEBHOOK_SECRET;
 
-  if (!WEBHOOK_SECRET) {
+  if (
+    !WEBHOOK_SECRET
+  ) {
     throw new Error(
       "Falta CLERK_WEBHOOK_SECRET",
     );
@@ -82,7 +84,7 @@ export async function POST(
     };
   } catch (err) {
     console.error(
-      "❌ Webhook inválido",
+      "Webhook inválido",
       err,
     );
 
@@ -93,11 +95,6 @@ export async function POST(
       },
     );
   }
-
-  console.log(
-    "✅ Webhook recibido:",
-    evt.type,
-  );
 
   if (
     evt.type ===
@@ -119,63 +116,39 @@ export async function POST(
       "Driver";
 
     try {
-      console.log(
-        "🛠 Creando driver:",
-        clerkUserId,
-      );
-
-      await prisma.driver.upsert({
-        where: {
-            clerkUserId,
-        },
-        update: {},
-        create: {
+      // Crear driver en DB
+      await prisma.driver.create(
+        {
+          data: {
             clerkUserId,
             email,
             nombre:
-            firstName ??
-            "Usuario",
+              firstName,
             role:
-            UserRole.DRIVER,
+              UserRole.DRIVER,
             status:
-            DriverStatus.OFFLINE,
-        },
-        });
-
-      console.log(
-        "✅ Driver creado",
-      );
-
-      const clerk =
-        createClerkClient({
-          secretKey:
-            process.env
-              .CLERK_SECRET_KEY,
-        });
-
-      console.log(
-        "🛠 Actualizando metadata Clerk",
-      );
-
-      const updatedUser =
-        await clerk.users.updateUserMetadata(
-          clerkUserId,
-          {
-            publicMetadata:
-              {
-                role:
-                  "driver",
-              },
+              DriverStatus.OFFLINE,
           },
-        );
+        },
+      );
 
-      console.log(
-        "✅ Metadata actualizada:",
-        updatedUser.publicMetadata,
+      // Guardar role en Clerk publicMetadata
+      const c =
+        await clerkClient();
+
+      await c.users.updateUser(
+        clerkUserId,
+        {
+          publicMetadata:
+            {
+              role:
+                "driver",
+            },
+        },
       );
     } catch (error) {
       console.error(
-        "❌ Error webhook:",
+        "Error creando driver o actualizando metadata:",
         error,
       );
 
