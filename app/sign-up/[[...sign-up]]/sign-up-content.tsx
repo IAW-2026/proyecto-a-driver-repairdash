@@ -16,36 +16,53 @@ export function SignUpContent() {
     isSignedIn,
   } = useUser();
 
-  const initialized =
+  const onboardingStarted =
     useRef(false);
 
   useEffect(() => {
-    async function onboardDriver() {
+    async function runOnboarding() {
       if (
-        initialized.current
+        onboardingStarted.current
       ) {
         return;
       }
 
-      initialized.current =
+      onboardingStarted.current =
         true;
 
       try {
-        await fetch(
-          "/api/onboarding/driver",
-          {
-            method:
-              "POST",
-          },
+        const response =
+          await fetch(
+            "/api/onboarding/driver",
+            {
+              method:
+                "POST",
+            },
+          );
+
+        const data =
+          await response.json();
+
+        console.log(
+          "ONBOARDING:",
+          data,
         );
 
-        window.location.replace(
-          "/",
-        );
+        if (
+          !response.ok
+        ) {
+          throw new Error(
+            "Falló onboarding",
+          );
+        }
+
+        window.location.href =
+          "/";
       } catch (
         error
       ) {
         console.error(
+          "ONBOARDING ERROR:",
           error,
         );
       }
@@ -55,17 +72,14 @@ export function SignUpContent() {
       isLoaded &&
       isSignedIn
     ) {
-      onboardDriver();
+      runOnboarding();
     }
   }, [
     isLoaded,
     isSignedIn,
   ]);
-
-  if (
-    !isLoaded ||
-    isSignedIn
-  ) {
+  
+  if (!isLoaded) {
     return null;
   }
 
@@ -74,8 +88,8 @@ export function SignUpContent() {
       path="/sign-up"
       routing="path"
       signInUrl="/login"
-      forceRedirectUrl="/"
-      fallbackRedirectUrl="/"
+      forceRedirectUrl="/sign-up"
+      fallbackRedirectUrl="/sign-up"
     />
   );
 }
