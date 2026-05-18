@@ -11,6 +11,8 @@ import {
 export async function POST(
   req: Request,
 ) {
+
+    
   const WEBHOOK_SECRET =
     process.env
       .CLERK_WEBHOOK_SECRET;
@@ -113,18 +115,27 @@ export async function POST(
     "Driver";
 
   try {
-    await prisma.driver.create({
-      data: {
+    await prisma.driver.upsert({
+    where: {
+        clerkUserId,
+    },
+    update: {
+        email,
+        nombre:
+        firstName ??
+        "Usuario",
+    },
+    create: {
         clerkUserId,
         email,
         nombre:
-          firstName ??
-          "Usuario",
+        firstName ??
+        "Usuario",
         role:
-          UserRole.DRIVER,
+        UserRole.DRIVER,
         status:
-          DriverStatus.OFFLINE,
-      },
+        DriverStatus.OFFLINE,
+    },
     });
 
     const c =
