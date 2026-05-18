@@ -146,9 +146,23 @@ export async function POST(
       { status: 200 },
     );
   } catch (error: any) {
+    console.error("WEBHOOK ERROR:", error);
+
     return NextResponse.json(
-      { ok: false },
-      { status: 500 },
+        {
+        ok: false,
+        message: error?.message,
+        code: error?.code,
+        meta: error?.meta,
+        stack:
+            process.env.NODE_ENV ===
+            "development"
+            ? error?.stack
+            : undefined,
+        },
+        {
+        status: 500,
+        },
     );
-  }
+    }
 }
