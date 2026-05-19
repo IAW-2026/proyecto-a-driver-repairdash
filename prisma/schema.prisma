@@ -35,18 +35,24 @@ enum DriverStatus {
 
 model Trabajo {
   id               String            @id @default(cuid())
-  driverId         String
-  driver           Driver            @relation(fields: [driverId], references: [id])
+
+  driverId         String?
+  driver           Driver?           @relation(fields: [driverId], references: [id])
+
   riderId          String
   tipoServicioId   String
   tipoServicio     TipoServicio      @relation(fields: [tipoServicioId], references: [id])
+
   descripcion      String?
   direccion        String
   latitud          Float?
   longitud         Float?
+
   estado           TrabajoEstado     @default(PENDIENTE)
   montoEstimado    Decimal           @db.Decimal(10, 2)
+
   historialEstados HistorialEstado[]
+
   creadoEn         DateTime          @default(now())
   actualizadoEn    DateTime          @updatedAt
 

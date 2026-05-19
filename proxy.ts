@@ -9,6 +9,7 @@ const isPublicRoute =
     "/sign-up(.*)",
     "/__clerk(.*)",
     "/api/webhooks(.*)",
+    "/api/mocks/(.*)"
   ]);
 
 export default clerkMiddleware(

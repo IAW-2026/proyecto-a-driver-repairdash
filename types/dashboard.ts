@@ -31,13 +31,24 @@ export type FeedbackReviewResponse = {
   }>;
 };
 
-export type PaymentDailySummary = {
-  driverId: string;
-  fecha: string;
-  ingresosDelDia: number;
-  moneda: "ARS";
-  trabajosLiquidados: number;
-};
+export type PaymentDailySummary =
+  {
+    driverId:
+      string;
+
+    balance: {
+      disponible:
+        string;
+    };
+
+    metricasHoy: {
+      facturacionHoy:
+        string;
+
+      trabajosRealizadosHoy:
+        number;
+    };
+  };
 
 export type RiderJobRequest = {
   id: string;

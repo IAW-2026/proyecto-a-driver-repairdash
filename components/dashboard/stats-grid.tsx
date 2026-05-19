@@ -9,9 +9,12 @@ export function StatsGrid({ stats }: StatsGridProps) {
   const items = [
     {
       label: "Completados",
-      value: stats.trabajosCompletados.toString(),
-      detail: "trabajos hoy",
-    },
+      value:
+      (
+        stats.trabajosCompletados ??
+        0
+      ).toString(),
+        },
     {
       label: "Ingresos",
       value: formatCurrency(stats.ingresosDelDia),
