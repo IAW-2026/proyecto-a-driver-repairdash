@@ -3,7 +3,7 @@ import {
 } from "next/server";
 
 import {
-  paymentWalletMock,
+  getPaymentWalletMock,
 } from "@/lib/mocks/payments.mock";
 
 type Params = {
@@ -27,11 +27,9 @@ export async function GET(
       await params;
 
     return NextResponse.json(
-      {
-        ...paymentWalletMock,
-
+      getPaymentWalletMock(
         driverId,
-      },
+      ),
       {
         status: 200,
       },

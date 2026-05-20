@@ -20,3 +20,12 @@ export const paymentWalletMock: PaymentDailySummary =
         3,
     },
   };
+
+export function getPaymentWalletMock(
+  driverId: string,
+): PaymentDailySummary {
+  return {
+    ...paymentWalletMock,
+    driverId,
+  };
+}
