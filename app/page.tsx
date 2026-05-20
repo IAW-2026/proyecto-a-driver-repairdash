@@ -6,56 +6,26 @@ import { getAvailableRiderRequestsForDriver } from "@/lib/services/external/ride
 import type { DriverDailyStats } from "@/types/dashboard";
 
 export default async function HomePage() {
-  const driver =
-    await getCurrentDriverProfile();
+  const driver = await getCurrentDriverProfile();
 
-  const [
-    feedback,
-    payments,
-    requests,
-  ] = await Promise.all([
-    getDriverFeedback(
-      driver.id,
-    ),
-
-    getPaymentDailySummary(
-      driver.id,
-    ),
-
-    getAvailableRiderRequestsForDriver(
-      driver.servicios.map(
-        (service) =>
-          service.nombre,
-      ),
-    ),
+  const [feedback, payments, requests] = await Promise.all([
+    getDriverFeedback(driver.id),
+    getPaymentDailySummary(driver.id),
+    getAvailableRiderRequestsForDriver(driver.id),
   ]);
 
-  const stats: DriverDailyStats =
-    {
-      trabajosCompletados:
-        payments.metricasHoy
-          .trabajosRealizadosHoy,
-
-      ingresosDelDia:
-        Number(
-          payments.metricasHoy
-            .facturacionHoy,
-        ),
-
-      ratingPromedio:
-        feedback.valoracion,
-
-      tiempoConectado:
-        "6h 20m",
-    };
+  const stats: DriverDailyStats = {
+    trabajosCompletados: payments.metricasHoy.trabajosRealizadosHoy,
+    ingresosDelDia: Number(payments.metricasHoy.facturacionHoy),
+    ratingPromedio: feedback.valoracion,
+    tiempoConectado: "6h 20m",
+  };
 
   return (
     <DashboardHome
       driver={driver}
       stats={stats}
-      requests={
-        requests
-      }
+      requests={requests}
     />
   );
 }
