@@ -7,19 +7,20 @@ datasource db {
 }
 
 model Driver {
-  id            String               @id @default(cuid())
-  clerkUserId   String               @unique
-  nombre        String
-  imagenURL     String?
-  bio           String?
-  email         String               @unique
-  telefono      String?
-  role          UserRole             @default(DRIVER)
-  status        DriverStatus         @default(OFFLINE)
-  trabajos      Trabajo[]
-  tiposServicio DriverTipoServicio[]
-  creadoEn      DateTime             @default(now())
-  actualizadoEn DateTime             @updatedAt
+  id                 String               @id @default(cuid())
+  clerkUserId        String               @unique
+  nombre             String
+  imagenURL          String?
+  bio                String?
+  email              String               @unique
+  telefono           String?
+  role               UserRole             @default(DRIVER)
+  status             DriverStatus         @default(OFFLINE)
+  trabajos           Trabajo[]
+  trabajosRechazados TrabajoRechazado[]
+  tiposServicio      DriverTipoServicio[]
+  creadoEn           DateTime             @default(now())
+  actualizadoEn      DateTime             @updatedAt
 }
 
 enum UserRole {
@@ -34,32 +35,47 @@ enum DriverStatus {
 }
 
 model Trabajo {
-  id               String            @id @default(cuid())
+  id String @id @default(cuid())
 
-  driverId         String?
-  driver           Driver?           @relation(fields: [driverId], references: [id])
+  driverId String?
+  driver   Driver? @relation(fields: [driverId], references: [id])
 
-  riderId          String
-  tipoServicioId   String
-  tipoServicio     TipoServicio      @relation(fields: [tipoServicioId], references: [id])
+  riderId        String
+  tipoServicioId String
+  tipoServicio   TipoServicio @relation(fields: [tipoServicioId], references: [id])
 
-  descripcion      String?
-  direccion        String
-  latitud          Float?
-  longitud         Float?
+  descripcion String?
+  direccion   String
+  fotos       String[] @default([])
+  latitud     Float?
+  longitud    Float?
 
-  estado           TrabajoEstado     @default(PENDIENTE)
-  montoEstimado    Decimal           @db.Decimal(10, 2)
+  estado        TrabajoEstado @default(PENDIENTE)
+  montoEstimado Decimal       @db.Decimal(10, 2)
 
   historialEstados HistorialEstado[]
+  rechazos         TrabajoRechazado[]
 
-  creadoEn         DateTime          @default(now())
-  actualizadoEn    DateTime          @updatedAt
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
 
   @@index([driverId])
   @@index([riderId])
   @@index([tipoServicioId])
   @@index([estado])
+}
+
+model TrabajoRechazado {
+  id        String   @id @default(cuid())
+  driverId  String
+  driver    Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  trabajoId String
+  trabajo   Trabajo  @relation(fields: [trabajoId], references: [id], onDelete: Cascade)
+  creadoEn  DateTime @default(now())
+
+  @@unique([driverId, trabajoId])
+  @@index([driverId])
+  @@index([trabajoId])
 }
 
 enum TrabajoEstado {
@@ -91,8 +107,8 @@ model TipoServicio {
   precioBase      Decimal              @db.Decimal(10, 2)
   creadoEn        DateTime             @default(now())
   actualizadoEn   DateTime             @updatedAt
-  driverServicios DriverTipoServicio[] 
-  trabajos        Trabajo[]           
+  driverServicios DriverTipoServicio[]
+  trabajos        Trabajo[]
 }
 
 model DriverTipoServicio {

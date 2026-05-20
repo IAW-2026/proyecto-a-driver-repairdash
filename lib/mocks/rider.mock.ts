@@ -1,5 +1,20 @@
 import type { RiderJobRequest } from "@/types/dashboard";
 
+const repairPhotoMocks = {
+  plomeria: [
+    "https://picsum.photos/seed/repairdash-plumbing-1/900/675",
+    "https://picsum.photos/seed/repairdash-plumbing-2/900/675",
+  ],
+  electricidad: [
+    "https://picsum.photos/seed/repairdash-electric-1/900/675",
+    "https://picsum.photos/seed/repairdash-electric-2/900/675",
+    "https://picsum.photos/seed/repairdash-electric-3/900/675",
+  ],
+  gas: [
+    "https://picsum.photos/seed/repairdash-gas-1/900/675",
+  ],
+};
+
 export const riderJobRequestsMock: RiderJobRequest[] = [
   {
     id: "request_001",
@@ -13,7 +28,8 @@ export const riderJobRequestsMock: RiderJobRequest[] = [
     },
     tipoServicio: "Plomeria",
     descripcion: "Perdida de agua bajo la cocina. Requiere revision urgente.",
-    fotos: ["/window.svg"],
+    fotos:
+      repairPhotoMocks.plomeria,
     estado: "ALTA_PRIORIDAD",
   },
   {
@@ -28,7 +44,8 @@ export const riderJobRequestsMock: RiderJobRequest[] = [
     },
     tipoServicio: "Electricidad",
     descripcion: "Corte parcial de energia en living y cocina.",
-    fotos: ["/globe.svg"],
+    fotos:
+      repairPhotoMocks.electricidad,
     estado: "DISPONIBLE",
   },
   {
@@ -43,7 +60,8 @@ export const riderJobRequestsMock: RiderJobRequest[] = [
     },
     tipoServicio: "Gas",
     descripcion: "Revision preventiva de calefon y conexion principal.",
-    fotos: ["/file.svg"],
+    fotos:
+      repairPhotoMocks.gas,
     estado: "PROGRAMADO",
   },
 ];

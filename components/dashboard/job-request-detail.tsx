@@ -1,7 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import {
+  useState,
+} from "react";
 import type { DashboardJobRequest } from "@/types/dashboard";
 import { formatCurrency } from "@/lib/utils/format";
 import { rechazarTrabajo } from "@/lib/actions/trabajo.actions";
@@ -12,14 +14,28 @@ type JobRequestDetailProps = {
 
 export function JobRequestDetail({ request }: JobRequestDetailProps) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [
+    isRejecting,
+    setIsRejecting,
+  ] = useState(false);
 
-  function handleRechazar() {
-    startTransition(async () => {
+  async function handleRechazar() {
+    setIsRejecting(
+      true,
+    );
+
+    try {
       await rechazarTrabajo(request.id);
-      router.push("/");
       router.refresh();
-    });
+      router.replace("/");
+    } catch (error) {
+      console.error(
+        error,
+      );
+      setIsRejecting(
+        false,
+      );
+    }
   }
 
   return (
@@ -76,6 +92,48 @@ export function JobRequestDetail({ request }: JobRequestDetailProps) {
             </div>
           )}
 
+          <div className="rounded-[20px] border border-highlight/10 bg-highlight/[0.05] p-5">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-semibold uppercase tracking-widest text-highlight/40">
+                Fotos del problema
+              </p>
+              {request.fotos.length > 0 && (
+                <span className="rounded-full border border-accent/20 bg-accent/10 px-2.5 py-1 text-[11px] font-bold text-accent">
+                  {request.fotos.length}
+                </span>
+              )}
+            </div>
+
+            {request.fotos.length === 0 ? (
+              <div className="mt-4 rounded-2xl border border-dashed border-highlight/15 bg-primary/25 p-5 text-center">
+                <p className="text-sm leading-6 text-highlight/55">
+                  El cliente no adjunto fotos para esta solicitud.
+                </p>
+              </div>
+            ) : (
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {request.fotos.map((foto, index) => (
+                  <a
+                    key={foto}
+                    href={foto}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="group relative aspect-[4/3] overflow-hidden rounded-2xl border border-highlight/10 bg-primary/30"
+                  >
+                    <img
+                      src={foto}
+                      alt={`Foto ${index + 1} del problema`}
+                      className="h-full w-full object-cover transition duration-200 group-hover:scale-[1.03]"
+                    />
+                    <span className="absolute bottom-2 left-2 rounded-full bg-primary/80 px-2.5 py-1 text-[11px] font-bold text-highlight/75 backdrop-blur">
+                      Foto {index + 1}
+                    </span>
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Cliente */}
           <div className="rounded-[20px] border border-highlight/10 bg-highlight/[0.05] p-5">
             <p className="text-xs font-semibold uppercase tracking-widest text-highlight/40">
@@ -95,11 +153,11 @@ export function JobRequestDetail({ request }: JobRequestDetailProps) {
           <div className="grid grid-cols-2 gap-3 pt-2">
             <button
               type="button"
-              disabled={isPending}
+              disabled={isRejecting}
               onClick={handleRechazar}
               className="h-14 rounded-2xl border border-highlight/10 bg-highlight/[0.06] text-sm font-black text-highlight transition hover:bg-highlight/10 disabled:opacity-50"
             >
-              {isPending ? "..." : "Rechazar"}
+              {isRejecting ? "..." : "Rechazar"}
             </button>
             <button
               type="button"
