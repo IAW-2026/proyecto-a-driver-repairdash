@@ -4,6 +4,8 @@ dotenv.config();
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
+import { getBaseUrl }
+from "@/lib/config/get-base-url";
 
 const pool = new Pool({
   connectionString:
@@ -18,28 +20,6 @@ const prisma =
   new PrismaClient({
     adapter,
   });
-
-function getBaseUrl() {
-  // Production custom domain
-  if (
-    process.env
-      .NEXT_PUBLIC_APP_URL
-  ) {
-    return process.env
-      .NEXT_PUBLIC_APP_URL;
-  }
-
-  // Preview deploy Vercel
-  if (
-    process.env
-      .VERCEL_URL
-  ) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-
-  // Local
-  return "http://localhost:3000";
-}
 
 const BASE_URL =
   getBaseUrl();
