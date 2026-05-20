@@ -1,12 +1,3 @@
-/**
- * Seed de trabajos PENDIENTE via webhook.
- * Uso: npx tsx prisma/seeds/seed-trabajos.ts
- *
- * El servidor debe estar corriendo (npm run dev).
- * Los trabajos se crean sin driver asignado — cualquier driver ONLINE
- * con el servicio habilitado los verá en su dashboard.
- */
-
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -14,12 +5,49 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
+const pool = new Pool({
+  connectionString:
+    process.env
+      .DATABASE_URL,
+});
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-const API_KEY = process.env.RIDER_WEBHOOK_API_KEY ?? "";
+const adapter =
+  new PrismaPg(pool);
+
+const prisma =
+  new PrismaClient({
+    adapter,
+  });
+
+function getBaseUrl() {
+  // Production custom domain
+  if (
+    process.env
+      .NEXT_PUBLIC_APP_URL
+  ) {
+    return process.env
+      .NEXT_PUBLIC_APP_URL;
+  }
+
+  // Preview deploy Vercel
+  if (
+    process.env
+      .VERCEL_URL
+  ) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+
+  // Local
+  return "http://localhost:3000";
+}
+
+const BASE_URL =
+  getBaseUrl();
+
+const API_KEY =
+  process.env
+    .RIDER_WEBHOOK_API_KEY ??
+  "";
 
 const MOCK_TRABAJOS = [
   {
