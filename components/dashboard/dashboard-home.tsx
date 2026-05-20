@@ -25,14 +25,19 @@ export function DashboardHome({ driver, stats, requests }: DashboardHomeProps) {
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-primary text-highlight">
-      <DriverDrawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />
+      <DriverDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        driverName={driver.nombre}
+        driverImageUrl={driver.imagenURL}
+        rating={stats.ratingPromedio}
+      />
 
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 pb-28 sm:px-6 lg:px-8 lg:pb-10">
         <DashboardHeader
           driverName={driver.nombre}
           driverImageUrl={driver.imagenURL}
           onMenuClick={() => setIsDrawerOpen(true)}
-          notificationCount={3}
         />
 
         <div className="mt-7 grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start xl:grid-cols-[minmax(0,1fr)_420px]">

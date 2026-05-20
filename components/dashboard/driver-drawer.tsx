@@ -5,6 +5,9 @@ import Link from "next/link";
 type DriverDrawerProps = {
   isOpen: boolean;
   onClose: () => void;
+  driverName: string;
+  driverImageUrl: string | null;
+  rating: number;
 };
 
 const menuItems = [
@@ -25,7 +28,19 @@ const menuItems = [
 export function DriverDrawer({
   isOpen,
   onClose,
+  driverName,
+  driverImageUrl,
+  rating,
 }: DriverDrawerProps) {
+  const initials =
+    driverName
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase() || "RD";
+
   return (
     <>
       <div
@@ -39,7 +54,7 @@ export function DriverDrawer({
       />
 
       <aside
-        className={`fixed left-0 top-0 z-50 h-full w-[82vw] max-w-sm border-r border-highlight/10 bg-[#210d2d] px-5 py-6 shadow-2xl shadow-black/40 transition-transform duration-300 ${
+        className={`fixed left-0 top-0 z-50 flex h-full w-[82vw] max-w-sm flex-col border-r border-highlight/10 bg-[#210d2d] px-5 py-6 shadow-2xl shadow-black/40 transition-transform duration-300 ${
           isOpen
             ? "translate-x-0"
             : "-translate-x-full"
@@ -86,8 +101,8 @@ export function DriverDrawer({
           ))}
         </nav>
 
-        {/* Bottom card */}
-        <div className="absolute bottom-6 left-5 right-5 rounded-2xl border border-magenta/20 bg-magenta/10 p-4">
+        {/* Ingresos info card */}
+        <div className="mt-8 rounded-2xl border border-magenta/20 bg-magenta/10 p-4">
           <p className="text-sm font-semibold text-highlight">
             Ingresos
           </p>
@@ -99,6 +114,36 @@ export function DriverDrawer({
             disponible.
           </p>
         </div>
+
+        {/* Profile card — mobile only */}
+        <Link
+          href="/cuenta"
+          onClick={onClose}
+          className="mt-auto flex items-center gap-3 rounded-2xl border border-highlight/10 bg-highlight/[0.06] p-3 transition hover:border-accent/30 hover:bg-highlight/[0.09] lg:hidden"
+        >
+          <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full border border-highlight/10 bg-accent/12 text-sm font-black text-highlight">
+            {driverImageUrl ? (
+              <img
+                src={driverImageUrl}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              initials
+            )}
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-bold text-highlight">
+              {driverName}
+            </p>
+
+            <p className="mt-0.5 flex items-center gap-1 text-xs font-medium text-highlight/65">
+              <span className="text-amber-400">★</span>
+              {rating.toFixed(1)}
+            </p>
+          </div>
+        </Link>
       </aside>
     </>
   );

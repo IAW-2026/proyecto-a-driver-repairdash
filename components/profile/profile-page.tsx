@@ -57,6 +57,9 @@ export function ProfilePage({
         onClose={() =>
           setIsDrawerOpen(false)
         }
+        driverName={driver.nombre}
+        driverImageUrl={driver.imagenURL}
+        rating={feedback.valoracion}
       />
 
       <div className="mx-auto max-w-7xl px-4 pb-16 pt-5 sm:px-6 lg:px-8">

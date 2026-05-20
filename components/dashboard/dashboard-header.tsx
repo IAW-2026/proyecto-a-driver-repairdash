@@ -6,14 +6,12 @@ import {
 type DashboardHeaderProps = {
   driverName: string;
   driverImageUrl: string | null;
-  notificationCount: number;
   onMenuClick: () => void;
 };
 
 export function DashboardHeader({
   driverName,
   driverImageUrl,
-  notificationCount,
   onMenuClick,
 }: DashboardHeaderProps) {
   const initials =
@@ -55,7 +53,7 @@ export function DashboardHeader({
         <div className="flex items-center gap-3 md:shrink-0">
           <Link
             href="/cuenta"
-            className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl border border-highlight/10 bg-highlight/[0.06] p-2.5 pr-3 shadow-lg shadow-black/20 transition hover:border-accent/35 hover:bg-highlight/[0.09] md:w-64 md:flex-none"
+            className="hidden min-w-0 flex-1 items-center gap-3 rounded-2xl border border-highlight/10 bg-highlight/[0.06] p-2.5 pr-3 shadow-lg shadow-black/20 transition hover:border-accent/35 hover:bg-highlight/[0.09] md:w-64 md:flex md:flex-none"
           >
             <div className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-xl border border-highlight/10 bg-accent/12 text-sm font-black text-highlight">
               {driverImageUrl ? (
@@ -78,15 +76,6 @@ export function DashboardHeader({
               </p>
             </div>
           </Link>
-
-          <button
-            type="button"
-            aria-label={`Notificaciones: ${notificationCount}`}
-            className="relative grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-highlight/10 bg-highlight/[0.06] text-xl shadow-lg shadow-black/20 transition hover:border-accent/35 hover:bg-highlight/[0.09]"
-          >
-            <Bell className="h-5 w-5 text-highlight" />
-            <span className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-magenta shadow-[0_0_18px_rgba(245,0,241,0.9)]" />
-          </button>
         </div>
       </div>
     </header>
