@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  useState,
-  useTransition,
-} from "react";
-import {
-  useRouter,
-} from "next/navigation";
+import { useState } from "react";
 import type {
   DashboardJobRequest,
   DriverAvailability,
@@ -18,9 +12,6 @@ import { DriverDrawer } from "./driver-drawer";
 import { DriverStatusCard } from "./driver-status-card";
 import { JobRequestsCarousel } from "./job-requests-carousel";
 import { StatsGrid } from "./stats-grid";
-import {
-  updateDriverAvailability,
-} from "@/lib/actions/driver.actions";
 
 type DashboardHomeProps = {
   driver: DriverDashboardProfile;
@@ -31,61 +22,15 @@ type DashboardHomeProps = {
 export function DashboardHome({ driver, stats, requests }: DashboardHomeProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [status, setStatus] = useState<DriverAvailability>(driver.status);
-  const [
-    isStatusPending,
-    startStatusTransition,
-  ] = useTransition();
-  const router =
-    useRouter();
-
-  function handleStatusToggle() {
-    if (
-      status ===
-      "EN_TRABAJO"
-    ) {
-      return;
-    }
-
-    const nextStatus =
-      status === "ONLINE"
-        ? "OFFLINE"
-        : "ONLINE";
-
-    setStatus(
-      nextStatus,
-    );
-
-    startStatusTransition(
-      async () => {
-        try {
-          const savedStatus =
-            await updateDriverAvailability(
-              nextStatus,
-            );
-
-          setStatus(
-            savedStatus,
-          );
-          router.refresh();
-        } catch (error) {
-          console.error(
-            error,
-          );
-          setStatus(
-            status,
-          );
-        }
-      },
-    );
-  }
 
   return (
-    <main className="min-h-screen overflow-hidden bg-primary text-highlight">
+    <main className="min-h-screen overflow-x-hidden bg-primary text-highlight">
       <DriverDrawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />
 
-      <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 pb-28 pt-5 sm:px-6 lg:px-8 lg:pb-10">
+      <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 pb-28 sm:px-6 lg:px-8 lg:pb-10">
         <DashboardHeader
           driverName={driver.nombre}
+          driverImageUrl={driver.imagenURL}
           onMenuClick={() => setIsDrawerOpen(true)}
           notificationCount={3}
         />
@@ -95,11 +40,7 @@ export function DashboardHome({ driver, stats, requests }: DashboardHomeProps) {
             <DriverStatusCard
               status={status}
               offeredServices={driver.servicios.map((service) => service.nombre)}
-              onToggle={handleStatusToggle}
-              disabled={
-                isStatusPending ||
-                status === "EN_TRABAJO"
-              }
+              onToggle={() => setStatus((current) => (current === "ONLINE" ? "OFFLINE" : "ONLINE"))}
             />
             <StatsGrid stats={stats} />
           </section>
@@ -123,10 +64,7 @@ export function DashboardHome({ driver, stats, requests }: DashboardHomeProps) {
           </aside>
         </div>
 
-        <JobRequestsCarousel
-          requests={requests}
-          driverStatus={status}
-        />
+        <JobRequestsCarousel requests={requests} driverStatus={"ONLINE"} />
       </div>
     </main>
   );
