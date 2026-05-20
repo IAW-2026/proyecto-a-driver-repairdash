@@ -4,6 +4,7 @@ type DriverStatusCardProps = {
   status: DriverAvailability;
   offeredServices: string[];
   onToggle: () => void;
+  disabled?: boolean;
 };
 
 const statusCopy: Record<DriverAvailability, { title: string; description: string }> = {
@@ -21,7 +22,12 @@ const statusCopy: Record<DriverAvailability, { title: string; description: strin
   },
 };
 
-export function DriverStatusCard({ status, offeredServices, onToggle }: DriverStatusCardProps) {
+export function DriverStatusCard({
+  status,
+  offeredServices,
+  onToggle,
+  disabled = false,
+}: DriverStatusCardProps) {
   const isOnline = status === "ONLINE";
 
   return (
@@ -37,10 +43,11 @@ export function DriverStatusCard({ status, offeredServices, onToggle }: DriverSt
         <button
           type="button"
           onClick={onToggle}
+          disabled={disabled}
           aria-pressed={isOnline}
           className={`relative h-8 w-16 shrink-0 rounded-full border p-1 transition ${
             isOnline ? "border-magenta/60 bg-magenta/30" : "border-highlight/15 bg-highlight/10"
-          }`}
+          } disabled:cursor-not-allowed disabled:opacity-60`}
         >
           <span
             className={`block h-5.5 w-5.5 rounded-full bg-highlight shadow-lg transition ${

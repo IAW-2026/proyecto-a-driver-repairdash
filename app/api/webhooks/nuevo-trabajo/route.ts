@@ -8,6 +8,7 @@ type RequestBody = {
   tipoServicioId: string;
   direccion: string;
   descripcion?: string;
+  fotos?: string[];
   latitud?: number;
   longitud?: number;
 };
@@ -26,7 +27,15 @@ export async function POST(req: NextRequest) {
     }
 
     const body: RequestBody = await req.json();
-    const { riderId, tipoServicioId, direccion, descripcion, latitud, longitud } = body;
+    const {
+      riderId,
+      tipoServicioId,
+      direccion,
+      descripcion,
+      fotos,
+      latitud,
+      longitud,
+    } = body;
 
     if (!riderId || !tipoServicioId || !direccion) {
       return NextResponse.json(
@@ -54,6 +63,8 @@ export async function POST(req: NextRequest) {
         tipoServicioId,
         descripcion,
         direccion,
+        fotos:
+          fotos ?? [],
         latitud,
         longitud,
         estado: TrabajoEstado.PENDIENTE,

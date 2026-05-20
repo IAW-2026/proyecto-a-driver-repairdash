@@ -1,27 +1,55 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import {
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
-import type { DashboardJobRequest } from "@/types/dashboard";
+import {
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import type {
+  DashboardJobRequest,
+  DriverAvailability,
+} from "@/types/dashboard";
 import { formatCurrency } from "@/lib/utils/format";
 import { rechazarTrabajo } from "@/lib/actions/trabajo.actions";
 
 type JobRequestsCarouselProps = {
   requests: DashboardJobRequest[];
+  driverStatus: DriverAvailability;
 };
 
-export function JobRequestsCarousel({ requests }: JobRequestsCarouselProps) {
+export function JobRequestsCarousel({
+  requests,
+  driverStatus,
+}: JobRequestsCarouselProps) {
   const router = useRouter();
+  const scrollRef =
+    useRef<HTMLDivElement>(null);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
   const [isPending, startTransition] = useTransition();
 
   const visible = requests.filter((r) => !dismissedIds.has(r.id));
+  const isOffline =
+    driverStatus !== "ONLINE";
 
   function handleDismiss(id: string) {
     startTransition(async () => {
       await rechazarTrabajo(id);
       setDismissedIds((prev) => new Set(prev).add(id));
+    });
+  }
+
+  function scrollRequests(direction: "left" | "right") {
+    scrollRef.current?.scrollBy({
+      left:
+        direction === "left"
+          ? -360
+          : 360,
+      behavior: "smooth",
     });
   }
 
@@ -36,34 +64,69 @@ export function JobRequestsCarousel({ requests }: JobRequestsCarouselProps) {
             Solicitudes disponibles
           </h2>
         </div>
-        <p className="hidden text-sm text-highlight/55 sm:block">
-          {visible.length} compatibles
-        </p>
+        <div className="hidden items-center gap-2 sm:flex">
+          <p className="mr-2 text-sm text-highlight/55">
+            {isOffline ? "Offline" : `${visible.length} compatibles`}
+          </p>
+          <button
+            type="button"
+            onClick={() => scrollRequests("left")}
+            disabled={isOffline || visible.length === 0}
+            aria-label="Ver solicitudes anteriores"
+            className="grid h-10 w-10 place-items-center rounded-2xl border border-highlight/10 bg-highlight/[0.06] text-highlight transition hover:bg-highlight/10 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => scrollRequests("right")}
+            disabled={isOffline || visible.length === 0}
+            aria-label="Ver mas solicitudes"
+            className="grid h-10 w-10 place-items-center rounded-2xl border border-highlight/10 bg-highlight/[0.06] text-highlight transition hover:bg-highlight/10 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
-      {visible.length === 0 ? (
+      {isOffline ? (
+        <div className="mt-5 rounded-[28px] border border-highlight/10 bg-highlight/[0.04] p-6 text-center sm:p-8">
+          <p className="text-base font-bold text-highlight">
+            Estas offline
+          </p>
+          <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-highlight/55">
+            Ponete online para ver solicitudes compatibles con tus servicios.
+          </p>
+        </div>
+      ) : visible.length === 0 ? (
         <div className="mt-5 rounded-[28px] border border-highlight/10 bg-highlight/[0.04] p-8 text-center">
           <p className="text-sm text-highlight/45">No hay solicitudes disponibles</p>
         </div>
       ) : (
-        <div className="mt-5 flex snap-x gap-4 overflow-x-auto pb-5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div
+          ref={scrollRef}
+          className="mt-5 flex flex-col gap-4 sm:snap-x sm:flex-row sm:overflow-x-auto sm:scroll-smooth sm:pb-5 sm:[-ms-overflow-style:none] sm:[scrollbar-width:none] sm:[&::-webkit-scrollbar]:hidden"
+        >
           {visible.map((request) => (
             <article
               key={request.id}
-              className="relative min-h-[360px] w-[82vw] max-w-[340px] shrink-0 snap-start overflow-hidden rounded-[28px] border border-highlight/10 bg-highlight/[0.055] shadow-2xl shadow-black/25 sm:w-[340px]"
+              className="relative min-h-[340px] w-full shrink-0 overflow-hidden rounded-[28px] border border-highlight/10 bg-highlight/[0.055] shadow-2xl shadow-black/25 sm:w-[340px] sm:snap-start"
             >
-              {/* Imagen / header */}
               <div className="relative h-36 bg-[#341445]">
-                <Image
+                <img
                   src={request.fotos[0] ?? "/window.svg"}
                   alt=""
-                  fill
-                  sizes="340px"
-                  className="object-contain p-10 opacity-80"
+                  className="h-full w-full object-cover opacity-85"
                 />
+                {request.fotos.length === 0 && (
+                  <div className="absolute inset-0 grid place-items-center bg-highlight/[0.03]">
+                    <span className="rounded-full border border-highlight/10 bg-primary/50 px-3 py-1 text-xs font-semibold text-highlight/55">
+                      Sin fotos
+                    </span>
+                  </div>
+                )}
               </div>
 
-              {/* Contenido */}
               <div className="p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">

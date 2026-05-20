@@ -19,7 +19,13 @@ export default async function TrabajoDetailPage({ params }: Props) {
   // 1. Buscar primero en la DB (trabajos reales creados por el webhook)
   const driver = await prisma.driver.findUnique({
     where: { clerkUserId: user.id },
-    select: { id: true },
+    include: {
+      tiposServicio: {
+        select: {
+          tipoServicioId: true,
+        },
+      },
+    },
   });
 
   if (driver) {
@@ -28,7 +34,37 @@ export default async function TrabajoDetailPage({ params }: Props) {
       include: { tipoServicio: true },
     });
 
-    if (trabajo && trabajo.driverId === driver.id && trabajo.estado === "PENDIENTE") {
+    const hasCompatibleService =
+      driver.tiposServicio.some(
+        (service) =>
+          service.tipoServicioId ===
+          trabajo?.tipoServicioId,
+      );
+
+    const rejectedRequest =
+      trabajo
+        ? await prisma.trabajoRechazado.findUnique({
+            where: {
+              driverId_trabajoId: {
+                driverId:
+                  driver.id,
+                trabajoId:
+                  trabajo.id,
+              },
+            },
+          })
+        : null;
+
+    if (
+      trabajo &&
+      trabajo.estado === "PENDIENTE" &&
+      hasCompatibleService &&
+      !rejectedRequest &&
+      (
+        trabajo.driverId === null ||
+        trabajo.driverId === driver.id
+      )
+    ) {
       const request: DashboardJobRequest = {
         id: trabajo.id,
         idCliente: trabajo.riderId,
@@ -41,7 +77,7 @@ export default async function TrabajoDetailPage({ params }: Props) {
         },
         tipoServicio: trabajo.tipoServicio.nombre,
         descripcion: trabajo.descripcion ?? "",
-        fotos: [],
+        fotos: trabajo.fotos,
         estado: "DISPONIBLE",
         precioEstimado: Number(trabajo.montoEstimado),
       };

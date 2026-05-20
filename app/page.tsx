@@ -11,7 +11,13 @@ export default async function HomePage() {
   const [feedback, payments, requests] = await Promise.all([
     getDriverFeedback(driver.id),
     getPaymentDailySummary(driver.id),
-    getAvailableRiderRequestsForDriver(driver.id),
+    getAvailableRiderRequestsForDriver({
+      driverId: driver.id,
+      driverStatus: driver.status,
+      serviceTypeIds: driver.servicios.map(
+        (service) => service.id,
+      ),
+    }),
   ]);
 
   const stats: DriverDailyStats = {
