@@ -20,148 +20,70 @@ export async function POST(req: NextRequest) {
 
     if (!authorized) {
       return NextResponse.json(
-        {
-          status: "error",
-          mensaje: "Unauthorized",
-        },
-        {
-          status: 401,
-        },
+        { status: "error", mensaje: "Unauthorized" },
+        { status: 401 },
       );
     }
 
     const body: RequestBody = await req.json();
+    const { riderId, tipoServicioId, direccion, descripcion, latitud, longitud } = body;
 
-    const {
-      riderId,
-      tipoServicioId,
-      direccion,
-      descripcion,
-      latitud,
-      longitud,
-    } = body;
-
-    if (
-      !riderId ||
-      !tipoServicioId ||
-      !direccion
-    ) {
+    if (!riderId || !tipoServicioId || !direccion) {
       return NextResponse.json(
-        {
-          status: "error",
-          mensaje:
-            "Faltan parámetros obligatorios",
-        },
-        {
-          status: 400,
-        },
+        { status: "error", mensaje: "Faltan parámetros obligatorios" },
+        { status: 400 },
       );
     }
 
-    // Buscar tipo de servicio
-    const tipoServicio =
-      await prisma.tipoServicio.findUnique({
-        where: {
-          id: tipoServicioId,
-        },
-      });
+    const tipoServicio = await prisma.tipoServicio.findUnique({
+      where: { id: tipoServicioId },
+    });
 
     if (!tipoServicio) {
       return NextResponse.json(
-        {
-          status: "error",
-          mensaje:
-            "Tipo de servicio no encontrado",
-        },
-        {
-          status: 404,
-        },
+        { status: "error", mensaje: "Tipo de servicio no encontrado" },
+        { status: 404 },
       );
     }
 
-    // Buscar driver disponible
-    // (simple por ahora)
-    const driver =
-      await prisma.driver.findFirst({
-        where: {
-          status: "ONLINE",
-          tiposServicio: {
-            some: {
-              tipoServicioId,
-            },
+    // Crear el trabajo sin asignar driver — visible para todos los drivers ONLINE
+    // con ese tipo de servicio habilitado
+    const trabajo = await prisma.trabajo.create({
+      data: {
+        riderId,
+        tipoServicioId,
+        descripcion,
+        direccion,
+        latitud,
+        longitud,
+        estado: TrabajoEstado.PENDIENTE,
+        montoEstimado: tipoServicio.precioBase,
+        historialEstados: {
+          create: {
+            estadoAnterior: null,
+            estadoNuevo: TrabajoEstado.PENDIENTE,
+            motivo: "Trabajo creado desde Rider App",
           },
         },
-      });
-
-    if (!driver) {
-      return NextResponse.json(
-        {
-          status: "error",
-          mensaje:
-            "No hay drivers disponibles",
-        },
-        {
-          status: 404,
-        },
-      );
-    }
-
-    // Crear trabajo
-    const trabajo =
-      await prisma.trabajo.create({
-        data: {
-          driverId: driver.id,
-          riderId,
-          tipoServicioId,
-          descripcion,
-          direccion,
-          latitud,
-          longitud,
-          estado:
-            TrabajoEstado.PENDIENTE,
-          montoEstimado:
-            tipoServicio.precioBase,
-
-          historialEstados: {
-            create: {
-              estadoAnterior: null,
-              estadoNuevo:
-                TrabajoEstado.PENDIENTE,
-              motivo:
-                "Trabajo creado desde Rider App",
-            },
-          },
-        },
-      });
+      },
+    });
 
     return NextResponse.json(
       {
         status: "success",
-        mensaje:
-          "Trabajo creado correctamente",
+        mensaje: "Trabajo creado correctamente",
         data: {
           id_trabajo: trabajo.id,
-          id_driver: driver.id,
-          estado_actual:
-            trabajo.estado,
+          estado_actual: trabajo.estado,
         },
       },
-      {
-        status: 201,
-      },
+      { status: 201 },
     );
   } catch (error) {
     console.error(error);
-
     return NextResponse.json(
-      {
-        status: "error",
-        mensaje:
-          "Error interno del servidor",
-      },
-      {
-        status: 500,
-      },
+      { status: "error", mensaje: "Error interno del servidor" },
+      { status: 500 },
     );
   }
 }

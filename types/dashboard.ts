@@ -13,7 +13,7 @@ export type DriverDashboardProfile = {
   telefono: string | null;
   bio: string | null;
   imagenURL: string | null;
-  email: string
+  email: string;
   status: DriverAvailability;
   role: "DRIVER" | "ADMIN";
   servicios: ServiceTypeDto[];
@@ -31,30 +31,23 @@ export type FeedbackReviewResponse = {
   }>;
 };
 
-export type PaymentDailySummary =
-  {
-    driverId:
-      string;
-
-    balance: {
-      disponible:
-        string;
-    };
-
-    metricasHoy: {
-      facturacionHoy:
-        string;
-
-      trabajosRealizadosHoy:
-        number;
-    };
+export type PaymentDailySummary = {
+  driverId: string;
+  balance: {
+    disponible: string;
   };
+  metricasHoy: {
+    facturacionHoy: string;
+    trabajosRealizadosHoy: number;
+  };
+};
 
 export type RiderJobRequest = {
   id: string;
   idCliente: string;
   nombreCliente: string;
   apellidoCliente: string;
+  ratingCliente: number;
   ubicacion: {
     direccion: string;
     barrio: string;

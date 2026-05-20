@@ -6,6 +6,7 @@ export const riderJobRequestsMock: RiderJobRequest[] = [
     idCliente: "rider_demo_001",
     nombreCliente: "Lucia",
     apellidoCliente: "Ramos",
+    ratingCliente: 4.8,
     ubicacion: {
       direccion: "Av. Corrientes 1234",
       barrio: "Balvanera",
@@ -20,6 +21,7 @@ export const riderJobRequestsMock: RiderJobRequest[] = [
     idCliente: "rider_demo_002",
     nombreCliente: "Mateo",
     apellidoCliente: "Sosa",
+    ratingCliente: 4.5,
     ubicacion: {
       direccion: "San Martin 850",
       barrio: "Microcentro",
@@ -34,6 +36,7 @@ export const riderJobRequestsMock: RiderJobRequest[] = [
     idCliente: "rider_demo_003",
     nombreCliente: "Carla",
     apellidoCliente: "Benitez",
+    ratingCliente: 4.9,
     ubicacion: {
       direccion: "Juncal 2200",
       barrio: "Recoleta",

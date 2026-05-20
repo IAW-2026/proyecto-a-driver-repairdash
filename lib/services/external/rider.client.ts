@@ -1,20 +1,36 @@
-import { riderJobRequestsMock } from "@/lib/mocks/rider.mock";
-import { serviceTypesMock } from "@/lib/mocks/service-types.mock";
+import { prisma } from "@/lib/prisma";
 import type { DashboardJobRequest } from "@/types/dashboard";
 
 export async function getAvailableRiderRequestsForDriver(
-  serviceNames: string[],
+  driverId: string,
 ): Promise<DashboardJobRequest[]> {
-  const offeredServices = new Set(serviceNames);
+  const trabajos = await prisma.trabajo.findMany({
+    where: {
+      driverId,
+      estado: "PENDIENTE",
+    },
+    include: {
+      tipoServicio: true,
+    },
+    orderBy: {
+      creadoEn: "desc",
+    },
+  });
 
-  return riderJobRequestsMock
-    .filter((request) => offeredServices.has(request.tipoServicio))
-    .map((request) => {
-      const serviceType = serviceTypesMock.find((service) => service.nombre === request.tipoServicio);
-
-      return {
-        ...request,
-        precioEstimado: serviceType?.precioBase ?? 0,
-      };
-    });
+  return trabajos.map((trabajo) => ({
+    id: trabajo.id,
+    idCliente: trabajo.riderId,
+    nombreCliente: "Cliente",
+    apellidoCliente: "",
+    ratingCliente: 0,
+    ubicacion: {
+      direccion: trabajo.direccion,
+      barrio: "",
+    },
+    tipoServicio: trabajo.tipoServicio.nombre,
+    descripcion: trabajo.descripcion ?? "",
+    fotos: [],
+    estado: "DISPONIBLE" as const,
+    precioEstimado: Number(trabajo.montoEstimado),
+  }));
 }
