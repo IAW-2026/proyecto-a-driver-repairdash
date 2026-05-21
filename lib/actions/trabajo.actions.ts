@@ -3,6 +3,7 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { getBaseUrl } from "@/lib/config/get-base-url";
 
 export async function rechazarTrabajo(
   trabajoId: string,
@@ -106,7 +107,9 @@ export async function aceptarTrabajo(trabajoId: string): Promise<void> {
     });
   });
 
-  await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/trabajos/state`, {
+  // 🔔 Notificar a RiderApp usando getBaseUrl
+  const baseUrl = getBaseUrl();
+  await fetch(`${baseUrl}/api/trabajos/state`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
