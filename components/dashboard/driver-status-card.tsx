@@ -1,10 +1,12 @@
+"use client";
+
+import { useTransition } from "react";
+import { updateDriverAvailability } from "@/lib/actions/driver.actions";
 import type { DriverAvailability } from "@/types/dashboard";
 
 type DriverStatusCardProps = {
   status: DriverAvailability;
   offeredServices: string[];
-  onToggle: () => void;
-  disabled?: boolean;
 };
 
 const statusCopy: Record<
@@ -36,20 +38,47 @@ const statusCopy: Record<
 export function DriverStatusCard({
   status,
   offeredServices,
-  onToggle,
-  disabled = false,
 }: DriverStatusCardProps) {
+  const [isPending, startTransition] =
+    useTransition();
+
   const isOnline =
     status === "ONLINE";
 
+  const isDisabled =
+    status ===
+      "EN_TRABAJO" ||
+    isPending;
+
+  function handleToggle() {
+    if (
+      status ===
+      "EN_TRABAJO"
+    ) {
+      return;
+    }
+
+    const nextStatus =
+      status ===
+      "ONLINE"
+        ? "OFFLINE"
+        : "ONLINE";
+
+    startTransition(
+      async () => {
+        await updateDriverAvailability(
+          nextStatus,
+        );
+      },
+    );
+  }
+
   return (
     <article className="relative overflow-hidden rounded-2xl border border-highlight/10 bg-highlight/[0.055] p-5 shadow-2xl shadow-black/25">
-      {/* Decorativo */}
-      <div className="pointer-events-none absolute right-0 top-0 h-28 w-28 rounded-bl-[48px] bg-magenta/15" />
+      <div className="absolute right-0 top-0 h-28 w-28 rounded-bl-[48px] bg-magenta/15" />
 
-      {/* Header */}
-      <div className="relative flex items-start justify-between gap-4 overflow-hidden">
-        <div className="min-w-0">
+      <div className="relative flex items-start justify-between gap-4">
+        <div>
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">
             Estado actual
           </p>
@@ -66,16 +95,20 @@ export function DriverStatusCard({
             {
               statusCopy[
                 status
-              ].description
+              ]
+                .description
             }
           </p>
         </div>
 
-        {/* Toggle */}
         <button
           type="button"
-          onClick={onToggle}
-          disabled={disabled}
+          onClick={
+            handleToggle
+          }
+          disabled={
+            isDisabled
+          }
           aria-pressed={
             isOnline
           }
@@ -86,7 +119,7 @@ export function DriverStatusCard({
           } disabled:cursor-not-allowed disabled:opacity-60`}
         >
           <span
-            className={`block h-5.5 w-5.5 rounded-full bg-highlight shadow-lg transition-transform ${
+            className={`block h-5.5 w-5.5 rounded-full bg-highlight shadow-lg transition ${
               isOnline
                 ? "translate-x-8 shadow-magenta/40"
                 : "translate-x-0"
@@ -95,24 +128,23 @@ export function DriverStatusCard({
         </button>
       </div>
 
-      {/* Servicios */}
-      <div className="relative mt-5 overflow-hidden">
-        <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {offeredServices.map(
-            (
-              service,
-            ) => (
-              <span
-                key={
-                  service
-                }
-                className="shrink-0 rounded-full border border-accent/25 bg-accent/10 px-3 py-1.5 text-xs font-semibold text-highlight"
-              >
-                {service}
-              </span>
-            ),
-          )}
-        </div>
+      <div className="relative mt-5 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {offeredServices.map(
+          (
+            service,
+          ) => (
+            <span
+              key={
+                service
+              }
+              className="shrink-0 rounded-full border border-accent/25 bg-accent/10 px-3 py-1.5 text-xs font-semibold text-highlight"
+            >
+              {
+                service
+              }
+            </span>
+          ),
+        )}
       </div>
     </article>
   );

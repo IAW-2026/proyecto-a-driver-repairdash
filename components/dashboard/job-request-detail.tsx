@@ -6,7 +6,10 @@ import {
 } from "react";
 import type { DashboardJobRequest } from "@/types/dashboard";
 import { formatCurrency } from "@/lib/utils/format";
-import { rechazarTrabajo } from "@/lib/actions/trabajo.actions";
+import {
+  aceptarTrabajo,
+  rechazarTrabajo,
+} from "@/lib/actions/trabajo.actions";
 
 type JobRequestDetailProps = {
   request: DashboardJobRequest;
@@ -18,6 +21,37 @@ export function JobRequestDetail({ request }: JobRequestDetailProps) {
     isRejecting,
     setIsRejecting,
   ] = useState(false);
+
+  const [
+    isAccepting,
+    setIsAccepting,
+  ] = useState(false);
+
+  async function handleAceptar() {
+    setIsAccepting(
+      true,
+    );
+
+    try {
+      await aceptarTrabajo(
+        request.id,
+      );
+
+      router.refresh();
+
+      router.replace(
+        "/trabajos/activo",
+      );
+    } catch (error) {
+      console.error(
+        error,
+      );
+
+      setIsAccepting(
+        false,
+      );
+    }
+  }
 
   async function handleRechazar() {
     setIsRejecting(
@@ -161,12 +195,17 @@ export function JobRequestDetail({ request }: JobRequestDetailProps) {
             </button>
             <button
               type="button"
-              className="h-14 rounded-2xl bg-[#F500F1] text-sm font-black text-white shadow-lg shadow-[#F500F1]/25 transition hover:bg-[#d400d0]"
-              onClick={() => {
-                // TODO: implementar aceptar trabajo
-              }}
+              disabled={
+                isAccepting
+              }
+              className="h-14 rounded-2xl bg-[#F500F1] text-sm font-black text-white shadow-lg shadow-[#F500F1]/25 transition hover:bg-[#d400d0] disabled:opacity-50"
+              onClick={
+                handleAceptar
+              }
             >
-              Aceptar
+              {isAccepting
+                ? "Aceptando..."
+                : "Aceptar"}
             </button>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import { DashboardHome } from "@/components/dashboard/dashboard-home";
+import { prisma } from "@/lib/prisma";
 import { getCurrentDriverProfile } from "@/lib/services/driver.service";
 import { getDriverFeedback } from "@/lib/services/external/feedback.client";
 import { getPaymentDailySummary } from "@/lib/services/external/payments.client";
@@ -27,11 +28,32 @@ export default async function HomePage() {
     tiempoConectado: "6h 20m",
   };
 
+  const trabajo = await prisma.trabajo.findFirst({
+    where: {
+      driverId: driver.id,
+      estado: { in: ["ACEPTADO", "EN_CAMINO", "EN_SERVICIO"] },
+    },
+    include: { tipoServicio: true },
+    orderBy: { actualizadoEn: "desc" },
+  });
+
+  const mappedTrabajo = trabajo
+    ? {
+        id: trabajo.id,
+        tipoServicio: { nombre: trabajo.tipoServicio.nombre },
+        direccion: trabajo.direccion,
+        descripcion: trabajo.descripcion ?? undefined,
+        montoEstimado: Number(trabajo.montoEstimado),
+        estado: trabajo.estado,
+      }
+    : undefined;
+
   return (
     <DashboardHome
       driver={driver}
       stats={stats}
       requests={requests}
+      trabajo={mappedTrabajo}
     />
   );
 }

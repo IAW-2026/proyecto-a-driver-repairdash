@@ -6,6 +6,7 @@ import { validateApiKey } from "@/lib/auth/api-key";
 type RequestBody = {
   riderId: string;
   tipoServicioId: string;
+  telefonoCliente?: string;
   direccion: string;
   descripcion?: string;
   fotos?: string[];
@@ -33,6 +34,7 @@ export async function POST(req: NextRequest) {
       direccion,
       descripcion,
       fotos,
+      telefonoCliente,
       latitud,
       longitud,
     } = body;
@@ -86,6 +88,9 @@ export async function POST(req: NextRequest) {
         data: {
           id_trabajo: trabajo.id,
           estado_actual: trabajo.estado,
+          telefonoCliente:
+          body.telefonoCliente ??
+          null
         },
       },
       { status: 201 },

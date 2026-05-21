@@ -19,7 +19,8 @@ export default async function TrabajoDetailPage({ params }: Props) {
   // 1. Buscar primero en la DB (trabajos reales creados por el webhook)
   const driver = await prisma.driver.findUnique({
     where: { clerkUserId: user.id },
-    include: {
+    select: {
+      id: true,
       tiposServicio: {
         select: {
           tipoServicioId: true,
@@ -36,7 +37,11 @@ export default async function TrabajoDetailPage({ params }: Props) {
 
     const hasCompatibleService =
       driver.tiposServicio.some(
-        (service) =>
+        (
+          service: {
+            tipoServicioId: string;
+          },
+        ) =>
           service.tipoServicioId ===
           trabajo?.tipoServicioId,
       );
