@@ -37,23 +37,13 @@ export default async function HomePage() {
     orderBy: { actualizadoEn: "desc" },
   });
 
-  const mappedTrabajo = trabajo
-    ? {
-        id: trabajo.id,
-        tipoServicio: { nombre: trabajo.tipoServicio.nombre },
-        direccion: trabajo.direccion,
-        descripcion: trabajo.descripcion ?? undefined,
-        montoEstimado: Number(trabajo.montoEstimado),
-        estado: trabajo.estado,
-      }
-    : undefined;
-
   return (
     <DashboardHome
       driver={driver}
       stats={stats}
       requests={requests}
-      trabajo={mappedTrabajo}
+      trabajo={trabajo ?? undefined}
     />
   );
+
 }
