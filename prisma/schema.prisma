@@ -8,6 +8,7 @@ datasource db {
 
 model Driver {
   id                 String               @id @default(cuid())
+  onboardingCompleto Boolean              @default(false)
   clerkUserId        String               @unique
   nombre             String
   imagenURL          String?

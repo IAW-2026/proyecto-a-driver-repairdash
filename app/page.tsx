@@ -8,64 +8,105 @@ import { getAvailableRiderRequestsForDriver } from "@/lib/services/external/ride
 import type { DriverDailyStats } from "@/types/dashboard";
 
 export default async function HomePage() {
-  const driver = await getCurrentDriverProfile();
+  const driver =
+    await getCurrentDriverProfile();
 
-  const [feedback, payments, requests] = await Promise.all([
-    getDriverFeedback(driver.id),
-    getPaymentDailySummary(driver.id),
-    getAvailableRiderRequestsForDriver({
-      driverId: driver.id,
-      driverStatus: driver.status,
-      serviceTypeIds: driver.servicios.map((service) => service.id),
-    }),
+  if (
+    !driver.onboardingCompleto
+  ) {
+    redirect(
+      "/onboarding",
+    );
+  }
+
+  const [
+    feedback,
+    payments,
+    requests,
+  ] = await Promise.all([
+    getDriverFeedback(
+      driver.id,
+    ),
+    getPaymentDailySummary(
+      driver.id,
+    ),
+    getAvailableRiderRequestsForDriver(
+      {
+        driverId:
+          driver.id,
+        driverStatus:
+          driver.status,
+        serviceTypeIds:
+          driver.servicios.map(
+            (
+              service,
+            ) =>
+              service.id,
+          ),
+      },
+    ),
   ]);
 
-  const stats: DriverDailyStats = {
-    trabajosCompletados: payments.metricasHoy.trabajosRealizadosHoy,
-    ingresosDelDia: Number(payments.metricasHoy.facturacionHoy),
-    ratingPromedio: feedback.valoracion,
-    tiempoConectado: "6h 20m",
-  };
+  const stats: DriverDailyStats =
+    {
+      trabajosCompletados:
+        payments.metricasHoy
+          .trabajosRealizadosHoy,
+      ingresosDelDia:
+        Number(
+          payments.metricasHoy
+            .facturacionHoy,
+        ),
+      ratingPromedio:
+        feedback.valoracion,
+      tiempoConectado:
+        "6h 20m",
+    };
 
-  const trabajoRaw = await prisma.trabajo.findFirst({
-    where: {
-      driverId: driver.id,
-      estado: {
-        in: [
-          "ACEPTADO",
-          "EN_CAMINO",
-          "EN_SERVICIO",
-        ],
+  const trabajoRaw =
+    await prisma.trabajo.findFirst(
+      {
+        where: {
+          driverId:
+            driver.id,
+          estado: {
+            in: [
+              "ACEPTADO",
+              "EN_CAMINO",
+              "EN_SERVICIO",
+            ],
+          },
+        },
+        include: {
+          tipoServicio: true,
+        },
+        orderBy: {
+          actualizadoEn:
+            "desc",
+        },
       },
-    },
-    include: {
-      tipoServicio: true,
-    },
-    orderBy: {
-      actualizadoEn:
-        "desc",
-    },
-  });
+    );
 
   const trabajo =
-  trabajoRaw
-    ? {
-        ...trabajoRaw,
-        montoEstimado:
-          Number(
-            trabajoRaw.montoEstimado,
-          ),
-        tipoServicio: {
-          ...trabajoRaw.tipoServicio,
-          precioBase:
+    trabajoRaw
+      ? {
+          ...trabajoRaw,
+          montoEstimado:
             Number(
-              trabajoRaw
-                .tipoServicio
-                .precioBase,
+              trabajoRaw.montoEstimado,
             ),
-        },
-      }
-    : undefined;
+          tipoServicio:
+            {
+              ...trabajoRaw.tipoServicio,
+              precioBase:
+                Number(
+                  trabajoRaw
+                    .tipoServicio
+                    .precioBase,
+                ),
+            },
+        }
+      : undefined;
 
   return (
     <DashboardHome

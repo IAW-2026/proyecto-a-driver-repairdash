@@ -61,6 +61,8 @@ export async function getCurrentDriverProfile(): Promise<DriverDashboardProfile>
 
   return {
   id: driver.id,
+  onboardingCompleto:
+    (driver as { onboardingCompleto?: boolean }).onboardingCompleto ?? false,
   nombre: driver.nombre,
   email: driver.email,
   telefono:

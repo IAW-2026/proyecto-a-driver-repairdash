@@ -1,20 +1,22 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { currentUser } from "@clerk/nextjs/server";
 import { uploadAvatar } from "@/lib/supabase";
+import { syncDriverOnboarding } from "@/lib/services/update-onboarding";
 
 export async function updateProfileData(
   formData: FormData,
 ) {
+  const user =
+    await currentUser();
 
-const user = await currentUser();
-
-if (!user) {
-  throw new Error("No autenticado");
-}
+  if (!user) {
+    throw new Error(
+      "No autenticado",
+    );
+  }
 
   const nombre =
     formData.get(
@@ -53,27 +55,31 @@ if (!user) {
         id: driver.id,
       },
       data: {
-      ...(nombre !==
-        null && {
-        nombre:
-          nombre.trim(),
-      }),
+        ...(nombre !==
+          null && {
+          nombre:
+            nombre.trim(),
+        }),
 
-      ...(telefono !==
-        null && {
-        telefono:
-          telefono.trim() ||
-          null,
-      }),
+        ...(telefono !==
+          null && {
+          telefono:
+            telefono.trim() ||
+            null,
+        }),
 
-      ...(bio !==
-        null && {
-        bio:
-          bio.trim() ||
-          null,
-      }),
+        ...(bio !==
+          null && {
+          bio:
+            bio.trim() ||
+            null,
+        }),
+      },
     },
-    },
+  );
+
+  await syncDriverOnboarding(
+    driver.id,
   );
 
   revalidatePath(
@@ -140,6 +146,10 @@ export async function updateProfilePhoto(
           imageUrl,
       },
     },
+  );
+
+  await syncDriverOnboarding(
+    driver.id,
   );
 
   revalidatePath(
@@ -216,6 +226,10 @@ export async function updateDriverServices(
         );
       }
     },
+  );
+
+  await syncDriverOnboarding(
+    driver.id,
   );
 
   revalidatePath(

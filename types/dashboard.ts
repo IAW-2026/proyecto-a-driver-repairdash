@@ -9,6 +9,7 @@ export type ServiceTypeDto = {
 
 export type DriverDashboardProfile = {
   id: string;
+  onboardingCompleto: boolean;
   nombre: string;
   telefono: string | null;
   bio: string | null;
