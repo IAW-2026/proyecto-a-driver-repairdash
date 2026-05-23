@@ -30,23 +30,42 @@ export default async function HomePage() {
   const trabajoRaw = await prisma.trabajo.findFirst({
     where: {
       driverId: driver.id,
-      estado: { in: ["ACEPTADO", "EN_CAMINO", "EN_SERVICIO"] },
+      estado: {
+        in: [
+          "ACEPTADO",
+          "EN_CAMINO",
+          "EN_SERVICIO",
+        ],
+      },
     },
-    include: { tipoServicio: true },
-    orderBy: { actualizadoEn: "desc" },
+    include: {
+      tipoServicio: true,
+    },
+    orderBy: {
+      actualizadoEn:
+        "desc",
+    },
   });
 
-  if (!trabajoRaw) redirect("/");
-
-  // 🔑 Normalización: convertir Decimal a number
-  const trabajo = {
-    ...trabajoRaw,
-    montoEstimado: Number(trabajoRaw.montoEstimado),
-    tipoServicio: {
-      ...trabajoRaw.tipoServicio,
-      precioBase: Number(trabajoRaw.tipoServicio.precioBase),
-    },
-  };
+  const trabajo =
+  trabajoRaw
+    ? {
+        ...trabajoRaw,
+        montoEstimado:
+          Number(
+            trabajoRaw.montoEstimado,
+          ),
+        tipoServicio: {
+          ...trabajoRaw.tipoServicio,
+          precioBase:
+            Number(
+              trabajoRaw
+                .tipoServicio
+                .precioBase,
+            ),
+        },
+      }
+    : undefined;
 
   return (
     <DashboardHome
