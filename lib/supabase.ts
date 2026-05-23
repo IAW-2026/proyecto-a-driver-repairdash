@@ -15,23 +15,7 @@ function getSupabaseAdmin() {
       .SUPABASE_SERVICE_ROLE_KEY
       ?.trim();
 
-  console.log(
-    "SUPABASE URL:",
-    supabaseUrl,
-  );
-
-  console.log(
-    "HAS SERVICE KEY:",
-    !!supabaseServiceKey,
-  );
-
-  console.log(
-    "KEY START:",
-    supabaseServiceKey?.slice(
-      0,
-      20,
-    ),
-  );
+  
 
   if (
     !supabaseUrl ||
@@ -83,28 +67,13 @@ export async function uploadAvatar(
   const path =
     `drivers/${safeDriverId}/${fileName}`;
 
-  console.log(
-    "==== SUPABASE DEBUG ====",
-  );
-  console.log(
-    "BUCKET:",
-    AVATARS_BUCKET,
-  );
-  console.log(
-    "PATH:",
-    path,
-  );
+  
 
   // 🔥 Ver buckets reales
   const buckets =
     await supabaseAdmin.storage.listBuckets();
 
-  console.log(
-    "AVAILABLE BUCKETS:",
-    buckets.data?.map(
-      (b) => b.name,
-    ),
-  );
+  
 
   // 🔥 Convertir File → Buffer
   const arrayBuffer =
@@ -133,15 +102,7 @@ export async function uploadAvatar(
         },
       );
 
-  console.log(
-    "UPLOAD DATA:",
-    data,
-  );
-
-  console.log(
-    "UPLOAD ERROR:",
-    error,
-  );
+  
 
   if (error) {
     throw new Error(
