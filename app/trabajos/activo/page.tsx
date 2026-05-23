@@ -2,6 +2,11 @@ import { redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/utils/format";
+import { getNextState } from "@/lib/state-machine/trabajo.states";
+import {
+  avanzarTrabajo,
+  comenzarReporte,
+} from "@/lib/actions/trabajo.actions";
 
 const ESTADOS = ["ACEPTADO", "EN_CAMINO", "EN_SERVICIO", "FINALIZADO"] as const;
 
@@ -23,14 +28,15 @@ const STATUS_COPY = {
   EN_SERVICIO: {
     title: "EN SERVICIO",
     subtitle: "Trabajo actualmente en progreso.",
-    color: "text-yellow-400",
+    color: "text-[#FF8E53]", 
     button: "Finalizar trabajo",
-    buttonColor: "from-yellow-400 to-yellow-600",
+    buttonColor: "from-[#FF6B6B] to-[#FF8E53]",
   },
+
   FINALIZADO: {
     title: "FINALIZADO",
     subtitle: "Trabajo completado.",
-    color: "text-green-400",
+    color: "[#0078AA]",
     button: null,
     buttonColor: "",
   },
@@ -72,6 +78,7 @@ export default async function TrabajoActivoPage() {
 
   const currentState = trabajo.estado as keyof typeof STATUS_COPY;
   const currentIndex = ESTADOS.indexOf(currentState);
+  const nextState = getNextState(trabajo.estado);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#271033] via-[#271033] to-[#160822] text-highlight flex flex-col">
@@ -156,16 +163,57 @@ export default async function TrabajoActivoPage() {
         </div>
       </section>
 
-      {STATUS_COPY[currentState].button && (
+      {nextState && STATUS_COPY[currentState].button && (
         <div className="sticky bottom-0 px-6 py-6 bg-gradient-to-t from-[#160822] via-[#160822]/90 to-transparent">
-          <button
-            type="button"
-            className={`h-16 w-full rounded-2xl bg-gradient-to-r ${STATUS_COPY[currentState].buttonColor} text-lg font-black text-white shadow-lg shadow-[#F500F1]/25 transition hover:opacity-90`}
-          >
-            {STATUS_COPY[currentState].button}
-          </button>
-        </div>
+          {currentState === "EN_SERVICIO" ? (
+            <div className="grid grid-cols-2 gap-3">
+              <form
+                action={comenzarReporte.bind(
+                  null,
+                  trabajo.id,
+                )}
+              >
+                <button
+                  type="submit"
+                  className="h-16 w-full rounded-2xl bg-gradient-to-r from-[#F500F1] to-[#C392DD] text-lg font-black text-white shadow-lg shadow-[#F500F1]/25 transition hover:opacity-90"
+                >
+                  Comenzar reporte
+                </button>
+              </form>
+
+              <form
+                action={avanzarTrabajo.bind(
+                  null,
+                  trabajo.id,
+                  nextState!,
+                )}
+              >
+                <button
+                  type="submit"
+                  className={`h-16 w-full rounded-2xl bg-gradient-to-r ${STATUS_COPY[currentState].buttonColor} text-lg font-black text-white shadow-lg shadow-[#F500F1]/25 transition hover:opacity-90`}
+                >
+                  {STATUS_COPY[currentState].button}
+                </button>
+              </form>
+            </div>
+          ) : (
+            <form
+              action={avanzarTrabajo.bind(
+                null,
+                trabajo.id,
+                nextState!,
+              )}
+            >
+              <button
+                type="submit"
+                className={`h-16 w-full rounded-2xl bg-gradient-to-r ${STATUS_COPY[currentState].buttonColor} text-lg font-black text-white shadow-lg shadow-[#F500F1]/25 transition hover:opacity-90`}
+              >
+                {STATUS_COPY[currentState].button}
+              </button>
+            </form>
       )}
+      </div>
+    )}
     </main>
   );
 }

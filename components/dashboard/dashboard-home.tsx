@@ -15,14 +15,18 @@ import { formatCurrency } from "@/lib/utils/format";
 
 import type { Trabajo, TipoServicio } from "@prisma/client";
 
+// 🔑 DTO para normalizar Decimal → number
+export type TrabajoDto = Omit<Trabajo, "montoEstimado"> & {
+  montoEstimado: number;
+  tipoServicio: Omit<TipoServicio, "precioBase"> & { precioBase: number };
+};
+
 type DashboardHomeProps = {
   driver: DriverDashboardProfile;
   stats: DriverDailyStats;
   requests: DashboardJobRequest[];
-  trabajo?: (Trabajo & { tipoServicio: TipoServicio });
+  trabajo?: TrabajoDto;
 };
-
-
 
 export function DashboardHome({
   driver,
@@ -99,7 +103,7 @@ export function DashboardHome({
                   <p className="mt-3 text-sm text-highlight/60">{trabajo.direccion}</p>
                 </div>
                 <p className="text-2xl font-black text-highlight">
-                  {formatCurrency(Number(trabajo.montoEstimado))}
+                  {formatCurrency(trabajo.montoEstimado)}
                 </p>
               </div>
 
@@ -112,7 +116,6 @@ export function DashboardHome({
                 </div>
               )}
 
-              
               <div className="mt-6 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div>
@@ -158,8 +161,6 @@ export function DashboardHome({
         ) : (
           <JobRequestsCarousel requests={requests} driverStatus={driver.status} />
         )}
-
-
       </div>
     </main>
   );

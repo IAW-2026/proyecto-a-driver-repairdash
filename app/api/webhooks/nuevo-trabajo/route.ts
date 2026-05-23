@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { TrabajoEstado } from "@prisma/client";
-import { validateApiKey } from "@/lib/auth/api-key";
+import { validateInternalApiKey } from "@/lib/auth/internal-auth";
 
 type RequestBody = {
   riderId: string;
   tipoServicioId: string;
-  telefonoCliente?: string;
   direccion: string;
   descripcion?: string;
   fotos?: string[];
@@ -16,16 +15,15 @@ type RequestBody = {
 
 export async function POST(req: NextRequest) {
   try {
-    const authorized = validateApiKey(req, [
-      process.env.RIDER_WEBHOOK_API_KEY!,
-    ]);
-
-    if (!authorized) {
-      return NextResponse.json(
-        { status: "error", mensaje: "Unauthorized" },
-        { status: 401 },
+    const authError =
+      validateInternalApiKey(
+        req,
+        process.env
+          .DRIVER_RIDER_WEBHOOK_API_KEY_HASH,
       );
-    }
+
+    if (authError)
+      return authError;
 
     const body: RequestBody = await req.json();
     const {
@@ -34,7 +32,6 @@ export async function POST(req: NextRequest) {
       direccion,
       descripcion,
       fotos,
-      telefonoCliente,
       latitud,
       longitud,
     } = body;
@@ -88,9 +85,6 @@ export async function POST(req: NextRequest) {
         data: {
           id_trabajo: trabajo.id,
           estado_actual: trabajo.estado,
-          telefonoCliente:
-          body.telefonoCliente ??
-          null
         },
       },
       { status: 201 },

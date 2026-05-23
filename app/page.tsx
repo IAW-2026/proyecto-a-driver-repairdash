@@ -1,5 +1,6 @@
-import { DashboardHome } from "@/components/dashboard/dashboard-home";
 import { prisma } from "@/lib/prisma";
+import { redirect } from "next/navigation";
+import { DashboardHome } from "@/components/dashboard/dashboard-home";
 import { getCurrentDriverProfile } from "@/lib/services/driver.service";
 import { getDriverFeedback } from "@/lib/services/external/feedback.client";
 import { getPaymentDailySummary } from "@/lib/services/external/payments.client";
@@ -15,9 +16,7 @@ export default async function HomePage() {
     getAvailableRiderRequestsForDriver({
       driverId: driver.id,
       driverStatus: driver.status,
-      serviceTypeIds: driver.servicios.map(
-        (service) => service.id,
-      ),
+      serviceTypeIds: driver.servicios.map((service) => service.id),
     }),
   ]);
 
@@ -28,7 +27,7 @@ export default async function HomePage() {
     tiempoConectado: "6h 20m",
   };
 
-  const trabajo = await prisma.trabajo.findFirst({
+  const trabajoRaw = await prisma.trabajo.findFirst({
     where: {
       driverId: driver.id,
       estado: { in: ["ACEPTADO", "EN_CAMINO", "EN_SERVICIO"] },
@@ -37,13 +36,24 @@ export default async function HomePage() {
     orderBy: { actualizadoEn: "desc" },
   });
 
+  if (!trabajoRaw) redirect("/");
+
+  // 🔑 Normalización: convertir Decimal a number
+  const trabajo = {
+    ...trabajoRaw,
+    montoEstimado: Number(trabajoRaw.montoEstimado),
+    tipoServicio: {
+      ...trabajoRaw.tipoServicio,
+      precioBase: Number(trabajoRaw.tipoServicio.precioBase),
+    },
+  };
+
   return (
     <DashboardHome
       driver={driver}
       stats={stats}
       requests={requests}
-      trabajo={trabajo ?? undefined}
+      trabajo={trabajo}
     />
   );
-
 }

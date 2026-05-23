@@ -1,23 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateApiKey } from "@/lib/auth/api-key";
+import { validateInternalApiKey } from "@/lib/auth/internal-auth";
 import { getServiceTypes } from "@/lib/services/admin/service-tipos-de-servicios";
 
 export async function GET(req: NextRequest) {
-  const authorized = validateApiKey(req, [
-    process.env.RIDER_APP_API_KEY!,
-  ]);
-
-  if (!authorized) {
-    return NextResponse.json(
-      {
-        status: "error",
-        mensaje: "Unauthorized",
-      },
-      {
-        status: 401,
-      },
+  const authError =
+    validateInternalApiKey(
+      req,
+      process.env
+        .DRIVER_RIDER_API_KEY_HASH,
     );
-  }
+
+  if (authError)
+    return authError;
 
   const services = await getServiceTypes();
 

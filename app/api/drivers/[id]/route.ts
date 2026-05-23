@@ -4,7 +4,7 @@ import {
   NextResponse,
 } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { validateApiKey } from "@/lib/auth/api-key"
+import { validateInternalApiKey } from "@/lib/auth/internal-auth";
 
 
 export const dynamic = "force-dynamic";;
@@ -18,24 +18,15 @@ export async function GET(
   },
 ): Promise<Response> {
   try {
-    const authorized =
-      validateApiKey(req, [
+    const authError =
+      validateInternalApiKey(
+        req,
         process.env
-          .FEEDBACK_APP_API_KEY!,
-      ]);
-
-    if (!authorized) {
-      return NextResponse.json(
-        {
-          status: "error",
-          mensaje:
-            "Unauthorized",
-        },
-        {
-          status: 401,
-        },
+          .DRIVER_FEEDBACK_API_KEY_HASH,
       );
-    }
+
+    if (authError)
+      return authError;
 
     const { id } =
       await context.params;
