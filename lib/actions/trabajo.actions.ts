@@ -256,19 +256,19 @@ export async function comenzarReporte(
   }
 
   // TODO: reemplazar por URL real al integrar Feedback App
-  const feedbackBaseUrl =
-    process.env
-      .FEEDBACK_APP_URL ??
-    "http://localhost:3002";
+  // Actualmente usa mock local. Cambiar FEEDBACK_APP_URL + llamada real + redirect externo al integrar.
+  const feedbackApiUrl =
+    `${getBaseUrl()}/api/mocks/feedback/reports`;
 
   const response =
     await fetch(
-      `${feedbackBaseUrl}/api/reports`,
+      feedbackApiUrl,
       {
         method: "POST",
         headers: {
           "Content-Type":
             "application/json",
+            "x-api-key": process.env.FEEDBACK_APP_API_KEY!,
         },
         body: JSON.stringify({
           idTrabajo:
@@ -287,10 +287,112 @@ export async function comenzarReporte(
     );
   }
 
-  const data =
-    await response.json();
+  revalidatePath("/");
+  revalidatePath("/trabajos/activo");
+  redirect("/proximamente");
+}
 
-  redirect(
-    `${feedbackBaseUrl}/reportes/${data.idReporte}`,
+export async function finalizarTrabajo(
+  trabajoId: string,
+): Promise<void> {
+  const user = await currentUser();
+
+  if (!user) {
+    throw new Error("No autenticado");
+  }
+
+  const driver = await prisma.driver.findUnique({
+    where: { clerkUserId: user.id },
+    select: { id: true },
+  });
+
+  if (!driver) {
+    throw new Error("Driver no encontrado");
+  }
+
+  const trabajo = await prisma.trabajo.findUnique({
+    where: { id: trabajoId },
+    select: {
+      id: true,
+      riderId: true,
+      driverId: true,
+      estado: true,
+      tipoServicio: {
+        select: { nombre: true },
+      },
+    },
+  });
+
+  if (!trabajo) {
+    throw new Error("Trabajo no encontrado");
+  }
+
+  if (trabajo.driverId !== driver.id) {
+    throw new Error("No autorizado");
+  }
+
+  if (trabajo.estado !== "EN_SERVICIO") {
+    throw new Error("El trabajo no está en servicio");
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.trabajo.update({
+      where: { id: trabajoId },
+      data: { estado: "FINALIZADO" },
+    });
+
+    await tx.historialEstado.create({
+      data: {
+        trabajoId,
+        estadoAnterior: "EN_SERVICIO",
+        estadoNuevo: "FINALIZADO",
+      },
+    });
+
+    await tx.driver.update({
+      where: { id: driver.id },
+      data: { status: "ONLINE" },
+    });
+  });
+
+  const baseUrl = getBaseUrl();
+  await fetch(`${baseUrl}/api/trabajos/state`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": process.env.RIDER_APP_API_KEY!,
+    },
+    body: JSON.stringify({
+      id_trabajo: trabajoId,
+      estado: "finalizado",
+    }),
+  });
+
+  // TODO: reemplazar por URL real al integrar Feedback App
+  // Actualmente usa mock local. Cambiar FEEDBACK_APP_URL + llamada real + redirect externo al integrar.
+  const feedbackApiUrl =
+    `${getBaseUrl()}/api/mocks/feedback/reviews`;
+
+  const response = await fetch(
+    feedbackApiUrl,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": process.env.FEEDBACK_APP_API_KEY!,
+      },
+      body: JSON.stringify({
+        idTrabajo: trabajoId,
+      }),
+    },
   );
+
+  if (!response.ok) {
+    throw new Error("No se pudo iniciar el proceso de review");
+  }
+
+  revalidatePath("/");
+  revalidatePath("/trabajos/activo");
+
+  redirect("/proximamente");
 }

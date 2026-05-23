@@ -6,6 +6,7 @@ import { getNextState } from "@/lib/state-machine/trabajo.states";
 import {
   avanzarTrabajo,
   comenzarReporte,
+  finalizarTrabajo,
 } from "@/lib/actions/trabajo.actions";
 
 const ESTADOS = ["ACEPTADO", "EN_CAMINO", "EN_SERVICIO", "FINALIZADO"] as const;
@@ -182,10 +183,9 @@ export default async function TrabajoActivoPage() {
               </form>
 
               <form
-                action={avanzarTrabajo.bind(
+                action={finalizarTrabajo.bind(
                   null,
                   trabajo.id,
-                  nextState!,
                 )}
               >
                 <button

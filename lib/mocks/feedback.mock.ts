@@ -33,3 +33,25 @@ export function createReportMock(
     estado: "SinResolver",
   };
 }
+
+export type ReviewsUserResponse = {
+  status: "ReadyToRate";
+  datosDelTrabajo: {
+    idTrabajo: string;
+    tipoDeTrabajo: string;
+    cliente: { id: number; nombre: string };
+    trabajador: { id: number; nombre: string };
+  };
+};
+
+export function createReviewsUserMock(idTrabajo: string): ReviewsUserResponse {
+  return {
+    status: "ReadyToRate",
+    datosDelTrabajo: {
+      idTrabajo,
+      tipoDeTrabajo: "Flete",
+      cliente: { id: 10, nombre: "Juan" },
+      trabajador: { id: 1, nombre: "Sebastian" },
+    },
+  };
+}

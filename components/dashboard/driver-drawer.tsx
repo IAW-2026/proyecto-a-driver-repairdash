@@ -21,7 +21,7 @@ const menuItems = [
   },
   {
     label: "Trabajos",
-    href: "/trabajos",
+    href: "/historial",
   },
 ];
 
@@ -100,20 +100,6 @@ export function DriverDrawer({
             </Link>
           ))}
         </nav>
-
-        {/* Ingresos info card */}
-        <div className="mt-8 rounded-2xl border border-magenta/20 bg-magenta/10 p-4">
-          <p className="text-sm font-semibold text-highlight">
-            Ingresos
-          </p>
-
-          <p className="mt-1 text-xs leading-5 text-highlight/65">
-            Esta opción conectará con
-            Payment App cuando el
-            servicio externo esté
-            disponible.
-          </p>
-        </div>
 
         {/* Profile card — mobile only */}
         <Link

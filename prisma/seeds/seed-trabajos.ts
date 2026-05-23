@@ -4,8 +4,6 @@ dotenv.config();
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
-import { getBaseUrl }
-from "@/lib/config/get-base-url";
 
 const pool = new Pool({
   connectionString:
@@ -20,14 +18,6 @@ const prisma =
   new PrismaClient({
     adapter,
   });
-
-const BASE_URL =
-  getBaseUrl();
-
-const API_KEY =
-  process.env
-    .RIDER_WEBHOOK_API_KEY ??
-  "";
 
 const MOCK_TRABAJOS = [
   {
@@ -71,15 +61,10 @@ const MOCK_TRABAJOS = [
 async function main() {
   console.log("🌱 Iniciando seed de trabajos...\n");
 
-  if (!API_KEY) {
-    console.error("❌ RIDER_WEBHOOK_API_KEY no está definida en .env");
-    process.exit(1);
-  }
-
   for (const mock of MOCK_TRABAJOS) {
     const tipoServicio = await prisma.tipoServicio.findUnique({
       where: { nombre: mock.tipoServicioNombre },
-      select: { id: true },
+      select: { id: true, precioBase: true },
     });
 
     if (!tipoServicio) {
@@ -87,40 +72,28 @@ async function main() {
       continue;
     }
 
-    const body = {
-      riderId: mock.riderId,
-      tipoServicioId: tipoServicio.id,
-      direccion: mock.direccion,
-      descripcion: mock.descripcion,
-      fotos: mock.fotos,
-      latitud: mock.latitud,
-      longitud: mock.longitud,
-    };
-
-    try {
-      const res = await fetch(`${BASE_URL}/api/webhooks/nuevo-trabajo`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": API_KEY,
+    const trabajo = await prisma.trabajo.create({
+      data: {
+        riderId: mock.riderId,
+        tipoServicioId: tipoServicio.id,
+        direccion: mock.direccion,
+        descripcion: mock.descripcion,
+        fotos: mock.fotos,
+        latitud: mock.latitud,
+        longitud: mock.longitud,
+        estado: "PENDIENTE",
+        montoEstimado: tipoServicio.precioBase,
+        historialEstados: {
+          create: {
+            estadoAnterior: null,
+            estadoNuevo: "PENDIENTE",
+            motivo: "Trabajo creado desde seed",
+          },
         },
-        body: JSON.stringify(body),
-      });
+      },
+    });
 
-      const data = await res.json() as {
-        status: string;
-        mensaje: string;
-        data?: { id_trabajo: string };
-      };
-
-      if (res.ok) {
-        console.log(`✅ ${mock.tipoServicioNombre} → trabajo creado: ${data.data?.id_trabajo}`);
-      } else {
-        console.error(`❌ ${mock.tipoServicioNombre} → error: ${data.mensaje}`);
-      }
-    } catch (err) {
-      console.error(`❌ ${mock.tipoServicioNombre} → no se pudo conectar:`, err);
-    }
+    console.log(`✅ ${mock.tipoServicioNombre} → trabajo creado: ${trabajo.id}`);
   }
 
   console.log("\n✅ Seed finalizado.");

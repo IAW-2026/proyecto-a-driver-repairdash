@@ -1,6 +1,18 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getBaseUrl } from "@/lib/config/get-base-url";
 import { getCurrentDriverProfile } from "@/lib/services/driver.service";
 import { getPaymentDailySummary } from "@/lib/services/external/payments.client";
+
+async function retirarGanancias() {
+  "use server";
+
+  // TODO: reemplazar por URL real al integrar Payment App
+  // const paymentAppUrl = process.env.PAYMENT_APP_URL ?? `${getBaseUrl()}/api/mocks/payments/withdraw`;
+  // redirect(`${paymentAppUrl}/retirar`);
+
+  redirect("/proximamente");
+}
 
 export default async function IngresosPage() {
   const driver =
@@ -88,6 +100,18 @@ const payments =
             )}
           </p>
         </div>
+
+        <form
+          action={retirarGanancias}
+          className="mt-4 sm:mt-6"
+        >
+          <button
+            type="submit"
+            className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-magenta px-6 text-sm font-bold text-white shadow-lg shadow-magenta/25 transition hover:opacity-90"
+          >
+            Retirar dinero
+          </button>
+        </form>
       </div>
     </main>
   );
