@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { TrabajoEstado } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { validateApiKey } from "@/lib/auth/api-key";
+import { validateInternalApiKey }  from "@/lib/auth/internal-auth";
 
 type RequestBody = {
   id_trabajo: string;
@@ -20,21 +20,15 @@ const estadoMap: Record<string, TrabajoEstado> = {
 
 export async function PUT(req: NextRequest) {
   try {
-    const authorized = validateApiKey(req, [
-      process.env.RIDER_APP_API_KEY!,
-    ]);
+    const authError =
+    validateInternalApiKey(
+      req,
+      process.env
+        .DRIVER_RIDER_API_KEY_HASH,
+    );
 
-    if (!authorized) {
-      return NextResponse.json(
-        {
-          status: "error",
-          mensaje: "Unauthorized",
-        },
-        {
-          status: 401,
-        },
-      );
-    }
+  if (authError)
+    return authError;
 
     const body: RequestBody = await req.json();
 
