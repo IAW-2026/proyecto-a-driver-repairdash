@@ -1,9 +1,5 @@
-import {
-  NextRequest,
-  NextResponse,
-} from "next/server";
+import { NextResponse } from "next/server";
 import { createReportMock } from "@/lib/mocks/feedback.mock";
-import { validateInternalApiKey } from "@/lib/internal-auth";
 
 export async function POST(req: Request) {
   try {
