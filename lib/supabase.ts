@@ -8,25 +8,51 @@ function getSupabaseAdmin() {
     process.env
       .NEXT_PUBLIC_SUPABASE_URL
       ?.trim()
-      .replace(/\/$/, ""); // 🔥 elimina slash final
+      .replace(/\/$/, "");
 
   const supabaseServiceKey =
     process.env
       .SUPABASE_SERVICE_ROLE_KEY
       ?.trim();
 
+  console.log(
+    "SUPABASE URL:",
+    supabaseUrl,
+  );
+
+  console.log(
+    "HAS SERVICE KEY:",
+    !!supabaseServiceKey,
+  );
+
+  console.log(
+    "KEY START:",
+    supabaseServiceKey?.slice(
+      0,
+      20,
+    ),
+  );
+
   if (
     !supabaseUrl ||
     !supabaseServiceKey
   ) {
     throw new Error(
-      "Supabase no configurado correctamente",
+      "Supabase no configurado",
     );
   }
 
   return createClient(
     supabaseUrl,
     supabaseServiceKey,
+    {
+      auth: {
+        persistSession:
+          false,
+        autoRefreshToken:
+          false,
+      },
+    },
   );
 }
 
