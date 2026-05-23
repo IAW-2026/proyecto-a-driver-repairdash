@@ -14,7 +14,14 @@ export async function uploadAvatar(
     file.name.split(".").pop() ??
     "jpg";
 
-  const path = `drivers/${driverId}/avatar.${ext}`;
+  const safeDriverId = driverId
+  .replace(/[^a-zA-Z0-9-_]/g, "_");
+
+  const fileName =
+    `avatar-${Date.now()}.${ext}`;
+
+  const path =
+    `drivers/${safeDriverId}/${fileName}`;
 
   const { error } =
     await supabaseAdmin.storage
