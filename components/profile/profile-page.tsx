@@ -9,10 +9,9 @@ import { EditableField } from "./editable-field";
 import { EditableServices } from "./editable-services";
 import { EditableAvatar } from "./editable-avatar";
 import { EditablePhoneField } from "./editable-phone-field";
-import { useClerk } from "@clerk/nextjs";
+import { SecurityActions } from "./security-actions";
 import Link from "next/link";
 import { useState } from "react";
-import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { DriverDrawer } from "@/components/dashboard/driver-drawer";
 import { AccountSidebar } from "./account-sidebar";
 import type {
@@ -35,15 +34,9 @@ export function ProfilePage({
   driver,
   feedback,
   allServices,
-  payments,
 }: ProfilePageProps) {
   const [isDrawerOpen, setIsDrawerOpen] =
     useState(false);
-
-  const {
-  openUserProfile,
-  signOut,
-} = useClerk();
 
   const [activeSection, setActiveSection] =
   useState<
@@ -209,34 +202,7 @@ export function ProfilePage({
               {activeSection ===
                 "seguridad" && (
                 <SectionCard title="Seguridad">
-                  <div className="space-y-4">
-                    <SecurityCard
-                      title="Cambiar contraseña"
-                      description="Actualiza tu contraseña de acceso."
-                      onClick={() =>
-                        openUserProfile()
-                      }
-                    />
-
-                    <SecurityCard
-                      title="Gestionar email"
-                      description="Modificar tu dirección de correo."
-                      onClick={() =>
-                        openUserProfile()
-                      }
-                    />
-
-                    <SecurityCard
-                      title="Cerrar sesión"
-                      description="Salir de tu cuenta en este dispositivo."
-                      destructive
-                      onClick={() =>
-                        signOut({
-                          redirectUrl: "/",
-                        })
-                      }
-                    />
-                  </div>
+                  <SecurityActions />
                 </SectionCard>
                 
               )}
@@ -338,49 +304,3 @@ function InfoRow({
   );
 }
 
-function SecurityCard({
-  title,
-  description,
-  onClick,
-  destructive = false,
-}: {
-  title: string;
-  description: string;
-  onClick: () => void;
-  destructive?: boolean;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`group flex w-full items-center justify-between rounded-[28px] border p-5 text-left transition ${
-        destructive
-          ? "border-red-500/20 bg-red-500/[0.04] hover:border-red-500/30 hover:bg-red-500/[0.06]"
-          : "border-highlight/10 bg-highlight/[0.03] hover:border-highlight/20 hover:bg-highlight/[0.06]"
-      }`}
-    >
-      <div>
-        <h3
-          className={`font-semibold ${
-            destructive
-              ? "text-red-400"
-              : "text-highlight"
-          }`}
-        >
-          {title}
-        </h3>
-
-        <p className="mt-1 text-sm text-highlight/55">
-          {description}
-        </p>
-      </div>
-
-      <ChevronRight
-        className={`h-5 w-5 transition group-hover:translate-x-1 ${
-          destructive
-            ? "text-red-400/70"
-            : "text-highlight/40"
-        }`}
-      />
-    </button>
-  );
-}

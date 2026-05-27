@@ -1,15 +1,51 @@
 import { prisma } from "@/lib/prisma";
-import type { Service } from "@/app/admin/servicios/service-card"; 
 
-export async function getServiceTypes(): Promise<Service[]> {
+export type AdminServiceType = {
+  id: string;
+  nombre: string;
+  descripcion: string;
+  precioBase: number;
+  creadoEn: string;
+  actualizadoEn: string;
+  driverServicios: {
+    id: string;
+    driverId: string;
+  }[];
+  trabajos: {
+    id: string;
+  }[];
+};
+
+export async function getServiceTypes() {
   const services = await prisma.tipoServicio.findMany({
     orderBy: {
       nombre: "asc",
     },
+    select: {
+      id: true,
+      nombre: true,
+      descripcion: true,
+      precioBase: true,
+      creadoEn: true,
+      actualizadoEn: true,
+      driverServicios: {
+        select: {
+          id: true,
+          driverId: true,
+        },
+      },
+      trabajos: {
+        select: {
+          id: true,
+        },
+      },
+    },
   });
 
-  return services.map((service) => ({
+  return services.map((service): AdminServiceType => ({
     ...service,
-    precioBase: Number(service.precioBase),
+    precioBase: service.precioBase.toNumber(),
+    creadoEn: service.creadoEn.toISOString(),
+    actualizadoEn: service.actualizadoEn.toISOString(),
   }));
 }

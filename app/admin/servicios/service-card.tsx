@@ -1,78 +1,149 @@
 "use client";
 
-import { useState } from "react";
+import { ChevronRight } from "lucide-react";
 
 export type Service = {
   id: string;
   nombre: string;
   descripcion: string;
   precioBase: number;
+  driverCount: number;
+  trabajosCount: number;
+  selected?: boolean;
 };
 
 type Props = {
   service: Service;
-  onUpdate: (id: string, formData: FormData) => Promise<void>;
 };
 
-export function ServiceCard({ service, onUpdate }: Props) {
-  const [editing, setEditing] = useState(false);
+function getServiceIcon(
+  nombre: string,
+) {
+  const lower =
+    nombre.toLowerCase();
 
-  if (editing) {
-    return (
-      <form
-        action={async (formData) => {
-          await onUpdate(service.id, formData);
-          setEditing(false);
-        }}
-        className="rounded-xl border p-4 space-y-3"
-      >
-        <input
-          name="nombre"
-          defaultValue={service.nombre}
-          className="w-full rounded border p-2 text-black"
-        />
-        <textarea
-          name="descripcion"
-          defaultValue={service.descripcion}
-          className="w-full rounded border p-2 text-black"
-        />
-        <input
-          name="precioBase"
-          type="number"
-          defaultValue={service.precioBase}
-          className="w-full rounded border p-2 text-black"
-        />
-        <div className="flex gap-2">
-          <button type="submit" className="rounded bg-green-600 px-3 py-2">
-            Guardar
-          </button>
-          <button
-            type="button"
-            onClick={() => setEditing(false)}
-            className="rounded bg-gray-500 px-3 py-2"
-          >
-            Cancelar
-          </button>
-        </div>
-      </form>
+  if (
+    lower.includes(
+      "electric",
+    )
+  )
+    return "⚡";
+
+  if (
+    lower.includes(
+      "plomer",
+    )
+  )
+    return "💧";
+
+  if (
+    lower.includes(
+      "gas",
+    )
+  )
+    return "🔥";
+
+  if (
+    lower.includes(
+      "cerraj",
+    )
+  )
+    return "🔑";
+
+  if (
+    lower.includes(
+      "aire",
+    )
+  )
+    return "❄️";
+
+  if (
+    lower.includes(
+      "pint",
+    )
+  )
+    return "🖌️";
+
+  return "🛠️";
+}
+
+export function ServiceCard({
+  service,
+}: Props) {
+  const icon =
+    getServiceIcon(
+      service.nombre,
     );
-  }
 
   return (
-    <div className="rounded-xl border p-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="font-bold">{service.nombre}</h2>
-          <p className="text-sm opacity-70">{service.descripcion}</p>
-          <p className="mt-2 font-medium">${service.precioBase}</p>
+    <button
+      className={`group relative w-full overflow-hidden rounded-[28px] border p-5 text-left transition-all duration-300 ${
+        service.selected
+          ? "border-fuchsia-500 bg-fuchsia-500/[0.08] shadow-[0_0_30px_rgba(217,70,239,0.25)]"
+          : "border-white/10 bg-[#12071D] hover:border-fuchsia-500/30 hover:bg-fuchsia-500/[0.04]"
+      }`}
+    >
+      {/* glow */}
+      {service.selected && (
+        <div className="absolute inset-0 bg-gradient-to-r from-fuchsia-500/5 to-transparent" />
+      )}
+
+      <div className="relative flex items-start gap-4">
+        {/* icon */}
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-fuchsia-500/15 text-3xl shadow-[0_0_25px_rgba(217,70,239,0.12)]">
+          {icon}
         </div>
-        <button
-          onClick={() => setEditing(true)}
-          className="rounded bg-blue-500 px-3 py-2"
-        >
-          Editar
-        </button>
+
+        {/* content */}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="truncate text-xl font-bold text-white">
+                {
+                  service.nombre
+                }
+              </h3>
+
+              <p className="mt-2 text-lg font-semibold text-white/85">
+                $
+                {service.precioBase.toLocaleString(
+                  "es-AR",
+                )}{" "}
+                base
+              </p>
+            </div>
+
+            <ChevronRight className="mt-1 h-5 w-5 shrink-0 text-white/30 transition-transform group-hover:translate-x-1" />
+          </div>
+
+          {/* stats */}
+          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-white/50">
+            <div className="flex items-center gap-2">
+              <span>
+                👥
+              </span>
+              <span>
+                {
+                  service.driverCount
+                }{" "}
+                drivers
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span>
+                📦
+              </span>
+              <span>
+                {
+                  service.trabajosCount
+                }{" "}
+                trabajos
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </button>
   );
 }
