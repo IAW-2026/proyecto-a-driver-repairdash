@@ -22,6 +22,7 @@ import {
   completeOnboarding,
 } from "@/app/onboarding/actions";
 
+import imageCompression from "browser-image-compression";
 type Service = {
   id: string;
   nombre: string;
@@ -136,21 +137,30 @@ export function OnboardingForm({
     avatarPreview ??
     driverImageUrl;
 
-  function handleFileChange(
+  async function handleFileChange(
     e: React.ChangeEvent<HTMLInputElement>,
   ) {
-    const file =
-      e.target.files?.[0];
+    const file = e.target.files?.[0];
 
     if (!file) return;
 
+    const compressedFile =
+      await imageCompression(
+        file,
+        {
+          maxSizeMB: 0.7,
+          maxWidthOrHeight: 1024,
+          useWebWorker: true,
+        },
+      );
+
     setAvatarFile(
-      file,
+      compressedFile,
     );
 
     setAvatarPreview(
       URL.createObjectURL(
-        file,
+        compressedFile,
       ),
     );
   }
