@@ -1,4 +1,5 @@
 import { getBaseUrl } from "@/lib/config/get-base-url";
+import { getPaymentWalletMock } from "@/lib/mocks/payments.mock";
 import type { PaymentDailySummary } from "@/types/dashboard";
 
 export async function getPaymentDailySummary(
@@ -7,25 +8,33 @@ export async function getPaymentDailySummary(
   const url =
     `${getBaseUrl()}/api/mocks/payments/wallet/${driverId}`;
 
-  console.log(
-    "PAYMENTS URL:",
-    url,
-  );
-
-  const response = await fetch(
-    url,
-    {
-      next: {
-        revalidate: 60,
+  try {
+    const response = await fetch(
+      url,
+      {
+        next: {
+          revalidate: 60,
+        },
       },
-    },
-  );
+    );
 
-  if (!response.ok) {
-    throw new Error("No se pudo obtener el resumen de pagos");
+    if (response.ok) {
+      return response.json() as Promise<PaymentDailySummary>;
+    }
+
+    console.warn(
+      "Payments mock API returned",
+      response.status,
+      "using local fallback",
+    );
+  } catch (error) {
+    console.warn(
+      "Payments mock API unavailable, using local fallback",
+      error,
+    );
   }
 
-  return response.json() as Promise<PaymentDailySummary>;
+  return getPaymentWalletMock(driverId);
 }
 
 export function getPaymentMetrics(payments: PaymentDailySummary) {
