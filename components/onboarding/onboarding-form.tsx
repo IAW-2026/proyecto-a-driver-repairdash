@@ -1,6 +1,10 @@
 "use client";
 
 import {
+  useClerk,
+} from "@clerk/nextjs";
+
+import {
   useState,
   useRef,
   useTransition,
@@ -16,6 +20,7 @@ import {
   ChevronLeft,
   Check,
   Loader2,
+  LogOut,
 } from "lucide-react";
 
 import {
@@ -68,6 +73,10 @@ export function OnboardingForm({
   currentServiceIds,
   allServices,
 }: Props) {
+  const {
+    signOut,
+  } = useClerk();
+
   const router =
     useRouter();
 
@@ -268,6 +277,25 @@ export function OnboardingForm({
 
   return (
     <div className="flex flex-1 flex-col">
+      <div className="mb-6 flex justify-start">
+        <button
+          type="button"
+          disabled={
+            isPending
+          }
+          onClick={() =>
+            signOut({
+              redirectUrl:
+                "/login",
+            })
+          }
+          className="inline-flex items-center gap-2 rounded-2xl border border-highlight/10 bg-highlight/[0.04] px-4 py-2.5 text-sm font-semibold text-highlight/70 transition hover:bg-highlight/[0.08] hover:text-highlight disabled:opacity-40"
+        >
+          <LogOut className="h-4 w-4" />
+          Volver al login
+        </button>
+      </div>
+
       <div className="mb-2 flex items-center justify-center gap-2">
         {STEPS.map(
           (

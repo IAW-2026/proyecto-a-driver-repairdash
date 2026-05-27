@@ -13,6 +13,7 @@ export type AdminServiceType = {
   }[];
   trabajos: {
     id: string;
+    driverId: string | null;
   }[];
 };
 
@@ -35,8 +36,14 @@ export async function getServiceTypes() {
         },
       },
       trabajos: {
+        where: {
+          estado: {
+            not: "FINALIZADO",
+          },
+        },
         select: {
           id: true,
+          driverId: true,
         },
       },
     },

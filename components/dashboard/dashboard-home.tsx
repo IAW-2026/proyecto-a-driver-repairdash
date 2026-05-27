@@ -15,6 +15,8 @@ import { formatCurrency } from "@/lib/utils/format";
 
 import type { Trabajo, TipoServicio } from "@prisma/client";
 
+
+
 // 🔑 DTO para normalizar Decimal → number
 export type TrabajoDto = Omit<Trabajo, "montoEstimado"> & {
   montoEstimado: number;
@@ -35,6 +37,8 @@ export function DashboardHome({
   trabajo,
 }: DashboardHomeProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-primary text-highlight">

@@ -66,6 +66,12 @@ export function ServiceEditor({
     );
   }
 
+  const assignedDrivers = new Set(
+    service.trabajos
+      .map((trabajo) => trabajo.driverId)
+      .filter((driverId): driverId is string => Boolean(driverId)),
+  ).size;
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -128,10 +134,10 @@ export function ServiceEditor({
           <div className="rounded-[24px] border border-highlight/10 bg-primary/35 p-4">
             <Users className="h-4 w-4 text-magenta" />
             <p className="mt-3 text-2xl font-black text-highlight">
-              {service.driverServicios.length}
+              {assignedDrivers}
             </p>
             <p className="mt-1 text-xs font-semibold text-highlight/45">
-              Drivers
+              Drivers asignados
             </p>
           </div>
           <div className="rounded-[24px] border border-highlight/10 bg-primary/35 p-4">
@@ -140,7 +146,7 @@ export function ServiceEditor({
               {service.trabajos.length}
             </p>
             <p className="mt-1 text-xs font-semibold text-highlight/45">
-              Trabajos
+              Trabajos activos
             </p>
           </div>
         </div>

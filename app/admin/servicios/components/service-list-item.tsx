@@ -21,6 +21,12 @@ export function ServiceListItem({
   selected,
   onSelect,
 }: ServiceListItemProps) {
+  const assignedDrivers = new Set(
+    service.trabajos
+      .map((trabajo) => trabajo.driverId)
+      .filter((driverId): driverId is string => Boolean(driverId)),
+  ).size;
+
   return (
     <button
       type="button"
@@ -65,11 +71,11 @@ export function ServiceListItem({
           <div className="mt-5 grid grid-cols-2 gap-3 text-xs font-semibold text-highlight/48">
             <span className="flex items-center gap-2">
               <Users className="h-4 w-4" />
-              {service.driverServicios.length} drivers
+              {assignedDrivers} drivers asignados
             </span>
             <span className="flex items-center gap-2">
               <ClipboardList className="h-4 w-4" />
-              {service.trabajos.length} trabajos
+              {service.trabajos.length} trabajos activos
             </span>
           </div>
         </div>

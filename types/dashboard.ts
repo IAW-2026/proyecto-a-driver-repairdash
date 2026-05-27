@@ -67,5 +67,4 @@ export type DriverDailyStats = {
   trabajosCompletados: number;
   ingresosDelDia: number;
   ratingPromedio: number;
-  tiempoConectado: string;
 };

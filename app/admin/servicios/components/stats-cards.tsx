@@ -35,9 +35,9 @@ export function StatsCards({ services }: StatsCardsProps) {
       icon: Users,
     },
     {
-      label: "Servicio mas usado",
+      label: "Servicio con mas actividad",
       value: mostUsedService?.nombre ?? "-",
-      detail: `${formatNumber.format(mostUsedService?.trabajos.length ?? 0)} trabajos realizados`,
+      detail: `${formatNumber.format(mostUsedService?.trabajos.length ?? 0)} trabajos activos`,
       icon: TrendingUp,
     },
   ];

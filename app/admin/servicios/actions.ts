@@ -36,8 +36,14 @@ const serviceSelect = {
     },
   },
   trabajos: {
+    where: {
+      estado: {
+        not: "FINALIZADO",
+      },
+    },
     select: {
       id: true,
+      driverId: true,
     },
   },
 } as const;
@@ -50,7 +56,7 @@ function serializeServiceType(service: {
   creadoEn: Date;
   actualizadoEn: Date;
   driverServicios: { id: string; driverId: string }[];
-  trabajos: { id: string }[];
+  trabajos: { id: string; driverId: string | null }[];
 }): AdminServiceType {
   return {
     ...service,

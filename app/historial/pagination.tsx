@@ -7,7 +7,6 @@ type TrabajoItem = {
   tipoServicio: string;
   direccion: string;
   estado: string;
-  montoEstimado: number;
   tiempoMinutos: number | null;
 };
 
@@ -49,9 +48,6 @@ function Row({ t }: { t: TrabajoItem }) {
           </span>
         )}
         <div className="text-right">
-          <p className="text-sm font-bold text-highlight">
-            ${t.montoEstimado.toLocaleString()}
-          </p>
           <p className="flex items-center gap-1 text-xs text-highlight/55">
             <span
               className={`inline-block h-1.5 w-1.5 rounded-full ${ESTADO_DOT[t.estado] ?? "bg-highlight/30"}`}

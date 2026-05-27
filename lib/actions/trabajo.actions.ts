@@ -71,6 +71,7 @@ export async function rechazarTrabajo(
   });
 
   revalidatePath("/");
+  revalidatePath("/admin/servicios");
 }
 
 export async function aceptarTrabajo(trabajoId: string): Promise<void> {
@@ -126,6 +127,7 @@ export async function aceptarTrabajo(trabajoId: string): Promise<void> {
 
   revalidatePath("/");
   revalidatePath("/trabajos/activo");
+  revalidatePath("/admin/servicios");
 }
 
 export async function avanzarTrabajo(trabajoId: string, nuevoEstado: TrabajoEstado): Promise<void> {
@@ -187,6 +189,11 @@ export async function avanzarTrabajo(trabajoId: string, nuevoEstado: TrabajoEsta
 
   revalidatePath("/");
   revalidatePath("/trabajos/activo");
+  revalidatePath("/admin/servicios");
+
+  if (nuevoEstado === "FINALIZADO") {
+    redirect("/");
+  }
 }
 
 export async function comenzarReporte(
@@ -289,6 +296,7 @@ export async function comenzarReporte(
 
   revalidatePath("/");
   revalidatePath("/trabajos/activo");
+  revalidatePath("/admin/servicios");
   redirect("/proximamente");
 }
 
@@ -393,6 +401,7 @@ export async function finalizarTrabajo(
 
   revalidatePath("/");
   revalidatePath("/trabajos/activo");
+  revalidatePath("/admin/servicios");
 
-  redirect("/proximamente");
+  redirect("/");
 }

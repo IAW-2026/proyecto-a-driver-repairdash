@@ -8,6 +8,17 @@ export const feedbackReviewMock: FeedbackReviewResponse = {
   reviews: [],
 };
 
+export function getFeedbackUserRatingMock(
+  userId: string,
+): FeedbackReviewResponse {
+  return {
+    ...feedbackReviewMock,
+    id: Number.isNaN(Number(userId))
+      ? feedbackReviewMock.id
+      : Number(userId),
+  };
+}
+
 export type ReportResponse = {
   message: string;
   idReporte: number;

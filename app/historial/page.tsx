@@ -103,8 +103,9 @@ function MetricsGrid({ data }: { data: DriverHistorialMetrics }) {
         <StatCard label="Total" value={String(data.totalTrabajos)} />
         <StatCard label="Completados" value={String(data.completados)} />
         <StatCard
-          label="Ingresos"
+          label="Ingresos del día"
           value={`$${data.ingresosTotales.toLocaleString()}`}
+          sub="Payment App mock"
           accent
         />
         <StatCard
@@ -187,7 +188,7 @@ function MetricsGrid({ data }: { data: DriverHistorialMetrics }) {
                   {s.nombre}
                 </span>
                 <span className="text-xs tabular-nums text-highlight/60">
-                  {s.cantidad} · ${s.total.toLocaleString()}
+                  {s.cantidad} trabajos
                 </span>
               </div>
             ))}

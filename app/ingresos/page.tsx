@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getBaseUrl } from "@/lib/config/get-base-url";
 import { getCurrentDriverProfile } from "@/lib/services/driver.service";
-import { getPaymentDailySummary } from "@/lib/services/external/payments.client";
+import {
+  getPaymentDailySummary,
+  getPaymentMetrics,
+} from "@/lib/services/external/payments.client";
 
 async function retirarGanancias() {
   "use server";
@@ -23,21 +25,13 @@ const payments =
     driver.id,
   );
 
-  const ingresosHoy =
-    Number(
-      payments.metricasHoy
-        .facturacionHoy,
-    );
-
-  const balanceDisponible =
-    Number(
-      payments.balance
-        .disponible,
-    );
-
-  const trabajosLiquidados =
-    payments.metricasHoy
-      .trabajosRealizadosHoy;
+  const {
+    ingresosDelDia,
+    balanceDisponible,
+    trabajosLiquidados,
+  } = getPaymentMetrics(
+    payments,
+  );
 
   return (
     <main className="min-h-screen bg-primary p-4 text-highlight sm:p-6">
@@ -67,7 +61,7 @@ const payments =
 
             <p className="mt-2 text-3xl font-bold text-accent sm:mt-3 sm:text-4xl">
               $
-              {ingresosHoy.toLocaleString(
+              {ingresosDelDia.toLocaleString(
                 "es-AR",
               )}
             </p>

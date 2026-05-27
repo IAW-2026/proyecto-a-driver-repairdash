@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { currentUser } from "@clerk/nextjs/server";
-import type { DriverDashboardProfile } from "@/types/dashboard";
+import {
+  getPaymentDailySummary,
+  getPaymentMetrics,
+} from "@/lib/services/external/payments.client";
 
 type EstadoCont = {
   estado: string;
@@ -10,7 +13,6 @@ type EstadoCont = {
 type ServicioCont = {
   nombre: string;
   cantidad: number;
-  total: number;
 };
 
 export type DriverHistorialMetrics = {
@@ -55,15 +57,24 @@ export async function getDriverHistorial(): Promise<DriverHistorialMetrics> {
 
   if (!driver) throw new Error("Driver not found");
 
+  const payments =
+    await getPaymentDailySummary(
+      driver.id,
+    );
+
+  const paymentMetrics =
+    getPaymentMetrics(
+      payments,
+    );
+
   const trabajos = driver.trabajos;
   const totalTrabajos = trabajos.length;
   const completados = trabajos.filter((t) => t.estado === "FINALIZADO").length;
   const cancelados = trabajos.filter((t) => t.estado === "CANCELADO").length;
   const totalRechazos = driver.trabajosRechazados.length;
 
-  const ingresosTotales = trabajos
-    .filter((t) => t.estado === "FINALIZADO")
-    .reduce((sum, t) => sum + Number(t.montoEstimado), 0);
+  const ingresosTotales =
+    paymentMetrics.ingresosDelDia;
 
   const aceptadosCount = trabajos.filter(
     (t) => t.estado !== "PENDIENTE" && t.estado !== "RECHAZADO"
@@ -89,10 +100,8 @@ export async function getDriverHistorial(): Promise<DriverHistorialMetrics> {
     const existing = servicioMap.get(nombre) ?? {
       nombre,
       cantidad: 0,
-      total: 0,
     };
     existing.cantidad++;
-    existing.total += Number(t.montoEstimado);
     servicioMap.set(nombre, existing);
   }
   const trabajosPorServicio = Array.from(servicioMap.values()).sort(
