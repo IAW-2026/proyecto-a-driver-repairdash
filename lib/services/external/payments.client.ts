@@ -4,8 +4,16 @@ import type { PaymentDailySummary } from "@/types/dashboard";
 export async function getPaymentDailySummary(
   driverId: string,
 ): Promise<PaymentDailySummary> {
+  const url =
+    `${getBaseUrl()}/api/mocks/payments/wallet/${driverId}`;
+
+  console.log(
+    "PAYMENTS URL:",
+    url,
+  );
+
   const response = await fetch(
-    `${getBaseUrl()}/api/mocks/payments/wallet/${driverId}`,
+    url,
     {
       next: {
         revalidate: 60,
