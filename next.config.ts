@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 // Extend NextConfig type to allow serverActions config
 const nextConfig: NextConfig & { serverActions?: { bodySizeLimit?: string } } = {
   serverActions: {
-    bodySizeLimit: "5MB",
+    bodySizeLimit: "4.5MB",
   },
   images: {
     remotePatterns: [
