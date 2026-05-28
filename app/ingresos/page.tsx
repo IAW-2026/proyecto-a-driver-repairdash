@@ -22,7 +22,7 @@ export default async function IngresosPage() {
 
 const payments =
   await getPaymentDailySummary(
-    driver.id,
+    driver.clerkUserId,
   );
 
   const {

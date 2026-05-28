@@ -19,7 +19,7 @@ export default async function CuentaPage() {
       driver.id,
     ),
     getPaymentDailySummary(
-      driver.id,
+      driver.clerkUserId,
     ),
     getAllServiceTypes(),
   ]);

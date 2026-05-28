@@ -43,7 +43,7 @@ export default async function HomePage() {
       driver.id,
     ),
     getPaymentDailySummary(
-      driver.id,
+      driver.clerkUserId,
     ),
     getAvailableRiderRequestsForDriver(
       {

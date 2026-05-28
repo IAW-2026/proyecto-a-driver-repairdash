@@ -9,6 +9,7 @@ export type ServiceTypeDto = {
 
 export type DriverDashboardProfile = {
   id: string;
+  clerkUserId: string;
   onboardingCompleto: boolean;
   nombre: string;
   telefono: string | null;
@@ -33,7 +34,8 @@ export type FeedbackReviewResponse = {
 };
 
 export type PaymentDailySummary = {
-  driverId: string;
+  driverId?: string;
+  trabajadorId?: string;
   balance: {
     disponible: string;
   };

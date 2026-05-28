@@ -59,7 +59,7 @@ export async function getDriverHistorial(): Promise<DriverHistorialMetrics> {
 
   const payments =
     await getPaymentDailySummary(
-      driver.id,
+      driver.clerkUserId,
     );
 
   const paymentMetrics =
