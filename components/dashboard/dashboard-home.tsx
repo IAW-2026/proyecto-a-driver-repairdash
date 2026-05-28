@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import type {
   DashboardJobRequest,
@@ -13,6 +13,7 @@ import { DriverStatusCard } from "./driver-status-card";
 import { JobRequestsCarousel } from "./job-requests-carousel";
 import { StatsGrid } from "./stats-grid";
 import { formatCurrency } from "@/lib/utils/format";
+import { AutoRefresh } from "@/components/auto-refresh";
 
 import type { Trabajo, TipoServicio } from "@prisma/client";
 
@@ -29,6 +30,7 @@ type DashboardHomeProps = {
   stats: DriverDailyStats;
   requests: DashboardJobRequest[];
   trabajo?: TrabajoDto;
+  trabajoCancelado?: TrabajoDto;
 };
 
 export function DashboardHome({
@@ -36,13 +38,68 @@ export function DashboardHome({
   stats,
   requests,
   trabajo,
+  trabajoCancelado,
 }: DashboardHomeProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [
+    dismissedCancelId,
+    setDismissedCancelId,
+  ] = useState<string | null>(null);
+  const [
+    isHydrated,
+    setIsHydrated,
+  ] = useState(false);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(
+      () => setIsHydrated(true),
+      0,
+    );
+
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
+  const cancelStorageKey =
+    trabajoCancelado
+      ? `repairdash:cancelled-work:${trabajoCancelado.id}`
+      : null;
+
+  const wasCancelSeen =
+    isHydrated &&
+    cancelStorageKey
+      ? window.localStorage.getItem(cancelStorageKey) === "seen"
+      : true;
+
+  const showCancelModal =
+    Boolean(
+      isHydrated &&
+        trabajoCancelado &&
+        dismissedCancelId !== trabajoCancelado.id &&
+        !wasCancelSeen,
+    );
+
+  function closeCancelModal() {
+    if (
+      trabajoCancelado &&
+      cancelStorageKey
+    ) {
+      window.localStorage.setItem(
+        cancelStorageKey,
+        "seen",
+      );
+
+      setDismissedCancelId(
+        trabajoCancelado.id,
+      );
+    }
+  }
 
   
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-primary text-highlight">
+      <AutoRefresh />
+
       <DriverDrawer
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
@@ -50,6 +107,33 @@ export function DashboardHome({
         driverImageUrl={driver.imagenURL}
         rating={stats.ratingPromedio}
       />
+
+      {showCancelModal && trabajoCancelado ? (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-[#09020d]/80 px-4 backdrop-blur-md">
+          <div className="w-full max-w-md rounded-[32px] border border-highlight/10 bg-[#2b1038]/95 p-6 text-center shadow-2xl shadow-magenta/20">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">
+              Trabajo cancelado
+            </p>
+
+            <h2 className="mt-4 text-3xl font-black leading-tight text-highlight">
+              Ups... el cliente canceló el trabajo
+            </h2>
+
+            <p className="mt-3 text-sm leading-6 text-highlight/62">
+              {trabajoCancelado.tipoServicio.nombre} ya no está disponible. Te
+              dejamos nuevamente online para recibir nuevas solicitudes.
+            </p>
+
+            <button
+              type="button"
+              onClick={closeCancelModal}
+              className="mt-7 inline-flex h-14 w-full items-center justify-center rounded-2xl bg-magenta px-6 text-sm font-black text-white shadow-lg shadow-magenta/25 transition hover:bg-magenta/90"
+            >
+              Entendido
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-3 pb-28 sm:px-6 lg:px-8 lg:pb-10">
         <DashboardHeader

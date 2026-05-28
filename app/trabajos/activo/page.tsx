@@ -4,6 +4,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/utils/format";
 import { getNextState } from "@/lib/state-machine/trabajo.states";
+import { AutoRefresh } from "@/components/auto-refresh";
 import {
   avanzarTrabajo,
   comenzarReporte,
@@ -95,12 +96,14 @@ export default async function TrabajoActivoPage() {
 
     return (
       <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#271033] via-[#271033] to-[#160822] px-6 text-center text-highlight">
+        <AutoRefresh intervalMs={15_000} />
+
         <div className="w-full max-w-md rounded-[32px] border border-highlight/10 bg-highlight/[0.05] p-7 shadow-2xl shadow-black/25">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">
             Trabajo cancelado
           </p>
           <h1 className="mt-4 text-3xl font-black leading-tight text-highlight">
-            Ups... {driver.nombre}, se canceló el trabajo
+            Ups... el rider canceló el trabajo
           </h1>
           <p className="mt-3 text-sm leading-6 text-highlight/60">
             {trabajoCancelado.tipoServicio.nombre} ya no está disponible. Te
@@ -123,6 +126,8 @@ export default async function TrabajoActivoPage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#271033] via-[#271033] to-[#160822] text-highlight flex flex-col">
+      <AutoRefresh />
+
       <header className="sticky top-0 z-20 bg-[#160822]/90 backdrop-blur-sm flex items-center justify-center px-5 py-4">
         <Link
           href="/"

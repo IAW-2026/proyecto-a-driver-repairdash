@@ -10,6 +10,9 @@ const isPublicRoute =
     "/__clerk(.*)",
     "/api/webhooks(.*)",
     "/api/mocks/(.*)",
+    "/api/trabajos/state",
+    "/api/tipos-servicios",
+    "/api/drivers/(.*)",
   ]);
 
 export default clerkMiddleware(

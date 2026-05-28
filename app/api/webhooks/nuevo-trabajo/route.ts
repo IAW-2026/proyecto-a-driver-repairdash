@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { TrabajoEstado } from "@prisma/client";
 import { validateInternalApiKey } from "@/lib/auth/internal-auth";
@@ -75,6 +76,9 @@ export async function POST(req: NextRequest) {
         },
       },
     });
+
+    revalidatePath("/");
+    revalidatePath("/admin/servicios");
 
     return NextResponse.json(
       {

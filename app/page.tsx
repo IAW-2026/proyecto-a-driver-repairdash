@@ -103,6 +103,25 @@ export default async function HomePage() {
       },
     );
 
+  const trabajoCanceladoRaw =
+    await prisma.trabajo.findFirst(
+      {
+        where: {
+          driverId:
+            driver.id,
+          estado:
+            "CANCELADO",
+        },
+        include: {
+          tipoServicio: true,
+        },
+        orderBy: {
+          actualizadoEn:
+            "desc",
+        },
+      },
+    );
+
   const trabajo =
     trabajoRaw
       ? {
@@ -124,12 +143,34 @@ export default async function HomePage() {
         }
       : undefined;
 
+  const trabajoCancelado =
+    trabajoCanceladoRaw
+      ? {
+          ...trabajoCanceladoRaw,
+          montoEstimado:
+            Number(
+              trabajoCanceladoRaw.montoEstimado,
+            ),
+          tipoServicio:
+            {
+              ...trabajoCanceladoRaw.tipoServicio,
+              precioBase:
+                Number(
+                  trabajoCanceladoRaw
+                    .tipoServicio
+                    .precioBase,
+                ),
+            },
+        }
+      : undefined;
+
   return (
     <DashboardHome
       driver={driver}
       stats={stats}
       requests={requests}
       trabajo={trabajo}
+      trabajoCancelado={trabajo ? undefined : trabajoCancelado}
     />
   );
 }
