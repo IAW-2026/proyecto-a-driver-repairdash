@@ -291,3 +291,10 @@ Variables de integracion saliente:
 | `RIDER_INTERNAL_API_KEY` | API key en texto plano enviada por DriverApp a RiderApp. |
 | `FEEDBACK_INTERNAL_API_KEY` | API key en texto plano enviada por DriverApp a FeedbackApp. |
 | `PAYMENTS_INTERNAL_API_KEY` | API key en texto plano enviada por DriverApp a PaymentsApp. |
+
+Notas para PaymentsApp:
+
+- DriverApp consulta `GET {PAYMENTS_APP_URL}/wallet/:driverId`.
+- Si PaymentsApp responde `404`, DriverApp interpreta que el driver todavia no tiene wallet/ingresos y muestra ceros.
+- En produccion no se usa mock local como fallback; ante error de PaymentsApp se muestra un resumen vacio para no romper la UI.
+- En desarrollo, si `PAYMENTS_APP_URL` no esta configurada o el mock falla, se usa el mock local.

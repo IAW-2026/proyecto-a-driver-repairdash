@@ -3,17 +3,58 @@ import { getPaymentWalletMock } from "@/lib/mocks/payments.mock";
 import type { PaymentDailySummary } from "@/types/dashboard";
 
 function getPaymentsBaseUrl() {
-  return (
-    process.env.PAYMENTS_APP_URL ??
-    `${getBaseUrl()}/api/mocks/payments`
-  ).replace(/\/+$/, "");
+  const configuredUrl =
+    process.env.PAYMENTS_APP_URL;
+
+  if (configuredUrl) {
+    return configuredUrl.replace(
+      /\/+$/,
+      "",
+    );
+  }
+
+  if (
+    process.env.NODE_ENV !==
+    "production"
+  ) {
+    return `${getBaseUrl()}/api/mocks/payments`;
+  }
+
+  return null;
+}
+
+function getEmptyPaymentSummary(
+  driverId: string,
+): PaymentDailySummary {
+  return {
+    driverId,
+    balance: {
+      disponible: "0",
+    },
+    metricasHoy: {
+      facturacionHoy: "0",
+      trabajosRealizadosHoy: 0,
+    },
+  };
 }
 
 export async function getPaymentDailySummary(
   driverId: string,
 ): Promise<PaymentDailySummary> {
-  const url =
-    `${getPaymentsBaseUrl()}/wallet/${driverId}`;
+  const baseUrl =
+    getPaymentsBaseUrl();
+
+  if (!baseUrl) {
+    console.warn(
+      "PAYMENTS_APP_URL is not configured",
+    );
+
+    return getEmptyPaymentSummary(
+      driverId,
+    );
+  }
+
+  const url = `${baseUrl}/wallet/${driverId}`;
 
   try {
     const response = await fetch(
@@ -32,15 +73,34 @@ export async function getPaymentDailySummary(
       return response.json() as Promise<PaymentDailySummary>;
     }
 
+    if (response.status === 404) {
+      return getEmptyPaymentSummary(
+        driverId,
+      );
+    }
+
     console.warn(
       "Payments API returned",
       response.status,
-      "using local fallback",
+      process.env.NODE_ENV === "production"
+        ? "using empty summary"
+        : "using local fallback",
     );
   } catch (error) {
     console.warn(
-      "Payments API unavailable, using local fallback",
+      process.env.NODE_ENV === "production"
+        ? "Payments API unavailable, using empty summary"
+        : "Payments API unavailable, using local fallback",
       error,
+    );
+  }
+
+  if (
+    process.env.NODE_ENV ===
+    "production"
+  ) {
+    return getEmptyPaymentSummary(
+      driverId,
     );
   }
 
