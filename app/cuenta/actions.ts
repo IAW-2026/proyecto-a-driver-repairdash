@@ -1,20 +1,26 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
+import {
+  auth,
+  currentUser,
+} from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { currentUser } from "@clerk/nextjs/server";
 import { uploadAvatar } from "@/lib/supabase";
+import { syncDriverOnboarding } from "@/lib/services/update-onboarding";
+import { normalizePhone } from "@/lib/utils/prisma-normalizers";
 
 export async function updateProfileData(
   formData: FormData,
 ) {
+  const user =
+    await currentUser();
 
-const user = await currentUser();
-
-if (!user) {
-  throw new Error("No autenticado");
-}
+  if (!user) {
+    throw new Error(
+      "No autenticado",
+    );
+  }
 
   const nombre =
     formData.get(
@@ -47,33 +53,82 @@ if (!user) {
     );
   }
 
+  // =========================
+  // VALIDAR TELEFONO DUPLICADO
+  // =========================
+
+  let telefonoNormalizado:
+    | string
+    | null = null;
+
+  if (
+    telefono?.trim()
+  ) {
+    telefonoNormalizado =
+      normalizePhone(
+        telefono,
+      );
+
+    const existingDriver =
+      await prisma.driver.findFirst(
+        {
+          where: {
+            telefonoNormalizado,
+            NOT: {
+              id:
+                driver.id,
+            },
+          },
+        },
+      );
+
+    if (
+      existingDriver
+    ) {
+      throw new Error(
+        "Ya existe un usuario con ese número de teléfono",
+      );
+    }
+  }
+
+  // =========================
+  // UPDATE
+  // =========================
+
   await prisma.driver.update(
     {
       where: {
-        id: driver.id,
+        id:
+          driver.id,
       },
       data: {
-      ...(nombre !==
-        null && {
-        nombre:
-          nombre.trim(),
-      }),
+        ...(nombre !==
+          null && {
+          nombre:
+            nombre.trim(),
+        }),
 
-      ...(telefono !==
-        null && {
-        telefono:
-          telefono.trim() ||
-          null,
-      }),
+        ...(telefono !==
+          null && {
+          telefono:
+            telefono.trim() ||
+            null,
 
-      ...(bio !==
-        null && {
-        bio:
-          bio.trim() ||
-          null,
-      }),
+          telefonoNormalizado,
+        }),
+
+        ...(bio !==
+          null && {
+          bio:
+            bio.trim() ||
+            null,
+        }),
+      },
     },
-    },
+  );
+
+  await syncDriverOnboarding(
+    driver.id,
   );
 
   revalidatePath(
@@ -133,13 +188,18 @@ export async function updateProfilePhoto(
   await prisma.driver.update(
     {
       where: {
-        id: driver.id,
+        id:
+          driver.id,
       },
       data: {
         imagenURL:
           imageUrl,
       },
     },
+  );
+
+  await syncDriverOnboarding(
+    driver.id,
   );
 
   revalidatePath(
@@ -216,6 +276,10 @@ export async function updateDriverServices(
         );
       }
     },
+  );
+
+  await syncDriverOnboarding(
+    driver.id,
   );
 
   revalidatePath(

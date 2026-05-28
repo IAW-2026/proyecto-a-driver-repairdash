@@ -1,9 +1,31 @@
-import type { PaymentDailySummary } from "@/types/dashboard";
+import type {
+  PaymentDailySummary,
+} from "@/types/dashboard";
 
-export const paymentDailySummaryMock: PaymentDailySummary = {
-  driverId: "driver_manuel",
-  fecha: "2026-05-08",
-  ingresosDelDia: 95500,
-  moneda: "ARS",
-  trabajosLiquidados: 3,
-};
+export const paymentWalletMock: PaymentDailySummary =
+  {
+    driverId:
+      "mock-driver",
+
+    balance: {
+      disponible:
+        "95500.00",
+    },
+
+    metricasHoy: {
+      facturacionHoy:
+        "95500.00",
+
+      trabajosRealizadosHoy:
+        3,
+    },
+  };
+
+export function getPaymentWalletMock(
+  driverId: string,
+): PaymentDailySummary {
+  return {
+    ...paymentWalletMock,
+    driverId,
+  };
+}

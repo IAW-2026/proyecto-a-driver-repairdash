@@ -126,6 +126,7 @@ async function main() {
   });
 
   await crearTrabajoDemo({
+    id: "rider_trabajo_dashboard_001",
     driverId: driver.id,
     riderId: "rider_demo_001",
     tipoServicioId: plomeria.id,
@@ -136,6 +137,7 @@ async function main() {
   });
 
   await crearTrabajoDemo({
+    id: "rider_trabajo_dashboard_002",
     driverId: driver.id,
     riderId: "rider_demo_002",
     tipoServicioId: electricidad.id,
@@ -151,6 +153,7 @@ async function main() {
   });
 
   await crearTrabajoDemo({
+    id: "rider_trabajo_dashboard_003",
     driverId: driver.id,
     riderId: "rider_demo_003",
     tipoServicioId: gas.id,
@@ -173,6 +176,7 @@ async function main() {
 }
 
 type CrearTrabajoDemoParams = {
+  id: string;
   driverId: string;
   riderId: string;
   tipoServicioId: string;
@@ -194,6 +198,7 @@ async function crearTrabajoDemo(params: CrearTrabajoDemoParams) {
 
   return prisma.trabajo.create({
     data: {
+      id: params.id,
       driverId: params.driverId,
       riderId: params.riderId,
       tipoServicioId: params.tipoServicioId,

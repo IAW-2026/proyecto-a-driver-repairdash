@@ -4,7 +4,8 @@ import {
   NextResponse,
 } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { validateApiKey } from "@/lib/auth/api-key"
+import { validateInternalApiKey } from "@/lib/auth/internal-auth";
+import { getDriverFeedback } from "@/lib/services/external/feedback.client";
 
 
 export const dynamic = "force-dynamic";;
@@ -18,24 +19,13 @@ export async function GET(
   },
 ): Promise<Response> {
   try {
-    const authorized =
-      validateApiKey(req, [
-        process.env
-          .FEEDBACK_APP_API_KEY!,
-      ]);
-
-    if (!authorized) {
-      return NextResponse.json(
-        {
-          status: "error",
-          mensaje:
-            "Unauthorized",
-        },
-        {
-          status: 401,
-        },
+    const authError =
+      validateInternalApiKey(
+        req,
       );
-    }
+
+    if (authError)
+      return authError;
 
     const { id } =
       await context.params;
@@ -62,6 +52,11 @@ export async function GET(
       );
     }
 
+    const feedback =
+      await getDriverFeedback(
+        driver.id,
+      );
+
     return NextResponse.json(
       {
         status:
@@ -74,7 +69,7 @@ export async function GET(
           nombre:
             driver.nombre,
           rating_promedio:
-            4.7,//TODO: calcular rating promedio
+            feedback.valoracion,
           estado:
             driver.status.toLowerCase(),
         },

@@ -9,11 +9,12 @@ export type ServiceTypeDto = {
 
 export type DriverDashboardProfile = {
   id: string;
+  onboardingCompleto: boolean;
   nombre: string;
   telefono: string | null;
   bio: string | null;
   imagenURL: string | null;
-  email: string
+  email: string;
   status: DriverAvailability;
   role: "DRIVER" | "ADMIN";
   servicios: ServiceTypeDto[];
@@ -33,10 +34,13 @@ export type FeedbackReviewResponse = {
 
 export type PaymentDailySummary = {
   driverId: string;
-  fecha: string;
-  ingresosDelDia: number;
-  moneda: "ARS";
-  trabajosLiquidados: number;
+  balance: {
+    disponible: string;
+  };
+  metricasHoy: {
+    facturacionHoy: string;
+    trabajosRealizadosHoy: number;
+  };
 };
 
 export type RiderJobRequest = {
@@ -44,6 +48,7 @@ export type RiderJobRequest = {
   idCliente: string;
   nombreCliente: string;
   apellidoCliente: string;
+  ratingCliente: number;
   ubicacion: {
     direccion: string;
     barrio: string;
@@ -62,5 +67,4 @@ export type DriverDailyStats = {
   trabajosCompletados: number;
   ingresosDelDia: number;
   ratingPromedio: number;
-  tiempoConectado: string;
 };

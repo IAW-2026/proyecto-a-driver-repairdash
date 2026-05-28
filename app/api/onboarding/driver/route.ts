@@ -83,10 +83,24 @@ export async function POST() {
     },
   );
 
-  // 2. crear driver prisma
-  await prisma.driver.create(
+  // 2. crear o sincronizar driver prisma
+  await prisma.driver.upsert(
     {
-      data: {
+      where: {
+        clerkUserId:
+          userId,
+      },
+      update: {
+        nombre,
+        email,
+        telefono,
+        imagenURL,
+        role:
+          UserRole.DRIVER,
+        status:
+          DriverStatus.OFFLINE,
+      },
+      create: {
         clerkUserId:
           userId,
         nombre,

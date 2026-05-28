@@ -1,37 +1,108 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl =
-  process.env.NEXT_PUBLIC_SUPABASE_URL!;
-
-const supabaseServiceKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-export const supabaseAdmin =
-  createClient(
-    supabaseUrl,
-    supabaseServiceKey,
-  );
-
 export const AVATARS_BUCKET =
   "avatars";
+
+function getSupabaseAdmin() {
+  const supabaseUrl =
+    process.env
+      .NEXT_PUBLIC_SUPABASE_URL
+      ?.trim()
+      .replace(/\/$/, "");
+
+  const supabaseServiceKey =
+    process.env
+      .SUPABASE_SERVICE_ROLE_KEY
+      ?.trim();
+
+  
+
+  if (
+    !supabaseUrl ||
+    !supabaseServiceKey
+  ) {
+    throw new Error(
+      "Supabase no configurado",
+    );
+  }
+
+  return createClient(
+    supabaseUrl,
+    supabaseServiceKey,
+    {
+      auth: {
+        persistSession:
+          false,
+        autoRefreshToken:
+          false,
+      },
+    },
+  );
+}
 
 export async function uploadAvatar(
   driverId: string,
   file: File,
 ): Promise<string> {
+  const supabaseAdmin =
+    getSupabaseAdmin();
+
   const ext =
-    file.name.split(".").pop() ??
+    file.name
+      .split(".")
+      .pop()
+      ?.toLowerCase() ??
     "jpg";
 
-  const path = `drivers/${driverId}/avatar.${ext}`;
+  // 🔥 Sanitizamos por seguridad
+  const safeDriverId =
+    driverId.replace(
+      /[^a-zA-Z0-9-_]/g,
+      "_",
+    );
 
-  const { error } =
+  const fileName =
+    `avatar-${Date.now()}.${ext}`;
+
+  const path =
+    `drivers/${safeDriverId}/${fileName}`;
+
+  
+
+  // 🔥 Ver buckets reales
+  const buckets =
+    await supabaseAdmin.storage.listBuckets();
+
+  
+
+  // 🔥 Convertir File → Buffer
+  const arrayBuffer =
+    await file.arrayBuffer();
+
+  const buffer =
+    Buffer.from(
+      arrayBuffer,
+    );
+
+  const {
+    data,
+    error,
+  } =
     await supabaseAdmin.storage
-      .from(AVATARS_BUCKET)
-      .upload(path, file, {
-        upsert: true,
-        contentType: file.type,
-      });
+      .from(
+        AVATARS_BUCKET,
+      )
+      .upload(
+        path,
+        buffer,
+        {
+          upsert: true,
+          contentType:
+            file.type,
+        },
+      );
+
+  
 
   if (error) {
     throw new Error(
@@ -39,15 +110,18 @@ export async function uploadAvatar(
     );
   }
 
-  // URL PUBLICA (NO SIGNED)
   const {
-    data: { publicUrl },
+    data: {
+      publicUrl,
+    },
   } =
     supabaseAdmin.storage
       .from(
         AVATARS_BUCKET,
       )
-      .getPublicUrl(path);
+      .getPublicUrl(
+        path,
+      );
 
   return `${publicUrl}?t=${Date.now()}`;
 }

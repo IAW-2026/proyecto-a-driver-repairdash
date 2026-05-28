@@ -1,5 +1,6 @@
 import {
   auth,
+  currentUser,
 } from "@clerk/nextjs/server";
 
 import {
@@ -28,29 +29,75 @@ export async function getCurrentDriver() {
   );
 }
 
-export async function requireAdmin() {
-  const driver =
-    await getCurrentDriver();
+export async function getCurrentRole() {
+  const user =
+    await currentUser();
+
+  if (!user) {
+    return null;
+  }
+
+  const clerkRole =
+    user.publicMetadata
+      ?.role;
+
+  // source of truth
+  if (
+    clerkRole ===
+      "driver-admin"
+  ) {
+    return UserRole.ADMIN;
+  }
 
   if (
-    !driver ||
-    driver.role !==
-      UserRole.ADMIN
+    clerkRole ===
+      "driver"
+  ) {
+    return UserRole.DRIVER;
+  }
+
+  // fallback temporal
+  const driver =
+    await prisma.driver.findUnique(
+      {
+        where: {
+          clerkUserId:
+            user.id,
+        },
+        select: {
+          role: true,
+        },
+      },
+    );
+
+  return (
+    driver?.role ??
+    UserRole.DRIVER
+  );
+}
+
+export async function requireAdmin() {
+  const role =
+    await getCurrentRole();
+
+  if (
+    role !==
+    UserRole.ADMIN
   ) {
     throw new Error(
       "Unauthorized",
     );
   }
 
-  return driver;
+  return true;
 }
 
 export async function isAdmin() {
-  const driver =
-    await getCurrentDriver();
+  const role =
+    await getCurrentRole();
 
   return (
-    driver?.role ===
+    role ===
     UserRole.ADMIN
   );
 }

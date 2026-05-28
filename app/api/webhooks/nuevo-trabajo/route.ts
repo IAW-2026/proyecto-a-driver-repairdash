@@ -1,167 +1,130 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { TrabajoEstado } from "@prisma/client";
-import { validateApiKey } from "@/lib/auth/api-key";
+import { Prisma, TrabajoEstado } from "@prisma/client";
+import { validateInternalApiKey } from "@/lib/auth/internal-auth";
 
 type RequestBody = {
+  id_trabajo: string;
   riderId: string;
   tipoServicioId: string;
   direccion: string;
   descripcion?: string;
-  latitud?: number;
-  longitud?: number;
+  fotos?: string[];
 };
 
 export async function POST(req: NextRequest) {
   try {
-    const authorized = validateApiKey(req, [
-      process.env.RIDER_WEBHOOK_API_KEY!,
-    ]);
-
-    if (!authorized) {
-      return NextResponse.json(
-        {
-          status: "error",
-          mensaje: "Unauthorized",
-        },
-        {
-          status: 401,
-        },
+    const authError =
+      validateInternalApiKey(
+        req,
       );
-    }
+
+    if (authError)
+      return authError;
 
     const body: RequestBody = await req.json();
-
     const {
+      id_trabajo,
       riderId,
       tipoServicioId,
       direccion,
       descripcion,
-      latitud,
-      longitud,
+      fotos,
     } = body;
 
     if (
+      !id_trabajo ||
       !riderId ||
       !tipoServicioId ||
       !direccion
     ) {
       return NextResponse.json(
-        {
-          status: "error",
-          mensaje:
-            "Faltan parámetros obligatorios",
-        },
-        {
-          status: 400,
-        },
+        { status: "error", mensaje: "Faltan parámetros obligatorios" },
+        { status: 400 },
       );
     }
 
-    // Buscar tipo de servicio
-    const tipoServicio =
-      await prisma.tipoServicio.findUnique({
-        where: {
-          id: tipoServicioId,
-        },
-      });
+    const tipoServicio = await prisma.tipoServicio.findUnique({
+      where: { id: tipoServicioId },
+    });
 
     if (!tipoServicio) {
       return NextResponse.json(
-        {
-          status: "error",
-          mensaje:
-            "Tipo de servicio no encontrado",
-        },
-        {
-          status: 404,
-        },
+        { status: "error", mensaje: "Tipo de servicio no encontrado" },
+        { status: 404 },
       );
     }
 
-    // Buscar driver disponible
-    // (simple por ahora)
-    const driver =
-      await prisma.driver.findFirst({
-        where: {
-          status: "ONLINE",
-          tiposServicio: {
-            some: {
-              tipoServicioId,
-            },
-          },
-        },
-      });
+    // Crear el trabajo sin asignar driver — visible para todos los drivers ONLINE
+    // con ese tipo de servicio habilitado
+    const trabajoExistente = await prisma.trabajo.findUnique({
+      where: {
+        id: id_trabajo,
+      },
+      select: {
+        id: true,
+      },
+    });
 
-    if (!driver) {
+    if (trabajoExistente) {
       return NextResponse.json(
-        {
-          status: "error",
-          mensaje:
-            "No hay drivers disponibles",
-        },
-        {
-          status: 404,
-        },
+        { status: "error", mensaje: "El trabajo ya existe" },
+        { status: 409 },
       );
     }
 
-    // Crear trabajo
-    const trabajo =
-      await prisma.trabajo.create({
-        data: {
-          driverId: driver.id,
-          riderId,
-          tipoServicioId,
-          descripcion,
-          direccion,
-          latitud,
-          longitud,
-          estado:
-            TrabajoEstado.PENDIENTE,
-          montoEstimado:
-            tipoServicio.precioBase,
-
-          historialEstados: {
-            create: {
-              estadoAnterior: null,
-              estadoNuevo:
-                TrabajoEstado.PENDIENTE,
-              motivo:
-                "Trabajo creado desde Rider App",
-            },
+    const trabajo = await prisma.trabajo.create({
+      data: {
+        id: id_trabajo,
+        riderId,
+        tipoServicioId,
+        descripcion,
+        direccion,
+        fotos:
+          fotos ?? [],
+        estado: TrabajoEstado.PENDIENTE,
+        montoEstimado: tipoServicio.precioBase,
+        historialEstados: {
+          create: {
+            estadoAnterior: null,
+            estadoNuevo: TrabajoEstado.PENDIENTE,
+            motivo: "Trabajo creado desde Rider App",
           },
         },
-      });
+      },
+    });
+
+    revalidatePath("/");
+    revalidatePath("/admin/servicios");
 
     return NextResponse.json(
       {
         status: "success",
-        mensaje:
-          "Trabajo creado correctamente",
+        mensaje: "Trabajo creado correctamente",
         data: {
           id_trabajo: trabajo.id,
-          id_driver: driver.id,
-          estado_actual:
-            trabajo.estado,
+          estado_actual: trabajo.estado,
         },
       },
-      {
-        status: 201,
-      },
+      { status: 201 },
     );
   } catch (error) {
     console.error(error);
 
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return NextResponse.json(
+        { status: "error", mensaje: "El trabajo ya existe" },
+        { status: 409 },
+      );
+    }
+
     return NextResponse.json(
-      {
-        status: "error",
-        mensaje:
-          "Error interno del servidor",
-      },
-      {
-        status: 500,
-      },
+      { status: "error", mensaje: "Error interno del servidor" },
+      { status: 500 },
     );
   }
 }

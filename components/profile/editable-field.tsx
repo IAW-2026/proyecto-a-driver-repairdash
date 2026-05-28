@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { updateProfileData } from "@/app/cuenta/actions";
 
 type EditableFieldProps = {
@@ -28,10 +34,11 @@ export function EditableField({
   const wrapperRef =
     useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    setSavedValue(value ?? "");
-    setDraft(value ?? "");
-  }, [value]);
+  const handleCancel =
+    useCallback(() => {
+      setDraft(savedValue);
+      setEditing(false);
+    }, [savedValue]);
 
   useEffect(() => {
     function handleOutsideClick(
@@ -58,12 +65,20 @@ export function EditableField({
         handleOutsideClick,
       );
     };
-  }, []);
+  }, [handleCancel]);
 
-  function handleCancel() {
-    setDraft(savedValue);
-    setEditing(false);
-  }
+  useEffect(() => {
+    const timeoutId =
+      window.setTimeout(() => {
+        setSavedValue(value ?? "");
+        setDraft(value ?? "");
+      }, 0);
+
+    return () =>
+      window.clearTimeout(
+        timeoutId,
+      );
+  }, [value]);
 
   function handleSave() {
     startTransition(async () => {

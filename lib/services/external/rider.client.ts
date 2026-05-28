@@ -1,20 +1,140 @@
-import { riderJobRequestsMock } from "@/lib/mocks/rider.mock";
-import { serviceTypesMock } from "@/lib/mocks/service-types.mock";
-import type { DashboardJobRequest } from "@/types/dashboard";
+import { prisma } from "@/lib/prisma";
+import { getBaseUrl } from "@/lib/config/get-base-url";
+import { TrabajoEstado } from "@prisma/client";
+import type {
+  DashboardJobRequest,
+  DriverAvailability,
+} from "@/types/dashboard";
+
+type AvailableRiderRequestsParams = {
+  driverId: string;
+  driverStatus: DriverAvailability;
+  serviceTypeIds: string[];
+};
 
 export async function getAvailableRiderRequestsForDriver(
-  serviceNames: string[],
+  {
+    driverId,
+    driverStatus,
+    serviceTypeIds,
+  }: AvailableRiderRequestsParams,
 ): Promise<DashboardJobRequest[]> {
-  const offeredServices = new Set(serviceNames);
+  if (
+    driverStatus !==
+      "ONLINE" ||
+    serviceTypeIds.length ===
+      0
+  ) {
+    return [];
+  }
 
-  return riderJobRequestsMock
-    .filter((request) => offeredServices.has(request.tipoServicio))
-    .map((request) => {
-      const serviceType = serviceTypesMock.find((service) => service.nombre === request.tipoServicio);
+  const trabajos = await prisma.trabajo.findMany({
+    where: {
+      estado: "PENDIENTE",
+      tipoServicioId: {
+        in: serviceTypeIds,
+      },
+      OR: [
+        {
+          driverId: null,
+        },
+        {
+          driverId,
+        },
+      ],
+      rechazos: {
+        none: {
+          driverId,
+        },
+      },
+    },
+    include: {
+      tipoServicio: true,
+    },
+    orderBy: {
+      creadoEn: "desc",
+    },
+  });
 
-      return {
-        ...request,
-        precioEstimado: serviceType?.precioBase ?? 0,
-      };
-    });
+  return trabajos.map((trabajo) => ({
+    id: trabajo.id,
+    idCliente: trabajo.riderId,
+    nombreCliente: "Cliente",
+    apellidoCliente: "",
+    ratingCliente: 0,
+    ubicacion: {
+      direccion: trabajo.direccion,
+      barrio: "",
+    },
+    tipoServicio: trabajo.tipoServicio.nombre,
+    descripcion: trabajo.descripcion ?? "",
+    fotos: trabajo.fotos,
+    estado: "DISPONIBLE" as const,
+    precioEstimado: Number(trabajo.montoEstimado),
+  }));
+}
+
+type RiderTravelState =
+  | "aceptado"
+  | "cancelado"
+  | "en camino"
+  | "ha llegado"
+  | "finalizado";
+
+const riderStateMap: Partial<Record<TrabajoEstado, RiderTravelState>> = {
+  ACEPTADO: "aceptado",
+  CANCELADO: "cancelado",
+  EN_CAMINO: "en camino",
+  EN_SERVICIO: "ha llegado",
+  FINALIZADO: "finalizado",
+};
+
+function getRiderStateBaseUrl() {
+  return (
+    process.env.RIDER_APP_URL ??
+    `${getBaseUrl()}/api/mocks/repairdash`
+  ).replace(/\/+$/, "");
+}
+
+export async function notifyRiderTrabajoState(input: {
+  trabajoId: string;
+  estado: TrabajoEstado;
+  driverId?: string;
+}) {
+  const estado =
+    riderStateMap[input.estado];
+
+  if (!estado) {
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `${getRiderStateBaseUrl()}/statetravel`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": process.env.RIDER_INTERNAL_API_KEY ?? "",
+        },
+        body: JSON.stringify({
+          id_viaje: input.trabajoId,
+          estado,
+          driver: input.driverId,
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      console.warn(
+        "Rider state API returned",
+        response.status,
+      );
+    }
+  } catch (error) {
+    console.warn(
+      "Rider state API unavailable",
+      error,
+    );
+  }
 }

@@ -9,8 +9,26 @@ import {
 
 type ClerkEvent = {
   type: string;
-  data: any;
+  data: ClerkUserData;
 };
+
+type ClerkUserData = {
+  id?: string;
+  public_metadata?: {
+    role?: unknown;
+  };
+  email_addresses?: Array<{
+    email_address?: string;
+  }>;
+  first_name?: string | null;
+  phone_numbers?: Array<{
+    phone_number?: string;
+  }>;
+  image_url?: string | null;
+};
+
+const DRIVER_ROLE =
+  "driver";
 
 export async function POST(
   req: Request,
@@ -97,11 +115,59 @@ export async function POST(
     );
   }
 
+  // ==================================================
+  // SOLO USER.UPDATED
+  // ==================================================
+
+  if (
+    evt.type !==
+    "user.updated"
+  ) {
+    return NextResponse.json(
+      {
+        ok: true,
+        message:
+          "Evento ignorado",
+      },
+    );
+  }
+
   const user =
     evt.data;
 
   const clerkUserId =
     user.id;
+
+  if (!clerkUserId) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message:
+          "Usuario Clerk sin id",
+      },
+      {
+        status: 400,
+      },
+    );
+  }
+
+  const role =
+    user.public_metadata
+      ?.role;
+
+  // Solo sincronizamos drivers
+  if (
+    role !==
+    DRIVER_ROLE
+  ) {
+    return NextResponse.json(
+      {
+        ok: true,
+        message:
+          "Usuario no driver ignorado",
+      },
+    );
+  }
 
   const email =
     user.email_addresses?.[0]
@@ -120,175 +186,74 @@ export async function POST(
     user.image_url ??
     null;
 
-  const role =
-    user.public_metadata
-      ?.role;
-
   try {
-    // ==================================================
-    // USER CREATED
-    // ==================================================
-
-    if (
-      evt.type ===
-      "user.created"
-    ) {
-      // Solo drivers
-      if (
-        role !==
-        "driver"
-      ) {
-        return NextResponse.json(
-          {
-            ok: true,
-            message:
-              "Usuario ignorado",
-          },
-        );
-      }
-
-      await prisma.driver.upsert(
-        {
-          where: {
-            clerkUserId,
-          },
-          update: {
-            nombre,
-            email,
-            telefono,
-            imagenURL,
-          },
-          create: {
-            clerkUserId,
-            nombre,
-            email,
-            telefono,
-            imagenURL,
-            role:
-              UserRole.DRIVER,
-            status:
-              DriverStatus.OFFLINE,
-          },
+    await prisma.driver.upsert(
+      {
+        where: {
+          clerkUserId,
         },
-      );
 
-      return NextResponse.json(
-        {
-          ok: true,
-          message:
-            "Driver creado",
+        update: {
+          nombre,
+          email,
+          telefono,
+          imagenURL,
         },
-      );
-    }
 
-    // ==================================================
-    // USER UPDATED
-    // ==================================================
-
-    if (
-      evt.type ===
-      "user.updated"
-    ) {
-      const existingDriver =
-        await prisma.driver.findUnique(
-          {
-            where: {
-              clerkUserId,
-            },
-          },
-        );
-
-      // Si no existe driver,
-      // ignoramos update
-      if (
-        !existingDriver
-      ) {
-        return NextResponse.json(
-          {
-            ok: true,
-            message:
-              "Usuario ignorado",
-          },
-        );
-      }
-
-      await prisma.driver.update(
-        {
-          where: {
-            clerkUserId,
-          },
-          data: {
-            nombre,
-            email,
-            telefono,
-            imagenURL,
-          },
+        create: {
+          clerkUserId,
+          nombre,
+          email,
+          telefono,
+          imagenURL,
+          role:
+            UserRole.DRIVER,
+          status:
+            DriverStatus.OFFLINE,
         },
-      );
+      },
+    );
 
-      return NextResponse.json(
-        {
-          ok: true,
-          message:
-            "Driver actualizado",
-        },
-      );
-    }
-
-    // ==================================================
-    // USER DELETED
-    // ==================================================
-
-    if (
-      evt.type ===
-      "user.deleted"
-    ) {
-      await prisma.driver.deleteMany(
-        {
-          where: {
-            clerkUserId,
-          },
-        },
-      );
-
-      return NextResponse.json(
-        {
-          ok: true,
-          message:
-            "Driver eliminado",
-        },
-      );
-    }
-
-    // ==================================================
-    // EVENTOS IGNORADOS
-    // ==================================================
-
-    return NextResponse.json({
-      ok: true,
-      message:
-        "Evento ignorado",
-    });
-  } catch (error: any) {
+    return NextResponse.json(
+      {
+        ok: true,
+        message:
+          "Driver sincronizado",
+      },
+    );
+  } catch (error: unknown) {
     console.error(
       "WEBHOOK ERROR:",
       error,
     );
 
+    const errorRecord =
+      typeof error ===
+        "object" &&
+      error !== null
+        ? (error as {
+            code?: unknown;
+            meta?: unknown;
+          })
+        : {};
+
     return NextResponse.json(
       {
         ok: false,
         message:
-          error?.message,
+          error instanceof Error
+            ? error.message
+            : "Error interno",
         code:
-          error?.code,
+          errorRecord.code,
         meta:
-          error?.meta,
+          errorRecord.meta,
         stack:
           process.env
             .NODE_ENV ===
-          "development"
-            ? error?.stack
+            "development" &&
+          error instanceof Error
+            ? error.stack
             : undefined,
       },
       {

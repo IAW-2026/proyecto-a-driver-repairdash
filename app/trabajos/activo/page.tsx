@@ -1,0 +1,264 @@
+import { redirect } from "next/navigation";
+import { currentUser } from "@clerk/nextjs/server";
+import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import { formatCurrency } from "@/lib/utils/format";
+import { getNextState } from "@/lib/state-machine/trabajo.states";
+import { AutoRefresh } from "@/components/auto-refresh";
+import {
+  avanzarTrabajo,
+  comenzarReporte,
+  finalizarTrabajo,
+} from "@/lib/actions/trabajo.actions";
+
+const ESTADOS = ["ACEPTADO", "EN_CAMINO", "EN_SERVICIO", "FINALIZADO"] as const;
+const STATUS_COPY = {
+  ACEPTADO: {
+    title: "ACEPTADO",
+    subtitle: "Solicitud aceptada. Dirígete al cliente.",
+    color: "text-[#F500F1]",
+    button: "Iniciar viaje",
+    buttonColor: "from-[#F500F1] to-[#d400d0]",
+  },
+  EN_CAMINO: {
+    title: "EN CAMINO",
+    subtitle: "Estás viajando hacia el cliente.",
+    color: "text-blue-400",
+    button: "Ya llegué",
+    buttonColor: "from-blue-500 to-blue-700",
+  },
+  EN_SERVICIO: {
+    title: "EN SERVICIO",
+    subtitle: "Trabajo actualmente en progreso.",
+    color: "text-[#FF8E53]", 
+    button: "Finalizar trabajo",
+    buttonColor: "from-[#FF6B6B] to-[#FF8E53]",
+  },
+
+  FINALIZADO: {
+    title: "FINALIZADO",
+    subtitle: "Trabajo completado.",
+    color: "[#0078AA]",
+    button: null,
+    buttonColor: "",
+  },
+};
+
+function formatRelativeTime(date: Date) {
+  const diffMs = Date.now() - date.getTime();
+  const diffMinutes = Math.floor(diffMs / 60000);
+
+  if (diffMinutes < 1) return "hace unos segundos";
+  if (diffMinutes < 60) return `hace ${diffMinutes} min`;
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) return `hace ${diffHours} h`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `hace ${diffDays} d`;
+}
+
+export default async function TrabajoActivoPage() {
+  const user = await currentUser();
+  if (!user) redirect("/login");
+
+  const driver = await prisma.driver.findUnique({
+    where: { clerkUserId: user.id },
+    select: { id: true, nombre: true, status: true },
+  });
+
+  if (!driver) redirect("/");
+
+  const trabajo = await prisma.trabajo.findFirst({
+    where: {
+      driverId: driver.id,
+      estado: { in: ["ACEPTADO", "EN_CAMINO", "EN_SERVICIO"] },
+    },
+    include: { tipoServicio: true },
+    orderBy: { actualizadoEn: "desc" },
+  });
+
+  if (!trabajo) {
+    const trabajoCancelado = await prisma.trabajo.findFirst({
+      where: {
+        driverId: driver.id,
+        estado: "CANCELADO",
+      },
+      include: {
+        tipoServicio: true,
+      },
+      orderBy: {
+        actualizadoEn: "desc",
+      },
+    });
+
+    if (!trabajoCancelado) {
+      redirect("/");
+    }
+
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#271033] via-[#271033] to-[#160822] px-6 text-center text-highlight">
+        <AutoRefresh intervalMs={15_000} />
+
+        <div className="w-full max-w-md rounded-[32px] border border-highlight/10 bg-highlight/[0.05] p-7 shadow-2xl shadow-black/25">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">
+            Trabajo cancelado
+          </p>
+          <h1 className="mt-4 text-3xl font-black leading-tight text-highlight">
+            Ups... el rider canceló el trabajo
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-highlight/60">
+            {trabajoCancelado.tipoServicio.nombre} ya no está disponible. Te
+            dejamos nuevamente online para recibir nuevas solicitudes.
+          </p>
+          <Link
+            href="/"
+            className="mt-7 inline-flex h-14 w-full items-center justify-center rounded-2xl bg-magenta px-6 text-sm font-black text-white shadow-lg shadow-magenta/25 transition hover:bg-magenta/90"
+          >
+            Volver al inicio
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
+  const currentState = trabajo.estado as keyof typeof STATUS_COPY;
+  const currentIndex = ESTADOS.indexOf(currentState);
+  const nextState = getNextState(trabajo.estado);
+
+  return (
+    <main className="min-h-screen bg-gradient-to-b from-[#271033] via-[#271033] to-[#160822] text-highlight flex flex-col">
+      <AutoRefresh />
+
+      <header className="sticky top-0 z-20 bg-[#160822]/90 backdrop-blur-sm flex items-center justify-center px-5 py-4">
+        <Link
+          href="/"
+          className="absolute left-5 grid h-11 w-11 place-items-center rounded-full border border-highlight/10 bg-highlight/[0.06] text-xl text-highlight/70 transition hover:bg-highlight/10"
+        >
+          ←
+        </Link>
+        <h1 className="text-base font-bold text-highlight/80">Trabajo en curso</h1>
+      </header>
+
+      <section className="flex flex-col items-center justify-center py-10 space-y-2">
+        <span className={`text-5xl sm:text-6xl font-black ${STATUS_COPY[currentState].color}`}>
+          {STATUS_COPY[currentState].title}
+        </span>
+        <span className="text-sm text-highlight/50">
+          {formatRelativeTime(trabajo.actualizadoEn)}
+        </span>
+        <span className="mt-2 rounded-full bg-[#F500F1]/20 px-3 py-1 text-xs font-bold text-[#F500F1]">
+          Estado
+        </span>
+        <p className="mt-3 max-w-md text-sm leading-6 text-highlight/60">
+          {STATUS_COPY[currentState].subtitle}
+        </p>
+      </section>
+
+      <section className="px-6 space-y-6">
+        <div className="rounded-[24px] border border-highlight/10 bg-highlight/[0.05] p-6 shadow-lg shadow-[#F500F1]/20">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">Servicio</p>
+              <h3 className="mt-2 text-3xl font-black text-highlight">{trabajo.tipoServicio.nombre}</h3>
+              <p className="mt-3 text-sm text-highlight/60">{trabajo.direccion}</p>
+            </div>
+            <p className="text-2xl font-black text-highlight">
+              {formatCurrency(Number(trabajo.montoEstimado))}
+            </p>
+          </div>
+          {trabajo.descripcion && (
+            <div className="mt-6 rounded-2xl border border-highlight/10 bg-primary/30 p-4">
+              <p className="text-xs font-semibold uppercase tracking-widest text-highlight/40">Descripción</p>
+              <p className="mt-2 text-sm leading-6 text-highlight/75">{trabajo.descripcion}</p>
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-[24px] border border-highlight/10 bg-highlight/[0.05] p-6">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">Progreso</p>
+          <div className="mt-6 space-y-5">
+            {ESTADOS.map((estado, index) => {
+              const isCompleted = index <= currentIndex;
+              const isCurrent = estado === currentState;
+              return (
+                <div key={estado} className="flex gap-4">
+                  <div className="flex flex-col items-center">
+                    <div
+                      className={`h-5 w-5 rounded-full ${
+                        isCompleted ? "bg-[#F500F1]" : "bg-highlight/20"
+                      }`}
+                    />
+                    {index < ESTADOS.length - 1 && (
+                      <div
+                        className={`mt-1 h-12 w-[2px] ${
+                          index < currentIndex ? "bg-[#F500F1]" : "bg-highlight/10"
+                        }`}
+                      />
+                    )}
+                  </div>
+                  <p
+                    className={`font-bold ${
+                      isCurrent ? "text-highlight" : "text-highlight/45"
+                    }`}
+                  >
+                    {estado}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {nextState && STATUS_COPY[currentState].button && (
+        <div className="sticky bottom-0 px-6 py-6 bg-gradient-to-t from-[#160822] via-[#160822]/90 to-transparent">
+          {currentState === "EN_SERVICIO" ? (
+            <div className="grid grid-cols-2 gap-3">
+              <form
+                action={comenzarReporte.bind(
+                  null,
+                  trabajo.id,
+                )}
+              >
+                <button
+                  type="submit"
+                  className="h-16 w-full rounded-2xl bg-gradient-to-r from-[#F500F1] to-[#C392DD] text-lg font-black text-white shadow-lg shadow-[#F500F1]/25 transition hover:opacity-90"
+                >
+                  Comenzar reporte
+                </button>
+              </form>
+
+              <form
+                action={finalizarTrabajo.bind(
+                  null,
+                  trabajo.id,
+                )}
+              >
+                <button
+                  type="submit"
+                  className={`h-16 w-full rounded-2xl bg-gradient-to-r ${STATUS_COPY[currentState].buttonColor} text-lg font-black text-white shadow-lg shadow-[#F500F1]/25 transition hover:opacity-90`}
+                >
+                  {STATUS_COPY[currentState].button}
+                </button>
+              </form>
+            </div>
+          ) : (
+            <form
+              action={avanzarTrabajo.bind(
+                null,
+                trabajo.id,
+                nextState!,
+              )}
+            >
+              <button
+                type="submit"
+                className={`h-16 w-full rounded-2xl bg-gradient-to-r ${STATUS_COPY[currentState].buttonColor} text-lg font-black text-white shadow-lg shadow-[#F500F1]/25 transition hover:opacity-90`}
+              >
+                {STATUS_COPY[currentState].button}
+              </button>
+            </form>
+      )}
+      </div>
+    )}
+    </main>
+  );
+}

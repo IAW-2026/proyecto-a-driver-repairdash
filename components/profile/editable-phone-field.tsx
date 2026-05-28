@@ -30,9 +30,19 @@ export function EditablePhoneField({
   ] = useTransition();
 
   useEffect(() => {
-    setPhone(
-      value ?? undefined,
-    );
+    const timeoutId =
+      window.setTimeout(
+        () =>
+          setPhone(
+            value ?? undefined,
+          ),
+        0,
+      );
+
+    return () =>
+      window.clearTimeout(
+        timeoutId,
+      );
   }, [value]);
 
   function cancelEdit() {

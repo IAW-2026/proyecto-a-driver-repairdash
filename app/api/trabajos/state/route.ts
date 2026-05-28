@@ -1,50 +1,40 @@
 import { NextRequest, NextResponse } from "next/server";
-import { TrabajoEstado } from "@prisma/client";
+import { revalidatePath } from "next/cache";
+import { DriverStatus, TrabajoEstado } from "@prisma/client";
+
+import { validateInternalApiKey } from "@/lib/auth/internal-auth";
 import { prisma } from "@/lib/prisma";
-import { validateApiKey } from "@/lib/auth/api-key";
 
 type RequestBody = {
   id_trabajo: string;
-  estado: string;
-};
-
-const estadoMap: Record<string, TrabajoEstado> = {
-  pendiente: TrabajoEstado.PENDIENTE,
-  aceptado: TrabajoEstado.ACEPTADO,
-  rechazado: TrabajoEstado.RECHAZADO,
-  en_camino: TrabajoEstado.EN_CAMINO,
-  en_servicio: TrabajoEstado.EN_SERVICIO,
-  finalizado: TrabajoEstado.FINALIZADO,
-  cancelado: TrabajoEstado.CANCELADO,
+  estado?: string;
 };
 
 export async function PUT(req: NextRequest) {
   try {
-    const authorized = validateApiKey(req, [
-      process.env.RIDER_APP_API_KEY!,
-    ]);
-
-    if (!authorized) {
-      return NextResponse.json(
-        {
-          status: "error",
-          mensaje: "Unauthorized",
-        },
-        {
-          status: 401,
-        },
+    const authError =
+      validateInternalApiKey(
+        req,
       );
+
+    if (authError) {
+      return authError;
     }
 
-    const body: RequestBody = await req.json();
+    const body: RequestBody =
+      await req.json();
 
-    const { id_trabajo, estado } = body;
+    const {
+      id_trabajo,
+      estado,
+    } = body;
 
-    if (!id_trabajo || !estado) {
+    if (!id_trabajo) {
       return NextResponse.json(
         {
           status: "error",
-          mensaje: "Faltan parámetros obligatorios",
+          mensaje:
+            "Falta id_trabajo",
         },
         {
           status: 400,
@@ -52,15 +42,16 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    const nuevoEstado = estadoMap[
-      estado.toLowerCase()
-    ];
-
-    if (!nuevoEstado) {
+    if (
+      estado &&
+      estado.toLowerCase() !==
+        "cancelado"
+    ) {
       return NextResponse.json(
         {
           status: "error",
-          mensaje: "Estado inválido",
+          mensaje:
+            "Esta API solo acepta cancelaciones",
         },
         {
           status: 400,
@@ -69,17 +60,30 @@ export async function PUT(req: NextRequest) {
     }
 
     const trabajoExistente =
-      await prisma.trabajo.findUnique({
-        where: {
-          id: id_trabajo,
+      await prisma.trabajo.findUnique(
+        {
+          where: {
+            id: id_trabajo,
+          },
+          select: {
+            id: true,
+            estado: true,
+            driverId: true,
+            driver: {
+              select: {
+                nombre: true,
+              },
+            },
+          },
         },
-      });
+      );
 
     if (!trabajoExistente) {
       return NextResponse.json(
         {
           status: "error",
-          mensaje: "Trabajo no encontrado",
+          mensaje:
+            "Trabajo no encontrado",
         },
         {
           status: 404,
@@ -87,34 +91,84 @@ export async function PUT(req: NextRequest) {
       );
     }
 
+    if (
+      trabajoExistente.estado ===
+      TrabajoEstado.FINALIZADO
+    ) {
+      return NextResponse.json(
+        {
+          status: "error",
+          mensaje:
+            "No se puede cancelar un trabajo finalizado",
+        },
+        {
+          status: 409,
+        },
+      );
+    }
+
     const trabajoActualizado =
-      await prisma.trabajo.update({
-        where: {
-          id: id_trabajo,
+      await prisma.$transaction(
+        async (tx) => {
+          const trabajo =
+            await tx.trabajo.update(
+              {
+                where: {
+                  id: id_trabajo,
+                },
+                data: {
+                  estado:
+                    TrabajoEstado.CANCELADO,
+                  historialEstados: {
+                    create: {
+                      estadoAnterior:
+                        trabajoExistente.estado,
+                      estadoNuevo:
+                        TrabajoEstado.CANCELADO,
+                      motivo:
+                        "Cancelacion desde Rider App",
+                    },
+                  },
+                },
+              },
+            );
+
+          if (
+            trabajoExistente.driverId
+          ) {
+            await tx.driver.update(
+              {
+                where: {
+                  id: trabajoExistente.driverId,
+                },
+                data: {
+                  status:
+                    DriverStatus.ONLINE,
+                },
+              },
+            );
+          }
+
+          return trabajo;
         },
-        data: {
-          estado: nuevoEstado,
-          historialEstados: {
-            create: {
-              estadoAnterior:
-                trabajoExistente.estado,
-              estadoNuevo: nuevoEstado,
-              motivo:
-                "Actualización desde Rider App",
-            },
-          },
-        },
-      });
+      );
+
+    revalidatePath("/");
+    revalidatePath("/trabajos/activo");
+    revalidatePath("/admin/servicios");
 
     return NextResponse.json({
       status: "success",
       mensaje:
-        "Estado del trabajo actualizado correctamente",
+        "Trabajo cancelado correctamente",
       data: {
         id_trabajo:
           trabajoActualizado.id,
         estado_actual:
           trabajoActualizado.estado,
+        driver_notificado:
+          trabajoExistente.driver
+            ?.nombre ?? null,
       },
     });
   } catch (error) {
