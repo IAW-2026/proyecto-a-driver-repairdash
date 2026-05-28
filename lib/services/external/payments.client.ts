@@ -2,11 +2,18 @@ import { getBaseUrl } from "@/lib/config/get-base-url";
 import { getPaymentWalletMock } from "@/lib/mocks/payments.mock";
 import type { PaymentDailySummary } from "@/types/dashboard";
 
+function getPaymentsBaseUrl() {
+  return (
+    process.env.PAYMENTS_APP_URL ??
+    `${getBaseUrl()}/api/mocks/payments`
+  ).replace(/\/+$/, "");
+}
+
 export async function getPaymentDailySummary(
   driverId: string,
 ): Promise<PaymentDailySummary> {
   const url =
-    `${getBaseUrl()}/api/mocks/payments/wallet/${driverId}`;
+    `${getPaymentsBaseUrl()}/wallet/${driverId}`;
 
   try {
     const response = await fetch(
@@ -26,13 +33,13 @@ export async function getPaymentDailySummary(
     }
 
     console.warn(
-      "Payments mock API returned",
+      "Payments API returned",
       response.status,
       "using local fallback",
     );
   } catch (error) {
     console.warn(
-      "Payments mock API unavailable, using local fallback",
+      "Payments API unavailable, using local fallback",
       error,
     );
   }

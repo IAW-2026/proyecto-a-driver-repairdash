@@ -9,8 +9,8 @@ import {
 async function retirarGanancias() {
   "use server";
 
-  // TODO: reemplazar por URL real al integrar Payment App
-  // const paymentAppUrl = process.env.PAYMENT_APP_URL ?? `${getBaseUrl()}/api/mocks/payments/withdraw`;
+  // TODO: reemplazar por flujo real al integrar Payments App
+  // const paymentAppUrl = process.env.PAYMENTS_APP_URL ?? `${getBaseUrl()}/api/mocks/payments`;
   // redirect(`${paymentAppUrl}/retirar`);
 
   redirect("/proximamente");

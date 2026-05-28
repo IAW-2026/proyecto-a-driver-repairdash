@@ -21,6 +21,7 @@ const prisma =
 
 const MOCK_TRABAJOS = [
   {
+    id: "rider_trabajo_demo_001",
     riderId: "rider_demo_001",
     tipoServicioNombre: "Plomeria",
     direccion: "Av. Corrientes 1234, Balvanera",
@@ -29,10 +30,9 @@ const MOCK_TRABAJOS = [
       "https://picsum.photos/seed/repairdash-plumbing-1/900/675",
       "https://picsum.photos/seed/repairdash-plumbing-2/900/675",
     ],
-    latitud: -34.6097,
-    longitud: -58.3932,
   },
   {
+    id: "rider_trabajo_demo_002",
     riderId: "rider_demo_002",
     tipoServicioNombre: "Electricidad",
     direccion: "San Martin 850, Microcentro",
@@ -42,10 +42,9 @@ const MOCK_TRABAJOS = [
       "https://picsum.photos/seed/repairdash-electric-2/900/675",
       "https://picsum.photos/seed/repairdash-electric-3/900/675",
     ],
-    latitud: -34.6037,
-    longitud: -58.3816,
   },
   {
+    id: "rider_trabajo_demo_003",
     riderId: "rider_demo_003",
     tipoServicioNombre: "Gas",
     direccion: "Juncal 2200, Recoleta",
@@ -53,8 +52,6 @@ const MOCK_TRABAJOS = [
     fotos: [
       "https://picsum.photos/seed/repairdash-gas-1/900/675",
     ],
-    latitud: -34.5875,
-    longitud: -58.3938,
   },
 ];
 
@@ -74,13 +71,12 @@ async function main() {
 
     const trabajo = await prisma.trabajo.create({
       data: {
+        id: mock.id,
         riderId: mock.riderId,
         tipoServicioId: tipoServicio.id,
         direccion: mock.direccion,
         descripcion: mock.descripcion,
         fotos: mock.fotos,
-        latitud: mock.latitud,
-        longitud: mock.longitud,
         estado: "PENDIENTE",
         montoEstimado: tipoServicio.precioBase,
         historialEstados: {

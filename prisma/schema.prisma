@@ -7,22 +7,22 @@ datasource db {
 }
 
 model Driver {
-  id                    String               @id @default(cuid())
-  onboardingCompleto    Boolean              @default(false)
-  clerkUserId           String               @unique
-  nombre                String
-  imagenURL             String?
-  bio                   String?
-  email                 String               @unique
-  telefono              String?
-  telefonoNormalizado   String?          @unique
-  role                  UserRole             @default(DRIVER)
-  status                DriverStatus         @default(OFFLINE)
-  trabajos              Trabajo[]
-  trabajosRechazados    TrabajoRechazado[]
-  tiposServicio         DriverTipoServicio[]
-  creadoEn              DateTime             @default(now())
-  actualizadoEn         DateTime             @updatedAt
+  id                  String               @id @default(cuid())
+  onboardingCompleto  Boolean              @default(false)
+  clerkUserId         String               @unique
+  nombre              String
+  imagenURL           String?
+  bio                 String?
+  email               String               @unique
+  telefono            String?
+  telefonoNormalizado String?              @unique
+  role                UserRole             @default(DRIVER)
+  status              DriverStatus         @default(OFFLINE)
+  trabajos            Trabajo[]
+  trabajosRechazados  TrabajoRechazado[]
+  tiposServicio       DriverTipoServicio[]
+  creadoEn            DateTime             @default(now())
+  actualizadoEn       DateTime             @updatedAt
 }
 
 enum UserRole {
@@ -49,8 +49,6 @@ model Trabajo {
   descripcion String?
   direccion   String
   fotos       String[] @default([])
-  latitud     Float?
-  longitud    Float?
 
   estado        TrabajoEstado @default(PENDIENTE)
   montoEstimado Decimal       @db.Decimal(10, 2)

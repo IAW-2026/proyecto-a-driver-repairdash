@@ -11,13 +11,12 @@ Request:
 
 ```json
 {
+  "id_trabajo": "trabajo_id_en_riderapp",
   "riderId": "rider_external_id",
   "tipoServicioId": "tipo_servicio_id",
   "direccion": "Av. Siempre Viva 742",
   "descripcion": "Cambio de foco",
-  "fotos": ["https://..."],
-  "latitud": -34.6037,
-  "longitud": -58.3816
+  "fotos": ["https://..."]
 }
 ```
 
@@ -25,6 +24,7 @@ Campos obligatorios:
 
 | Campo | Tipo | Descripcion |
 |---|---|---|
+| `id_trabajo` | `string` | ID del trabajo generado por RiderApp. DriverApp lo guarda como `Trabajo.id`. |
 | `riderId` | `string` | ID externo del rider. No es relacion Prisma. |
 | `tipoServicioId` | `string` | ID de `TipoServicio` existente en DriverApp. |
 | `direccion` | `string` | Direccion del trabajo. |
@@ -49,11 +49,13 @@ Errores:
 | `400` | Faltan campos obligatorios. |
 | `401` | API key ausente o invalida. |
 | `404` | Tipo de servicio no encontrado. |
+| `409` | Ya existe un trabajo con ese `id_trabajo`. |
 | `500` | Error interno. |
 
 Notas:
 
 - El trabajo se crea en estado `PENDIENTE`.
+- `id_trabajo` se persiste como `Trabajo.id`; es el mismo ID que RiderApp debe usar luego para cancelar.
 - No se asigna driver al crearlo.
 - El trabajo queda visible para drivers `ONLINE` que tengan ese tipo de servicio y no lo hayan rechazado.
 - `riderId` es solo una referencia externa.
@@ -79,7 +81,7 @@ Campos:
 
 | Campo | Tipo | Obligatorio | Descripcion |
 |---|---|---:|---|
-| `id_trabajo` | `string` | Si | ID del trabajo en DriverApp. |
+| `id_trabajo` | `string` | Si | ID compartido del trabajo, enviado originalmente por RiderApp y guardado como `Trabajo.id`. |
 | `estado` | `string` | No | Si se envia, solo puede ser `cancelado`. |
 
 Response `200 OK`:
@@ -278,3 +280,14 @@ APIs externas simuladas que DriverApp consume:
 | `/api/mocks/repairdash/*` | RiderApp |
 | `/api/mocks/payments/*` | PaymentsApp |
 | `/api/mocks/feedback/*` | FeedbackApp |
+
+Variables de integracion saliente:
+
+| Variable | Uso |
+|---|---|
+| `RIDER_APP_URL` | Base URL de RiderApp para notificar cambios de estado. En desarrollo puede apuntar a `/api/mocks/repairdash`. |
+| `FEEDBACK_APP_URL` | Base URL de FeedbackApp para reviews, reportes y trabajos. En desarrollo puede apuntar a `/api/mocks/feedback`. |
+| `PAYMENTS_APP_URL` | Base URL de PaymentsApp para wallet/ingresos. En desarrollo puede apuntar a `/api/mocks/payments`. |
+| `RIDER_INTERNAL_API_KEY` | API key en texto plano enviada por DriverApp a RiderApp. |
+| `FEEDBACK_INTERNAL_API_KEY` | API key en texto plano enviada por DriverApp a FeedbackApp. |
+| `PAYMENTS_INTERNAL_API_KEY` | API key en texto plano enviada por DriverApp a PaymentsApp. |

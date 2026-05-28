@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { TrabajoEstado } from "@prisma/client";
+import { Prisma, TrabajoEstado } from "@prisma/client";
 import { validateInternalApiKey } from "@/lib/auth/internal-auth";
 
 type RequestBody = {
+  id_trabajo: string;
   riderId: string;
   tipoServicioId: string;
   direccion: string;
   descripcion?: string;
   fotos?: string[];
-  latitud?: number;
-  longitud?: number;
 };
 
 export async function POST(req: NextRequest) {
@@ -26,16 +25,20 @@ export async function POST(req: NextRequest) {
 
     const body: RequestBody = await req.json();
     const {
+      id_trabajo,
       riderId,
       tipoServicioId,
       direccion,
       descripcion,
       fotos,
-      latitud,
-      longitud,
     } = body;
 
-    if (!riderId || !tipoServicioId || !direccion) {
+    if (
+      !id_trabajo ||
+      !riderId ||
+      !tipoServicioId ||
+      !direccion
+    ) {
       return NextResponse.json(
         { status: "error", mensaje: "Faltan parámetros obligatorios" },
         { status: 400 },
@@ -55,16 +58,31 @@ export async function POST(req: NextRequest) {
 
     // Crear el trabajo sin asignar driver — visible para todos los drivers ONLINE
     // con ese tipo de servicio habilitado
+    const trabajoExistente = await prisma.trabajo.findUnique({
+      where: {
+        id: id_trabajo,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (trabajoExistente) {
+      return NextResponse.json(
+        { status: "error", mensaje: "El trabajo ya existe" },
+        { status: 409 },
+      );
+    }
+
     const trabajo = await prisma.trabajo.create({
       data: {
+        id: id_trabajo,
         riderId,
         tipoServicioId,
         descripcion,
         direccion,
         fotos:
           fotos ?? [],
-        latitud,
-        longitud,
         estado: TrabajoEstado.PENDIENTE,
         montoEstimado: tipoServicio.precioBase,
         historialEstados: {
@@ -93,6 +111,17 @@ export async function POST(req: NextRequest) {
     );
   } catch (error) {
     console.error(error);
+
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return NextResponse.json(
+        { status: "error", mensaje: "El trabajo ya existe" },
+        { status: 409 },
+      );
+    }
+
     return NextResponse.json(
       { status: "error", mensaje: "Error interno del servidor" },
       { status: 500 },
