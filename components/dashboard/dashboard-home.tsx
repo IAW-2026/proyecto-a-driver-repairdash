@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import type {
   DashboardJobRequest,
   DriverDailyStats,
@@ -50,15 +51,15 @@ export function DashboardHome({
         rating={stats.ratingPromedio}
       />
 
-      <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 pb-28 sm:px-6 lg:px-8 lg:pb-10">
+      <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-3 pb-28 sm:px-6 lg:px-8 lg:pb-10">
         <DashboardHeader
           driverName={driver.nombre}
           driverImageUrl={driver.imagenURL}
           onMenuClick={() => setIsDrawerOpen(true)}
         />
 
-        <div className="mt-7 grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start xl:grid-cols-[minmax(0,1fr)_420px]">
-          <section className="space-y-5">
+        <div className="mt-5 grid gap-4 sm:mt-7 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start xl:grid-cols-[minmax(0,1fr)_420px]">
+          <section className="space-y-4 sm:space-y-5">
             <DriverStatusCard
               status={driver.status}
               offeredServices={driver.servicios.map((service) => service.nombre)}
@@ -95,18 +96,18 @@ export function DashboardHome({
 
         {driver.status === "EN_TRABAJO" && trabajo ? (
           <section className="mt-7">
-            <div className="rounded-[30px] border border-highlight/10 bg-highlight/[0.05] p-6 shadow-2xl shadow-black/20">
-              <div className="flex items-start justify-between gap-4">
-                <div>
+            <div className="rounded-[26px] border border-highlight/10 bg-highlight/[0.05] p-4 shadow-2xl shadow-black/20 sm:rounded-[30px] sm:p-6">
+              <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:gap-4">
+                <div className="min-w-0">
                   <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">
                     Trabajo activo
                   </p>
-                  <h3 className="mt-2 text-3xl font-black text-highlight">
+                  <h3 className="mt-2 truncate text-2xl font-black leading-tight text-highlight sm:text-3xl">
                     {trabajo.tipoServicio.nombre}
                   </h3>
-                  <p className="mt-3 text-sm text-highlight/60">{trabajo.direccion}</p>
+                  <p className="mt-2 line-clamp-2 text-xs leading-5 text-highlight/60 sm:mt-3 sm:text-sm">{trabajo.direccion}</p>
                 </div>
-                <p className="text-2xl font-black text-highlight">
+                <p className="text-left text-xl font-black leading-none text-highlight sm:shrink-0 sm:text-right sm:text-2xl">
                   {formatCurrency(trabajo.montoEstimado)}
                 </p>
               </div>
@@ -120,7 +121,7 @@ export function DashboardHome({
                 </div>
               )}
 
-              <div className="mt-6 flex items-center justify-between">
+              <div className="mt-5 grid gap-3 sm:mt-6 sm:flex sm:items-center sm:justify-between">
                 <div className="flex items-center gap-4">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-widest text-highlight/40">
@@ -153,12 +154,12 @@ export function DashboardHome({
                     </div>
                   </div>
                 </div>
-                <a
+                <Link
                   href="/trabajos/activo"
-                  className="rounded-2xl bg-gradient-to-r from-[#F500F1] to-[#d400d0] px-5 py-2 text-sm font-black text-white shadow-lg shadow-[#F500F1]/25 transition hover:opacity-90"
+                  className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-gradient-to-r from-[#F500F1] to-[#d400d0] px-5 text-sm font-black text-white shadow-lg shadow-[#F500F1]/25 transition hover:opacity-90 sm:w-auto"
                 >
                   Continuar trabajo
-                </a>
+                </Link>
               </div>
             </div>
           </section>
