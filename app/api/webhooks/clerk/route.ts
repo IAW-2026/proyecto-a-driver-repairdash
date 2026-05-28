@@ -9,7 +9,22 @@ import {
 
 type ClerkEvent = {
   type: string;
-  data: any;
+  data: ClerkUserData;
+};
+
+type ClerkUserData = {
+  id?: string;
+  public_metadata?: {
+    role?: unknown;
+  };
+  email_addresses?: Array<{
+    email_address?: string;
+  }>;
+  first_name?: string | null;
+  phone_numbers?: Array<{
+    phone_number?: string;
+  }>;
+  image_url?: string | null;
 };
 
 const DRIVER_ROLE =
@@ -123,6 +138,19 @@ export async function POST(
   const clerkUserId =
     user.id;
 
+  if (!clerkUserId) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message:
+          "Usuario Clerk sin id",
+      },
+      {
+        status: 400,
+      },
+    );
+  }
+
   const role =
     user.public_metadata
       ?.role;
@@ -193,26 +221,39 @@ export async function POST(
           "Driver sincronizado",
       },
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(
       "WEBHOOK ERROR:",
       error,
     );
 
+    const errorRecord =
+      typeof error ===
+        "object" &&
+      error !== null
+        ? (error as {
+            code?: unknown;
+            meta?: unknown;
+          })
+        : {};
+
     return NextResponse.json(
       {
         ok: false,
         message:
-          error?.message,
+          error instanceof Error
+            ? error.message
+            : "Error interno",
         code:
-          error?.code,
+          errorRecord.code,
         meta:
-          error?.meta,
+          errorRecord.meta,
         stack:
           process.env
             .NODE_ENV ===
-          "development"
-            ? error?.stack
+            "development" &&
+          error instanceof Error
+            ? error.stack
             : undefined,
       },
       {
