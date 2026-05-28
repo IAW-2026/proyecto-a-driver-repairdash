@@ -38,6 +38,23 @@ function getEmptyPaymentSummary(
   };
 }
 
+function getPaymentsWalletUrl(
+  baseUrl: string,
+  driverId: string,
+) {
+  const walletBaseUrl =
+    baseUrl.endsWith(
+      "/payments",
+    ) ||
+    baseUrl.endsWith(
+      "/mocks/payments",
+    )
+      ? baseUrl
+      : `${baseUrl}/payments`;
+
+  return `${walletBaseUrl}/wallet/${driverId}`;
+}
+
 export async function getPaymentDailySummary(
   driverId: string,
 ): Promise<PaymentDailySummary> {
@@ -54,14 +71,18 @@ export async function getPaymentDailySummary(
     );
   }
 
-  const url = `${baseUrl}/wallet/${driverId}`;
+  const url = getPaymentsWalletUrl(
+    baseUrl,
+    driverId,
+  );
 
   try {
     const response = await fetch(
       url,
       {
         headers: {
-          "x-api-key": process.env.PAYMENTS_INTERNAL_API_KEY ?? "",
+          "x-internal-api-key":
+            process.env.PAYMENTS_INTERNAL_API_KEY ?? "",
         },
         next: {
           revalidate: 60,
