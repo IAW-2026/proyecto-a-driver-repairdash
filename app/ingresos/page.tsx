@@ -9,11 +9,9 @@ import {
 async function retirarGanancias() {
   "use server";
 
-  // TODO: reemplazar por flujo real al integrar Payments App
-  // const paymentAppUrl = process.env.PAYMENTS_APP_URL ?? `${getBaseUrl()}/api/mocks/payments`;
-  // redirect(`${paymentAppUrl}/retirar`);
-
-  redirect("/proximamente");
+  redirect(
+    "https://proyecto-a-payments-repairdash.vercel.app/",
+  );
 }
 
 export default async function IngresosPage() {
