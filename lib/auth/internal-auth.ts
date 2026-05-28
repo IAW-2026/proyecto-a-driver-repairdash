@@ -1,39 +1,26 @@
-import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 
-function isValidSha256Hash(
-  value: string,
-): boolean {
-  return /^[a-f0-9]{64}$/i.test(
-    value,
-  );
-}
-
-function sha256(
-  value: string,
-): Buffer {
-  return Buffer.from(
-    crypto
-      .createHash("sha256")
-      .update(value.trim())
-      .digest("hex"),
-    "utf8",
+function unauthorized() {
+  return NextResponse.json(
+    {
+      message: "Unauthorized",
+    },
+    {
+      status: 401,
+    },
   );
 }
 
 export function validateInternalApiKey(
   req: NextRequest,
-  expectedHash?: string,
+  expectedApiKey = process.env.DRIVER_API_KEY,
 ): NextResponse | null {
-  if (!expectedHash) {
-    console.error(
-      "INTERNAL_AUTH_NOT_CONFIGURED",
-    );
+  if (!expectedApiKey) {
+    console.error("INTERNAL_AUTH_NOT_CONFIGURED");
 
     return NextResponse.json(
       {
-        message:
-          "Internal auth not configured",
+        message: "Internal auth not configured",
       },
       {
         status: 500,
@@ -41,19 +28,29 @@ export function validateInternalApiKey(
     );
   }
 
-  if (
-    !isValidSha256Hash(
-      expectedHash,
-    )
-  ) {
-    console.error(
-      "INVALID_INTERNAL_API_KEY_HASH_FORMAT",
-    );
+  const apiKey = req.headers.get("x-api-key");
+
+  if (!apiKey || apiKey !== expectedApiKey) {
+    return unauthorized();
+  }
+
+  return null;
+}
+
+export function validateAnyInternalApiKey(
+  req: NextRequest,
+  expectedApiKeys: Array<string | undefined>,
+): NextResponse | null {
+  const configuredApiKeys = expectedApiKeys.filter(
+    (apiKey): apiKey is string => Boolean(apiKey),
+  );
+
+  if (configuredApiKeys.length === 0) {
+    console.error("INTERNAL_AUTH_NOT_CONFIGURED");
 
     return NextResponse.json(
       {
-        message:
-          "Invalid API key hash format",
+        message: "Internal auth not configured",
       },
       {
         status: 500,
@@ -61,48 +58,10 @@ export function validateInternalApiKey(
     );
   }
 
-  const apiKey =
-    req.headers.get(
-      "x-api-key",
-    );
+  const apiKey = req.headers.get("x-api-key");
 
-  if (!apiKey) {
-    return NextResponse.json(
-      {
-        message:
-          "Unauthorized",
-      },
-      {
-        status: 401,
-      },
-    );
-  }
-
-  const receivedHash =
-    sha256(apiKey);
-
-  const expectedHashBuffer =
-    Buffer.from(
-      expectedHash,
-      "utf8",
-    );
-
-  const isValid =
-    crypto.timingSafeEqual(
-      receivedHash,
-      expectedHashBuffer,
-    );
-
-  if (!isValid) {
-    return NextResponse.json(
-      {
-        message:
-          "Unauthorized",
-      },
-      {
-        status: 401,
-      },
-    );
+  if (!apiKey || !configuredApiKeys.includes(apiKey)) {
+    return unauthorized();
   }
 
   return null;

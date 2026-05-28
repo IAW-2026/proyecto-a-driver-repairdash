@@ -5,6 +5,10 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/roles";
 import { prisma } from "@/lib/prisma";
 import type { AdminServiceType } from "@/lib/services/admin/service-tipos-de-servicios";
+import {
+  Prisma,
+  TrabajoEstado,
+} from "@prisma/client";
 
 function readServiceTypeForm(formData: FormData) {
   const nombre = formData.get("nombre")?.toString().trim();
@@ -38,7 +42,10 @@ const serviceSelect = {
   trabajos: {
     where: {
       estado: {
-        not: "FINALIZADO",
+        notIn: [
+          TrabajoEstado.FINALIZADO,
+          TrabajoEstado.CANCELADO,
+        ],
       },
     },
     select: {
@@ -46,7 +53,7 @@ const serviceSelect = {
       driverId: true,
     },
   },
-} as const;
+} satisfies Prisma.TipoServicioSelect;
 
 function serializeServiceType(service: {
   id: string;

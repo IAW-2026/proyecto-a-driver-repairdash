@@ -6,13 +6,17 @@ import {
   getPaymentWalletMock,
 } from "@/lib/mocks/payments.mock";
 
+const VALID_API_KEY =
+  process.env
+    .PAYMENTS_INTERNAL_API_KEY;
+
 type Params = {
   driverId:
     string;
 };
 
 export async function GET(
-  _req: Request,
+  req: Request,
   {
     params,
   }: {
@@ -21,6 +25,27 @@ export async function GET(
   },
 ) {
   try {
+    const apiKey =
+      req.headers.get(
+        "x-api-key",
+      );
+
+    if (
+      !apiKey ||
+      apiKey !==
+        VALID_API_KEY
+    ) {
+      return NextResponse.json(
+        {
+          message:
+            "Unauthorized",
+        },
+        {
+          status: 401,
+        },
+      );
+    }
+
     const {
       driverId,
     } =

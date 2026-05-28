@@ -18,8 +18,6 @@ export async function POST(req: NextRequest) {
     const authError =
       validateInternalApiKey(
         req,
-        process.env
-          .DRIVER_RIDER_WEBHOOK_API_KEY_HASH,
       );
 
     if (authError)

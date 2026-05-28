@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { TrabajoEstado } from "@prisma/client";
 
 export type AdminServiceType = {
   id: string;
@@ -38,7 +39,10 @@ export async function getServiceTypes() {
       trabajos: {
         where: {
           estado: {
-            not: "FINALIZADO",
+            notIn: [
+              TrabajoEstado.FINALIZADO,
+              TrabajoEstado.CANCELADO,
+            ],
           },
         },
         select: {

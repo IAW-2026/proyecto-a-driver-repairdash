@@ -5,6 +5,7 @@ import {
 } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { validateInternalApiKey } from "@/lib/auth/internal-auth";
+import { getDriverFeedback } from "@/lib/services/external/feedback.client";
 
 
 export const dynamic = "force-dynamic";;
@@ -21,8 +22,6 @@ export async function GET(
     const authError =
       validateInternalApiKey(
         req,
-        process.env
-          .DRIVER_FEEDBACK_API_KEY_HASH,
       );
 
     if (authError)
@@ -53,6 +52,11 @@ export async function GET(
       );
     }
 
+    const feedback =
+      await getDriverFeedback(
+        driver.id,
+      );
+
     return NextResponse.json(
       {
         status:
@@ -65,7 +69,7 @@ export async function GET(
           nombre:
             driver.nombre,
           rating_promedio:
-            4.7,//TODO: calcular rating promedio
+            feedback.valoracion,
           estado:
             driver.status.toLowerCase(),
         },

@@ -6,8 +6,6 @@ export async function GET(req: NextRequest) {
   const authError =
     validateInternalApiKey(
       req,
-      process.env
-        .DRIVER_RIDER_API_KEY_HASH,
     );
 
   if (authError)

@@ -19,7 +19,23 @@ export function getFeedbackUserRatingMock(
   };
 }
 
-export type ReportResponse = {
+export type FeedbackPublicReportsResponse = {
+  idUsuario: string;
+  reportesAbiertos: number;
+  reportesConFalloEnContra: number;
+};
+
+export function getFeedbackPublicReportsMock(
+  userId: string,
+): FeedbackPublicReportsResponse {
+  return {
+    idUsuario: userId,
+    reportesAbiertos: 1,
+    reportesConFalloEnContra: 0,
+  };
+}
+
+export type FeedbackReportResponse = {
   message: string;
   idReporte: number;
   vinculos: {
@@ -29,11 +45,11 @@ export type ReportResponse = {
   estado: "SinResolver" | "Resuelto";
 };
 
-export function createReportMock(
-  idTrabajo: number,
-  idReportante: number,
-  idReportado: number
-) {
+export function createFeedbackReportMock(
+  idTrabajo: string,
+  idReportante: string,
+  idReportado: string,
+): FeedbackReportResponse {
   return {
     message: "Reporte creado exitosamente",
     idReporte: Math.floor(Math.random() * 1000),
@@ -42,6 +58,28 @@ export function createReportMock(
       reportado: `Mock Reportado ${idReportado}`,
     },
     estado: "SinResolver",
+  };
+}
+
+export const createReportMock = createFeedbackReportMock;
+
+export type FeedbackTrabajoRequest = {
+  Idtrabajo: string;
+  IdCliente: string;
+  IdTrabajador: string;
+  tipodeTrabajo: string;
+};
+
+export type FeedbackTrabajoResponse = FeedbackTrabajoRequest & {
+  fechaDeInicio: string;
+};
+
+export function createFeedbackTrabajoMock(
+  input: FeedbackTrabajoRequest,
+): FeedbackTrabajoResponse {
+  return {
+    ...input,
+    fechaDeInicio: new Date().toISOString(),
   };
 }
 

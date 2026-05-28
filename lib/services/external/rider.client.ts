@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { getBaseUrl } from "@/lib/config/get-base-url";
+import { TrabajoEstado } from "@prisma/client";
 import type {
   DashboardJobRequest,
   DriverAvailability,
@@ -70,4 +72,69 @@ export async function getAvailableRiderRequestsForDriver(
     estado: "DISPONIBLE" as const,
     precioEstimado: Number(trabajo.montoEstimado),
   }));
+}
+
+type RiderTravelState =
+  | "aceptado"
+  | "cancelado"
+  | "en camino"
+  | "ha llegado"
+  | "finalizado";
+
+const riderStateMap: Partial<Record<TrabajoEstado, RiderTravelState>> = {
+  ACEPTADO: "aceptado",
+  CANCELADO: "cancelado",
+  EN_CAMINO: "en camino",
+  EN_SERVICIO: "ha llegado",
+  FINALIZADO: "finalizado",
+};
+
+function getRiderStateBaseUrl() {
+  return (
+    process.env.RIDER_APP_URL ??
+    `${getBaseUrl()}/api/mocks/repairdash`
+  ).replace(/\/+$/, "");
+}
+
+export async function notifyRiderTrabajoState(input: {
+  trabajoId: string;
+  estado: TrabajoEstado;
+  driverId?: string;
+}) {
+  const estado =
+    riderStateMap[input.estado];
+
+  if (!estado) {
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `${getRiderStateBaseUrl()}/statetravel`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": process.env.RIDER_INTERNAL_API_KEY ?? "",
+        },
+        body: JSON.stringify({
+          id_viaje: input.trabajoId,
+          estado,
+          driver: input.driverId,
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      console.warn(
+        "Rider state API returned",
+        response.status,
+      );
+    }
+  } catch (error) {
+    console.warn(
+      "Rider state API unavailable",
+      error,
+    );
+  }
 }

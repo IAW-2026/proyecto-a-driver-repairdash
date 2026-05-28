@@ -84,7 +84,7 @@ const payments =
         {/* BALANCE DISPONIBLE */}
         <div className="mt-4 rounded-2xl border border-highlight/10 bg-highlight/[0.04] p-5 shadow-2xl shadow-black/20 sm:mt-6 sm:rounded-[28px] sm:p-6">
           <p className="text-[11px] uppercase tracking-[0.2em] text-highlight/40 sm:text-xs">
-            Balance disponible
+            Balance disponible para retirar
           </p>
 
           <p className="mt-2 text-3xl font-bold text-accent sm:mt-3 sm:text-4xl">

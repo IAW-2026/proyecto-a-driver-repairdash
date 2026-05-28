@@ -12,6 +12,9 @@ export async function getPaymentDailySummary(
     const response = await fetch(
       url,
       {
+        headers: {
+          "x-api-key": process.env.PAYMENTS_INTERNAL_API_KEY ?? "",
+        },
         next: {
           revalidate: 60,
         },

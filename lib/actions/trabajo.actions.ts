@@ -3,10 +3,17 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { getBaseUrl } from "@/lib/config/get-base-url";
 import { canTransition } from "@/lib/state-machine/trabajo.states";
 import { TrabajoEstado } from "@prisma/client";
 import { redirect } from "next/navigation";
+import {
+  createFeedbackReport,
+  createFeedbackTrabajo,
+  requestFeedbackReview,
+} from "@/lib/services/external/feedback.client";
+import {
+  notifyRiderTrabajoState,
+} from "@/lib/services/external/rider.client";
 
 export async function rechazarTrabajo(
   trabajoId: string,
@@ -86,10 +93,20 @@ export async function aceptarTrabajo(trabajoId: string): Promise<void> {
   if (!driver) throw new Error("Driver no encontrado");
   if (driver.status === "EN_TRABAJO") throw new Error("Ya tienes un trabajo activo");
 
-  await prisma.$transaction(async (tx) => {
+  const acceptedTrabajo = await prisma.$transaction(async (tx) => {
     const trabajo = await tx.trabajo.findUnique({
       where: { id: trabajoId },
-      select: { id: true, estado: true, driverId: true },
+      select: {
+        id: true,
+        estado: true,
+        driverId: true,
+        riderId: true,
+        tipoServicio: {
+          select: {
+            nombre: true,
+          },
+        },
+      },
     });
 
     if (!trabajo) throw new Error("Trabajo no encontrado");
@@ -109,20 +126,21 @@ export async function aceptarTrabajo(trabajoId: string): Promise<void> {
     await tx.historialEstado.create({
       data: { trabajoId, estadoAnterior: "PENDIENTE", estadoNuevo: "ACEPTADO" },
     });
+
+    return trabajo;
   });
 
-  // 🔔 Notificar a RiderApp usando getBaseUrl
-  const baseUrl = getBaseUrl();
-  await fetch(`${baseUrl}/api/trabajos/state`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": process.env.RIDER_APP_API_KEY!,
-    },
-    body: JSON.stringify({
-      id_trabajo: trabajoId,
-      estado: "aceptado",
-    }),
+  await notifyRiderTrabajoState({
+    trabajoId,
+    estado: TrabajoEstado.ACEPTADO,
+    driverId: driver.id,
+  });
+
+  await createFeedbackTrabajo({
+    idTrabajo: acceptedTrabajo.id,
+    idCliente: acceptedTrabajo.riderId,
+    idTrabajador: driver.id,
+    tipoDeTrabajo: acceptedTrabajo.tipoServicio.nombre,
   });
 
   revalidatePath("/");
@@ -173,18 +191,9 @@ export async function avanzarTrabajo(trabajoId: string, nuevoEstado: TrabajoEsta
     }
   });
 
-  // 🔔 Notificar a RiderApp
-  const baseUrl = getBaseUrl();
-  await fetch(`${baseUrl}/api/trabajos/state`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": process.env.RIDER_APP_API_KEY!,
-    },
-    body: JSON.stringify({
-      id_trabajo: trabajoId,
-      estado: nuevoEstado.toLowerCase(),
-    }),
+  await notifyRiderTrabajoState({
+    trabajoId,
+    estado: nuevoEstado,
   });
 
   revalidatePath("/");
@@ -262,37 +271,11 @@ export async function comenzarReporte(
     );
   }
 
-  // TODO: reemplazar por URL real al integrar Feedback App
-  // Actualmente usa mock local. Cambiar FEEDBACK_APP_URL + llamada real + redirect externo al integrar.
-  const feedbackApiUrl =
-    `${getBaseUrl()}/api/mocks/feedback/reports`;
-
-  const response =
-    await fetch(
-      feedbackApiUrl,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type":
-            "application/json",
-            "x-api-key": process.env.FEEDBACK_APP_API_KEY!,
-        },
-        body: JSON.stringify({
-          idTrabajo:
-            trabajo.id,
-          idReportante:
-            driver.id,
-          idReportado:
-            trabajo.riderId,
-        }),
-      },
-    );
-
-  if (!response.ok) {
-    throw new Error(
-      "No se pudo crear el reporte",
-    );
-  }
+  await createFeedbackReport({
+    idTrabajo: trabajo.id,
+    idReportante: driver.id,
+    idReportado: trabajo.riderId,
+  });
 
   revalidatePath("/");
   revalidatePath("/trabajos/activo");
@@ -363,41 +346,12 @@ export async function finalizarTrabajo(
     });
   });
 
-  const baseUrl = getBaseUrl();
-  await fetch(`${baseUrl}/api/trabajos/state`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": process.env.RIDER_APP_API_KEY!,
-    },
-    body: JSON.stringify({
-      id_trabajo: trabajoId,
-      estado: "finalizado",
-    }),
+  await notifyRiderTrabajoState({
+    trabajoId,
+    estado: TrabajoEstado.FINALIZADO,
   });
 
-  // TODO: reemplazar por URL real al integrar Feedback App
-  // Actualmente usa mock local. Cambiar FEEDBACK_APP_URL + llamada real + redirect externo al integrar.
-  const feedbackApiUrl =
-    `${getBaseUrl()}/api/mocks/feedback/reviews`;
-
-  const response = await fetch(
-    feedbackApiUrl,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": process.env.FEEDBACK_APP_API_KEY!,
-      },
-      body: JSON.stringify({
-        idTrabajo: trabajoId,
-      }),
-    },
-  );
-
-  if (!response.ok) {
-    throw new Error("No se pudo iniciar el proceso de review");
-  }
+  await requestFeedbackReview(trabajoId);
 
   revalidatePath("/");
   revalidatePath("/trabajos/activo");

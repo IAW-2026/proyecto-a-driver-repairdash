@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs/server";
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/utils/format";
 import { getNextState } from "@/lib/state-machine/trabajo.states";
@@ -10,7 +11,6 @@ import {
 } from "@/lib/actions/trabajo.actions";
 
 const ESTADOS = ["ACEPTADO", "EN_CAMINO", "EN_SERVICIO", "FINALIZADO"] as const;
-
 const STATUS_COPY = {
   ACEPTADO: {
     title: "ACEPTADO",
@@ -61,10 +61,10 @@ export default async function TrabajoActivoPage() {
 
   const driver = await prisma.driver.findUnique({
     where: { clerkUserId: user.id },
-    select: { id: true, status: true },
+    select: { id: true, nombre: true, status: true },
   });
 
-  if (!driver || driver.status !== "EN_TRABAJO") redirect("/");
+  if (!driver) redirect("/");
 
   const trabajo = await prisma.trabajo.findFirst({
     where: {
@@ -75,7 +75,47 @@ export default async function TrabajoActivoPage() {
     orderBy: { actualizadoEn: "desc" },
   });
 
-  if (!trabajo) redirect("/");
+  if (!trabajo) {
+    const trabajoCancelado = await prisma.trabajo.findFirst({
+      where: {
+        driverId: driver.id,
+        estado: "CANCELADO",
+      },
+      include: {
+        tipoServicio: true,
+      },
+      orderBy: {
+        actualizadoEn: "desc",
+      },
+    });
+
+    if (!trabajoCancelado) {
+      redirect("/");
+    }
+
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#271033] via-[#271033] to-[#160822] px-6 text-center text-highlight">
+        <div className="w-full max-w-md rounded-[32px] border border-highlight/10 bg-highlight/[0.05] p-7 shadow-2xl shadow-black/25">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">
+            Trabajo cancelado
+          </p>
+          <h1 className="mt-4 text-3xl font-black leading-tight text-highlight">
+            Ups... {driver.nombre}, se canceló el trabajo
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-highlight/60">
+            {trabajoCancelado.tipoServicio.nombre} ya no está disponible. Te
+            dejamos nuevamente online para recibir nuevas solicitudes.
+          </p>
+          <Link
+            href="/"
+            className="mt-7 inline-flex h-14 w-full items-center justify-center rounded-2xl bg-magenta px-6 text-sm font-black text-white shadow-lg shadow-magenta/25 transition hover:bg-magenta/90"
+          >
+            Volver al inicio
+          </Link>
+        </div>
+      </main>
+    );
+  }
 
   const currentState = trabajo.estado as keyof typeof STATUS_COPY;
   const currentIndex = ESTADOS.indexOf(currentState);
@@ -84,12 +124,12 @@ export default async function TrabajoActivoPage() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#271033] via-[#271033] to-[#160822] text-highlight flex flex-col">
       <header className="sticky top-0 z-20 bg-[#160822]/90 backdrop-blur-sm flex items-center justify-center px-5 py-4">
-        <a
+        <Link
           href="/"
           className="absolute left-5 grid h-11 w-11 place-items-center rounded-full border border-highlight/10 bg-highlight/[0.06] text-xl text-highlight/70 transition hover:bg-highlight/10"
         >
           ←
-        </a>
+        </Link>
         <h1 className="text-base font-bold text-highlight/80">Trabajo en curso</h1>
       </header>
 

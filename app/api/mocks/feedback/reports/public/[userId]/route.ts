@@ -1,9 +1,21 @@
 import { NextResponse } from "next/server";
-import { createReviewsUserMock } from "@/lib/mocks/feedback.mock";
+
+import { getFeedbackPublicReportsMock } from "@/lib/mocks/feedback.mock";
 
 const VALID_API_KEY = process.env.FEEDBACK_INTERNAL_API_KEY;
 
-export async function PUT(req: Request) {
+type Params = {
+  userId: string;
+};
+
+export async function GET(
+  req: Request,
+  {
+    params,
+  }: {
+    params: Promise<Params>;
+  },
+) {
   try {
     const apiKey = req.headers.get("x-api-key");
 
@@ -14,25 +26,24 @@ export async function PUT(req: Request) {
       );
     }
 
-    const body = await req.json();
-    const { idTrabajo } = body;
-
-    if (!idTrabajo) {
-      return NextResponse.json(
-        { message: "Falta idTrabajo" },
-        { status: 400 },
-      );
-    }
+    const { userId } = await params;
 
     return NextResponse.json(
-      createReviewsUserMock(idTrabajo),
-      { status: 200 },
+      getFeedbackPublicReportsMock(userId),
+      {
+        status: 200,
+      },
     );
   } catch (error) {
     console.error(error);
+
     return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 },
+      {
+        message: "Internal server error",
+      },
+      {
+        status: 500,
+      },
     );
   }
 }

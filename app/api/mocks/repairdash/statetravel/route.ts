@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 
 const VALID_API_KEY =
   process.env
-    .REPAIRDASH_API_KEY;
+    .RIDER_INTERNAL_API_KEY;
 
 type EstadoViaje =
   | "aceptado"

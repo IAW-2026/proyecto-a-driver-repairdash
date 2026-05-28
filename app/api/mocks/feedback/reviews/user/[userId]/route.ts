@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 
 import { getFeedbackUserRatingMock } from "@/lib/mocks/feedback.mock";
 
+const VALID_API_KEY = process.env.FEEDBACK_INTERNAL_API_KEY;
+
 type Params = {
   userId: string;
 };
@@ -15,6 +17,15 @@ export async function GET(
   },
 ) {
   try {
+    const apiKey = _req.headers.get("x-api-key");
+
+    if (!apiKey || apiKey !== VALID_API_KEY) {
+      return NextResponse.json(
+        { message: "Unauthorized" },
+        { status: 401 },
+      );
+    }
+
     const { userId } = await params;
 
     return NextResponse.json(
