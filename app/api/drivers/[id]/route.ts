@@ -34,7 +34,8 @@ export async function GET(
       await prisma.driver.findUnique(
         {
           where: {
-            id,
+            clerkUserId:
+              id,
           },
         },
       );
@@ -54,7 +55,7 @@ export async function GET(
 
     const feedback =
       await getDriverFeedback(
-        driver.id,
+        driver.clerkUserId,
       );
 
     return NextResponse.json(
@@ -65,7 +66,7 @@ export async function GET(
           "Datos del trabajador obtenidos correctamente",
         data: {
           id_driver:
-            driver.id,
+            driver.clerkUserId,
           nombre:
             driver.nombre,
           rating_promedio:

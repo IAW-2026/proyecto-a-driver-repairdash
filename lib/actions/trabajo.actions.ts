@@ -87,7 +87,7 @@ export async function aceptarTrabajo(trabajoId: string): Promise<void> {
 
   const driver = await prisma.driver.findUnique({
     where: { clerkUserId: user.id },
-    select: { id: true, status: true },
+    select: { id: true, clerkUserId: true, status: true },
   });
 
   if (!driver) throw new Error("Driver no encontrado");
@@ -133,13 +133,13 @@ export async function aceptarTrabajo(trabajoId: string): Promise<void> {
   await notifyRiderTrabajoState({
     trabajoId,
     estado: TrabajoEstado.ACEPTADO,
-    driverId: driver.id,
+    driverId: driver.clerkUserId,
   });
 
   await createFeedbackTrabajo({
     idTrabajo: acceptedTrabajo.id,
     idCliente: acceptedTrabajo.riderId,
-    idTrabajador: driver.id,
+    idTrabajador: driver.clerkUserId,
     tipoDeTrabajo: acceptedTrabajo.tipoServicio.nombre,
   });
 
@@ -225,6 +225,7 @@ export async function comenzarReporte(
       },
       select: {
         id: true,
+        clerkUserId: true,
       },
     });
 
@@ -273,7 +274,7 @@ export async function comenzarReporte(
 
   await createFeedbackReport({
     idTrabajo: trabajo.id,
-    idReportante: driver.id,
+    idReportante: driver.clerkUserId,
     idReportado: trabajo.riderId,
   });
 

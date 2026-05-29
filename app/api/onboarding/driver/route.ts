@@ -16,6 +16,16 @@ import {
   NextResponse,
 } from "next/server";
 
+function shouldSetDriverRole(
+  role: unknown,
+) {
+  return (
+    role !== "driver" &&
+    role !== "driver-admin" &&
+    role !== "admin"
+  );
+}
+
 export async function POST() {
   const { userId } =
     await auth();
@@ -44,14 +54,21 @@ export async function POST() {
     user.publicMetadata
       ?.role;
 
-  // evita ejecutar onboarding dos veces
   if (
-    role ===
-    "driver"
+    shouldSetDriverRole(
+      role,
+    )
   ) {
-    return NextResponse.json({
-      ok: true,
-    });
+    await clerk.users.updateUser(
+      userId,
+      {
+        publicMetadata: {
+          ...user.publicMetadata,
+          role:
+            "driver",
+        },
+      },
+    );
   }
 
   const email =
@@ -72,18 +89,6 @@ export async function POST() {
     user.imageUrl ??
     null;
 
-  // 1. setear role
-  await clerk.users.updateUser(
-    userId,
-    {
-      publicMetadata: {
-        role:
-          "driver",
-      },
-    },
-  );
-
-  // 2. crear o sincronizar driver prisma
   await prisma.driver.upsert(
     {
       where: {

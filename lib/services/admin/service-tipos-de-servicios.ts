@@ -33,7 +33,11 @@ export async function getServiceTypes() {
       driverServicios: {
         select: {
           id: true,
-          driverId: true,
+          driver: {
+            select: {
+              clerkUserId: true,
+            },
+          },
         },
       },
       trabajos: {
@@ -47,16 +51,30 @@ export async function getServiceTypes() {
         },
         select: {
           id: true,
-          driverId: true,
+          driver: {
+            select: {
+              clerkUserId: true,
+            },
+          },
         },
       },
     },
   });
 
   return services.map((service): AdminServiceType => ({
-    ...service,
+    id: service.id,
+    nombre: service.nombre,
+    descripcion: service.descripcion,
     precioBase: service.precioBase.toNumber(),
     creadoEn: service.creadoEn.toISOString(),
     actualizadoEn: service.actualizadoEn.toISOString(),
+    driverServicios: service.driverServicios.map((driverService) => ({
+      id: driverService.id,
+      driverId: driverService.driver.clerkUserId,
+    })),
+    trabajos: service.trabajos.map((trabajo) => ({
+      id: trabajo.id,
+      driverId: trabajo.driver?.clerkUserId ?? null,
+    })),
   }));
 }

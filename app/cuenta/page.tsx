@@ -16,7 +16,7 @@ export default async function CuentaPage() {
     allServices,
   ] = await Promise.all([
     getDriverFeedback(
-      driver.id,
+      driver.clerkUserId,
     ),
     getPaymentDailySummary(
       driver.clerkUserId,

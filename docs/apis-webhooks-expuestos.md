@@ -12,7 +12,7 @@ Request:
 ```json
 {
   "id_trabajo": "trabajo_id_en_riderapp",
-  "riderId": "rider_external_id",
+  "riderId": "clerk_user_id_del_rider",
   "tipoServicioId": "tipo_servicio_id",
   "direccion": "Av. Siempre Viva 742",
   "descripcion": "Cambio de foco",
@@ -25,7 +25,7 @@ Campos obligatorios:
 | Campo | Tipo | Descripcion |
 |---|---|---|
 | `id_trabajo` | `string` | ID del trabajo generado por RiderApp. DriverApp lo guarda como `Trabajo.id`. |
-| `riderId` | `string` | ID externo del rider. No es relacion Prisma. |
+| `riderId` | `string` | Clerk ID del rider. No es relacion Prisma. |
 | `tipoServicioId` | `string` | ID de `TipoServicio` existente en DriverApp. |
 | `direccion` | `string` | Direccion del trabajo. |
 
@@ -58,7 +58,8 @@ Notas:
 - `id_trabajo` se persiste como `Trabajo.id`; es el mismo ID que RiderApp debe usar luego para cancelar.
 - No se asigna driver al crearlo.
 - El trabajo queda visible para drivers `ONLINE` que tengan ese tipo de servicio y no lo hayan rechazado.
-- `riderId` es solo una referencia externa.
+- `riderId` es el Clerk ID del rider y se guarda solo como referencia externa.
+- Todo ID de rider/driver que cruce limites entre aplicaciones debe ser un Clerk ID, no un ID interno de base de datos.
 
 ## PUT `/api/trabajos/state`
 
@@ -143,13 +144,13 @@ Response `200 OK`:
       "driverServicios": [
         {
           "id": "relacion_id",
-          "driverId": "driver_id"
+          "driverId": "clerk_user_id_del_driver"
         }
       ],
       "trabajos": [
         {
           "id": "trabajo_id",
-          "driverId": "driver_id"
+          "driverId": "clerk_user_id_del_driver"
         }
       ]
     }
@@ -177,7 +178,7 @@ Path params:
 
 | Param | Tipo | Descripcion |
 |---|---|---|
-| `id` | `string` | ID interno del `Driver`. |
+| `id` | `string` | Clerk ID del `Driver`. |
 
 Response `200 OK`:
 
@@ -186,7 +187,7 @@ Response `200 OK`:
   "status": "success",
   "mensaje": "Datos del trabajador obtenidos correctamente",
   "data": {
-    "id_driver": "driver_id",
+    "id_driver": "clerk_user_id_del_driver",
     "nombre": "Juan Perez",
     "rating_promedio": 4.8,
     "estado": "online"
@@ -204,7 +205,8 @@ Errores:
 
 Notas:
 
-- `rating_promedio` se obtiene consultando FeedbackApp mediante el cliente externo de Feedback.
+- `id_driver` se devuelve como Clerk ID.
+- `rating_promedio` se obtiene consultando FeedbackApp mediante el cliente externo de Feedback usando el Clerk ID.
 - En desarrollo, FeedbackApp esta mockeada en `/api/mocks/feedback/reviews/user/[userId]`.
 - El valor de `estado` se devuelve en minuscula.
 
@@ -294,7 +296,7 @@ Variables de integracion saliente:
 
 Notas para PaymentsApp:
 
-- DriverApp consulta `GET {PAYMENTS_APP_URL}/payments/wallet/:driverId` cuando `PAYMENTS_APP_URL` apunta a la base `/api`.
+- DriverApp consulta `GET {PAYMENTS_APP_URL}/payments/wallet/:driverId` usando el Clerk ID del driver cuando `PAYMENTS_APP_URL` apunta a la base `/api`.
 - En desarrollo, si la base apunta directamente a `/api/mocks/payments`, consulta `GET {PAYMENTS_APP_URL}/wallet/:driverId`.
 - Si PaymentsApp responde `404`, DriverApp interpreta que el driver todavia no tiene wallet/ingresos y muestra ceros.
 - En produccion no se usa mock local como fallback; ante error de PaymentsApp se muestra un resumen vacio para no romper la UI.

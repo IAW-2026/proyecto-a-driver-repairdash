@@ -36,7 +36,11 @@ const serviceSelect = {
   driverServicios: {
     select: {
       id: true,
-      driverId: true,
+      driver: {
+        select: {
+          clerkUserId: true,
+        },
+      },
     },
   },
   trabajos: {
@@ -50,7 +54,11 @@ const serviceSelect = {
     },
     select: {
       id: true,
-      driverId: true,
+      driver: {
+        select: {
+          clerkUserId: true,
+        },
+      },
     },
   },
 } satisfies Prisma.TipoServicioSelect;
@@ -62,14 +70,24 @@ function serializeServiceType(service: {
   precioBase: { toNumber: () => number };
   creadoEn: Date;
   actualizadoEn: Date;
-  driverServicios: { id: string; driverId: string }[];
-  trabajos: { id: string; driverId: string | null }[];
+  driverServicios: { id: string; driver: { clerkUserId: string } }[];
+  trabajos: { id: string; driver: { clerkUserId: string } | null }[];
 }): AdminServiceType {
   return {
-    ...service,
+    id: service.id,
+    nombre: service.nombre,
+    descripcion: service.descripcion,
     precioBase: service.precioBase.toNumber(),
     creadoEn: service.creadoEn.toISOString(),
     actualizadoEn: service.actualizadoEn.toISOString(),
+    driverServicios: service.driverServicios.map((driverService) => ({
+      id: driverService.id,
+      driverId: driverService.driver.clerkUserId,
+    })),
+    trabajos: service.trabajos.map((trabajo) => ({
+      id: trabajo.id,
+      driverId: trabajo.driver?.clerkUserId ?? null,
+    })),
   };
 }
 

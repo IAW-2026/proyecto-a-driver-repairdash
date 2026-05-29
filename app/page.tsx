@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
+import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { DashboardHome } from "@/components/dashboard/dashboard-home";
+import { PublicHome } from "@/components/landing/public-home";
 import { getCurrentDriverProfile } from "@/lib/services/driver.service";
 import { getDriverFeedback } from "@/lib/services/external/feedback.client";
 import {
@@ -12,6 +14,14 @@ import type { DriverDailyStats } from "@/types/dashboard";
 import { isAdmin } from "@/lib/auth/roles";
 
 export default async function HomePage() {
+  const {
+    userId,
+  } = await auth();
+
+  if (!userId) {
+    return <PublicHome />;
+  }
+
   const driver =
     await getCurrentDriverProfile();
 
@@ -40,7 +50,7 @@ export default async function HomePage() {
     requests,
   ] = await Promise.all([
     getDriverFeedback(
-      driver.id,
+      driver.clerkUserId,
     ),
     getPaymentDailySummary(
       driver.clerkUserId,

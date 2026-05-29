@@ -163,7 +163,8 @@ if (
     await prisma.driver.findUnique(
       {
         where: {
-          id: driver,
+          clerkUserId:
+            driver,
         },
       },
     );
@@ -196,7 +197,7 @@ if (
           TrabajoEstado.ACEPTADO,
 
         driverId:
-          driver,
+          driverExistente.id,
       },
     },
   );
