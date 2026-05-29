@@ -287,7 +287,7 @@ Variables de integracion saliente:
 
 | Variable | Uso |
 |---|---|
-| `RIDER_APP_URL` | Base URL de RiderApp para notificar cambios de estado. En desarrollo puede apuntar a `/api/mocks/repairdash`. |
+| `RIDER_APP_URL` | URL final del endpoint de RiderApp para notificar cambios de estado, por ejemplo `/api/repairdash/statetravel`. En desarrollo puede apuntar a `/api/mocks/repairdash/statetravel`. |
 | `FEEDBACK_APP_URL` | Base URL de FeedbackApp para reviews, reportes y trabajos. En desarrollo puede apuntar a `/api/mocks/feedback`. |
 | `PAYMENTS_APP_URL` | Base URL de PaymentsApp para wallet/ingresos. En desarrollo puede apuntar a `/api/mocks/payments`. |
 | `RIDER_INTERNAL_API_KEY` | API key en texto plano enviada por DriverApp a RiderApp. |

@@ -89,19 +89,11 @@ const riderStateMap: Partial<Record<TrabajoEstado, RiderTravelState>> = {
   FINALIZADO: "finalizado",
 };
 
-function getRiderStateBaseUrl() {
+function getRiderStateUrl() {
   return (
     process.env.RIDER_APP_URL ??
-    `${getBaseUrl()}/api/mocks/repairdash`
+    `${getBaseUrl()}/api/mocks/repairdash/statetravel`
   ).replace(/\/+$/, "");
-}
-
-function getRiderStateUrl() {
-  const path =
-    process.env.RIDER_STATE_TRAVEL_PATH ??
-    "/statetravel";
-
-  return `${getRiderStateBaseUrl()}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
 export async function notifyRiderTrabajoState(input: {
