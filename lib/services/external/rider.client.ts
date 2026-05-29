@@ -96,6 +96,14 @@ function getRiderStateBaseUrl() {
   ).replace(/\/+$/, "");
 }
 
+function getRiderStateUrl() {
+  const path =
+    process.env.RIDER_STATE_TRAVEL_PATH ??
+    "/statetravel";
+
+  return `${getRiderStateBaseUrl()}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
 export async function notifyRiderTrabajoState(input: {
   trabajoId: string;
   estado: TrabajoEstado;
@@ -109,13 +117,17 @@ export async function notifyRiderTrabajoState(input: {
   }
 
   try {
+    const url =
+      getRiderStateUrl();
+
     const response = await fetch(
-      `${getRiderStateBaseUrl()}/statetravel`,
+      url,
       {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           "x-api-key": process.env.RIDER_INTERNAL_API_KEY ?? "",
+          "x-internal-api-key": process.env.RIDER_INTERNAL_API_KEY ?? "",
         },
         body: JSON.stringify({
           id_viaje: input.trabajoId,
@@ -126,9 +138,16 @@ export async function notifyRiderTrabajoState(input: {
     );
 
     if (!response.ok) {
+      const responseBody =
+        await response.text();
+
       console.warn(
         "Rider state API returned",
         response.status,
+        {
+          url,
+          body: responseBody,
+        },
       );
     }
   } catch (error) {

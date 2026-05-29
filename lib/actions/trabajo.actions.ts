@@ -154,18 +154,37 @@ export async function avanzarTrabajo(trabajoId: string, nuevoEstado: TrabajoEsta
 
   const driver = await prisma.driver.findUnique({
     where: { clerkUserId: user.id },
-    select: { id: true },
+    select: {
+      id: true,
+      clerkUserId: true,
+    },
   });
 
   if (!driver) throw new Error("Driver no encontrado");
 
+  let wasCancelled = false;
+
   await prisma.$transaction(async (tx) => {
     const trabajo = await tx.trabajo.findUnique({
       where: { id: trabajoId },
-      select: { id: true, estado: true },
+      select: {
+        id: true,
+        estado: true,
+        driverId: true,
+      },
     });
 
     if (!trabajo) throw new Error("Trabajo no encontrado");
+
+    if (trabajo.driverId !== driver.id) {
+      throw new Error("No autorizado");
+    }
+
+    if (trabajo.estado === TrabajoEstado.CANCELADO) {
+      wasCancelled = true;
+      return;
+    }
+
     if (!canTransition(trabajo.estado, nuevoEstado)) {
       throw new Error(`Transición inválida: ${trabajo.estado} → ${nuevoEstado}`);
     }
@@ -191,9 +210,16 @@ export async function avanzarTrabajo(trabajoId: string, nuevoEstado: TrabajoEsta
     }
   });
 
+  if (wasCancelled) {
+    revalidatePath("/");
+    revalidatePath("/trabajos/activo");
+    redirect("/trabajos/activo");
+  }
+
   await notifyRiderTrabajoState({
     trabajoId,
     estado: nuevoEstado,
+    driverId: driver.clerkUserId,
   });
 
   revalidatePath("/");
@@ -203,6 +229,8 @@ export async function avanzarTrabajo(trabajoId: string, nuevoEstado: TrabajoEsta
   if (nuevoEstado === "FINALIZADO") {
     redirect("/");
   }
+
+  redirect("/trabajos/activo");
 }
 
 export async function comenzarReporte(

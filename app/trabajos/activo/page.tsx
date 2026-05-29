@@ -96,7 +96,7 @@ export default async function TrabajoActivoPage() {
 
     return (
       <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#271033] via-[#271033] to-[#160822] px-6 text-center text-highlight">
-        <AutoRefresh intervalMs={15_000} />
+        <AutoRefresh intervalMs={3_000} />
 
         <div className="w-full max-w-md rounded-[32px] border border-highlight/10 bg-highlight/[0.05] p-7 shadow-2xl shadow-black/25">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">
@@ -126,7 +126,7 @@ export default async function TrabajoActivoPage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#271033] via-[#271033] to-[#160822] text-highlight flex flex-col">
-      <AutoRefresh />
+      <AutoRefresh intervalMs={3_000} />
 
       <header className="sticky top-0 z-20 bg-[#160822]/90 backdrop-blur-sm flex items-center justify-center px-5 py-4">
         <Link

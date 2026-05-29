@@ -61,7 +61,9 @@ export function DashboardHome({
 
   const cancelStorageKey =
     trabajoCancelado
-      ? `repairdash:cancelled-work:${trabajoCancelado.id}`
+      ? `repairdash:cancelled-work:${trabajoCancelado.id}:${new Date(
+          trabajoCancelado.actualizadoEn,
+        ).getTime()}`
       : null;
 
   const wasCancelSeen =
@@ -98,7 +100,7 @@ export function DashboardHome({
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-primary text-highlight">
-      <AutoRefresh />
+      <AutoRefresh intervalMs={5_000} />
 
       <DriverDrawer
         isOpen={isDrawerOpen}
