@@ -92,7 +92,7 @@ const riderStateMap: Partial<Record<TrabajoEstado, RiderTravelState>> = {
 function getRiderStateUrl() {
   return (
     process.env.RIDER_APP_URL ??
-    `${getBaseUrl()}/api/mocks/repairdash/statetravel`
+    `${getBaseUrl()}statetravel`
   ).replace(/\/+$/, "");
 }
 
