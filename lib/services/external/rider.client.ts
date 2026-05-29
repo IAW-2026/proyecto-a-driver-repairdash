@@ -98,7 +98,7 @@ function getRiderStateBaseUrl() {
 
 function getRiderStateUrl() {
   const path =
-    process.env.RIDER_STATE_TRAVEL_PATH ??
+    process.env.RIDER_APP_URL ??
     "/statetravel";
 
   return `${getRiderStateBaseUrl()}${path.startsWith("/") ? path : `/${path}`}`;
