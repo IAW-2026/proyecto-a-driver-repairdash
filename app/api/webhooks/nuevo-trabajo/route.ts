@@ -86,37 +86,64 @@ export async function POST(req: NextRequest) {
         riderId,
       );
 
-    const trabajo = await prisma.trabajo.create({
-      data: {
-        id: id_trabajo,
-        riderId,
-        nombreRider:
-          nombreRider?.trim() ||
-          riderMock.nombreCliente,
-        apellidoRider:
-          apellidoRider?.trim() ||
-          riderMock.apellidoCliente,
-        valoracionRider:
-          typeof valoracionRider ===
-          "number"
-            ? valoracionRider
-            : riderMock.ratingCliente,
-        tipoServicioId,
-        descripcion,
-        direccion,
-        fotos:
-          fotos ?? [],
-        estado: TrabajoEstado.PENDIENTE,
-        montoEstimado: tipoServicio.precioBase,
-        historialEstados: {
-          create: {
-            estadoAnterior: null,
-            estadoNuevo: TrabajoEstado.PENDIENTE,
-            motivo: "Trabajo creado desde Rider App",
-          },
+    const riderSnapshot = {
+      nombre:
+        nombreRider?.trim() ||
+        riderMock.nombreCliente,
+      apellido:
+        apellidoRider?.trim() ||
+        riderMock.apellidoCliente,
+      valoracion:
+        typeof valoracionRider ===
+          "number" &&
+        Number.isFinite(
+          valoracionRider,
+        )
+          ? valoracionRider
+          : riderMock.ratingCliente,
+    };
+
+    const trabajo =
+      await prisma.$transaction(
+        async (tx) => {
+          const creado =
+            await tx.trabajo.create({
+              data: {
+                id: id_trabajo,
+                riderId,
+                tipoServicioId,
+                descripcion,
+                direccion,
+                fotos:
+                  fotos ?? [],
+                estado:
+                  TrabajoEstado.PENDIENTE,
+                montoEstimado:
+                  tipoServicio.precioBase,
+                historialEstados: {
+                  create: {
+                    estadoAnterior: null,
+                    estadoNuevo:
+                      TrabajoEstado.PENDIENTE,
+                    motivo:
+                      "Trabajo creado desde Rider App",
+                  },
+                },
+              },
+            });
+
+          await tx.$executeRaw`
+            UPDATE "Trabajo"
+            SET
+              "nombreRider" = ${riderSnapshot.nombre},
+              "apellidoRider" = ${riderSnapshot.apellido},
+              "valoracionRider" = ${riderSnapshot.valoracion}
+            WHERE "id" = ${creado.id}
+          `;
+
+          return creado;
         },
-      },
-    });
+      );
 
     revalidatePath("/");
     revalidatePath("/admin/servicios");
