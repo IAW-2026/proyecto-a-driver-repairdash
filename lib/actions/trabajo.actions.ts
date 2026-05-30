@@ -163,6 +163,7 @@ export async function avanzarTrabajo(trabajoId: string, nuevoEstado: TrabajoEsta
   if (!driver) throw new Error("Driver no encontrado");
 
   let wasCancelled = false;
+  let didTransition = false;
 
   await prisma.$transaction(async (tx) => {
     const trabajo = await tx.trabajo.findUnique({
@@ -182,6 +183,10 @@ export async function avanzarTrabajo(trabajoId: string, nuevoEstado: TrabajoEsta
 
     if (trabajo.estado === TrabajoEstado.CANCELADO) {
       wasCancelled = true;
+      return;
+    }
+
+    if (trabajo.estado === nuevoEstado) {
       return;
     }
 
@@ -208,6 +213,8 @@ export async function avanzarTrabajo(trabajoId: string, nuevoEstado: TrabajoEsta
         data: { status: "ONLINE" },
       });
     }
+
+    didTransition = true;
   });
 
   if (wasCancelled) {
@@ -216,11 +223,13 @@ export async function avanzarTrabajo(trabajoId: string, nuevoEstado: TrabajoEsta
     redirect("/trabajos/activo");
   }
 
-  await notifyRiderTrabajoState({
-    trabajoId,
-    estado: nuevoEstado,
-    driverId: driver.clerkUserId,
-  });
+  if (didTransition) {
+    await notifyRiderTrabajoState({
+      trabajoId,
+      estado: nuevoEstado,
+      driverId: driver.clerkUserId,
+    });
+  }
 
   revalidatePath("/");
   revalidatePath("/trabajos/activo");
