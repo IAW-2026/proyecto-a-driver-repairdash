@@ -152,7 +152,9 @@ curl.exe -i -X POST "http://localhost:3000/api/webhooks/nuevo-trabajo" ^
 
 Origen esperado: RiderApp.
 
-Objetivo: cancelar un trabajo desde fuera de DriverApp.
+Objetivo: cancelar un trabajo desde RiderApp.
+
+Esta API no es una state machine publica. RiderApp solo puede usarla para informar cancelaciones. Cualquier estado distinto de `cancelado` debe responder `400`.
 
 Auth: `x-api-key` contra `DRIVER_API_KEY`.
 
@@ -164,6 +166,13 @@ Request:
   "estado": "cancelado"
 }
 ```
+
+Campos:
+
+| Campo | Tipo | Obligatorio | Descripcion |
+|---|---|---:|---|
+| `id_trabajo` | `string` | Si | ID compartido del trabajo, el mismo recibido en `POST /api/webhooks/nuevo-trabajo`. |
+| `estado` | `"cancelado"` | Si | Unico estado aceptado por esta API. |
 
 Efectos:
 
@@ -181,6 +190,17 @@ curl.exe -i -X PUT "http://localhost:3000/api/trabajos/state" ^
   -H "x-api-key: driver-secret-key" ^
   -d "{ \"id_trabajo\": \"trabajo-terminal-001\", \"estado\": \"cancelado\" }"
 ```
+
+Test de rechazo para estados no permitidos:
+
+```bat
+curl.exe -i -X PUT "http://localhost:3000/api/trabajos/state" ^
+  -H "Content-Type: application/json" ^
+  -H "x-api-key: driver-secret-key" ^
+  -d "{ \"id_trabajo\": \"trabajo-terminal-001\", \"estado\": \"en camino\" }"
+```
+
+La respuesta esperada es `400`.
 
 ### GET `/api/tipos-servicios`
 
@@ -383,7 +403,7 @@ APIs expuestas por DriverApp:
 | Endpoint | Consumidor | Proposito |
 |---|---|---|
 | `POST /api/webhooks/nuevo-trabajo` | RiderApp/script mock | Publicar trabajo nuevo. |
-| `PUT /api/trabajos/state` | RiderApp | Cancelar trabajo. |
+| `PUT /api/trabajos/state` | RiderApp | Cancelar trabajo. No acepta otros estados. |
 | `GET /api/tipos-servicios` | RiderApp | Consultar tipos de servicio. |
 | `GET /api/drivers/[id]` | RiderApp/FeedbackApp | Consultar driver por Clerk ID. |
 | `POST /api/webhooks/clerk` | Clerk | Sincronizar usuarios. |
