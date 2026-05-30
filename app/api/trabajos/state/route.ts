@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 
 type RequestBody = {
   id_trabajo: string;
-  estado?: string;
+  estado: string;
 };
 
 export async function PUT(req: NextRequest) {
@@ -42,10 +42,22 @@ export async function PUT(req: NextRequest) {
       );
     }
 
+    if (!estado) {
+      return NextResponse.json(
+        {
+          status: "error",
+          mensaje:
+            "Falta estado. Esta API solo acepta estado cancelado",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
     if (
-      estado &&
       estado.toLowerCase() !==
-        "cancelado"
+      "cancelado"
     ) {
       return NextResponse.json(
         {
