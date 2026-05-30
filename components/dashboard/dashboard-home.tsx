@@ -14,6 +14,7 @@ import { JobRequestsCarousel } from "./job-requests-carousel";
 import { StatsGrid } from "./stats-grid";
 import { formatCurrency } from "@/lib/utils/format";
 import { AutoRefresh } from "@/components/auto-refresh";
+import { getCancelledWorkNoticeKey } from "@/lib/utils/cancelled-work-notice";
 
 import type { Trabajo, TipoServicio } from "@prisma/client";
 
@@ -61,9 +62,10 @@ export function DashboardHome({
 
   const cancelStorageKey =
     trabajoCancelado
-      ? `repairdash:cancelled-work:${trabajoCancelado.id}:${new Date(
+      ? getCancelledWorkNoticeKey(
+          trabajoCancelado.id,
           trabajoCancelado.actualizadoEn,
-        ).getTime()}`
+        )
       : null;
 
   const wasCancelSeen =
@@ -79,6 +81,21 @@ export function DashboardHome({
         dismissedCancelId !== trabajoCancelado.id &&
         !wasCancelSeen,
     );
+
+  useEffect(() => {
+    if (
+      showCancelModal &&
+      cancelStorageKey
+    ) {
+      window.localStorage.setItem(
+        cancelStorageKey,
+        "seen",
+      );
+    }
+  }, [
+    cancelStorageKey,
+    showCancelModal,
+  ]);
 
   function closeCancelModal() {
     if (
