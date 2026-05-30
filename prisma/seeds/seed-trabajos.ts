@@ -23,6 +23,9 @@ const MOCK_TRABAJOS = [
   {
     id: "rider_trabajo_demo_001",
     riderId: "rider_demo_001",
+    nombreRider: "Lucia",
+    apellidoRider: "Ramos",
+    valoracionRider: 4.8,
     tipoServicioNombre: "Plomeria",
     direccion: "Av. Corrientes 1234, Balvanera",
     descripcion: "Perdida de agua bajo la cocina. Requiere revision urgente.",
@@ -34,6 +37,9 @@ const MOCK_TRABAJOS = [
   {
     id: "rider_trabajo_demo_002",
     riderId: "rider_demo_002",
+    nombreRider: "Mateo",
+    apellidoRider: "Sosa",
+    valoracionRider: 4.5,
     tipoServicioNombre: "Electricidad",
     direccion: "San Martin 850, Microcentro",
     descripcion: "Corte parcial de energia en living y cocina.",
@@ -46,6 +52,9 @@ const MOCK_TRABAJOS = [
   {
     id: "rider_trabajo_demo_003",
     riderId: "rider_demo_003",
+    nombreRider: "Carla",
+    apellidoRider: "Benitez",
+    valoracionRider: 4.9,
     tipoServicioNombre: "Gas",
     direccion: "Juncal 2200, Recoleta",
     descripcion: "Revision preventiva de calefon y conexion principal.",
@@ -73,6 +82,9 @@ async function main() {
       data: {
         id: mock.id,
         riderId: mock.riderId,
+        nombreRider: mock.nombreRider,
+        apellidoRider: mock.apellidoRider,
+        valoracionRider: mock.valoracionRider,
         tipoServicioId: tipoServicio.id,
         direccion: mock.direccion,
         descripcion: mock.descripcion,

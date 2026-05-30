@@ -59,9 +59,9 @@ export async function getAvailableRiderRequestsForDriver(
   return trabajos.map((trabajo) => ({
     id: trabajo.id,
     idCliente: trabajo.riderId,
-    nombreCliente: "Cliente",
-    apellidoCliente: "",
-    ratingCliente: 0,
+    nombreCliente: trabajo.nombreRider,
+    apellidoCliente: trabajo.apellidoRider,
+    ratingCliente: trabajo.valoracionRider,
     ubicacion: {
       direccion: trabajo.direccion,
       barrio: "",
@@ -90,10 +90,7 @@ const riderStateMap: Partial<Record<TrabajoEstado, RiderTravelState>> = {
 };
 
 function getRiderStateUrl() {
-  return (
-    process.env.RIDER_APP_URL ??
-    `${getBaseUrl()}statetravel`
-  ).replace(/\/+$/, "");
+  return `${getBaseUrl()}/api/mocks/repairdash/statetravel`;
 }
 
 export async function notifyRiderTrabajoState(input: {
@@ -112,6 +109,12 @@ export async function notifyRiderTrabajoState(input: {
     const url =
       getRiderStateUrl();
 
+    const requestBody = {
+      id_viaje: input.trabajoId,
+      estado,
+      driver: input.driverId,
+    };
+
     const response = await fetch(
       url,
       {
@@ -121,20 +124,18 @@ export async function notifyRiderTrabajoState(input: {
           "x-api-key": process.env.RIDER_INTERNAL_API_KEY ?? "",
           "x-internal-api-key": process.env.RIDER_INTERNAL_API_KEY ?? "",
         },
-        body: JSON.stringify({
-          id_viaje: input.trabajoId,
-          estado,
-          driver: input.driverId,
-        }),
+        body: JSON.stringify(
+          requestBody,
+        ),
       },
     );
 
-    if (!response.ok) {
-      const responseBody =
-        await response.text();
+    const responseBody =
+      await response.text();
 
+    if (!response.ok) {
       console.warn(
-        "Rider state API returned",
+        "Mock Rider state API returned",
         response.status,
         {
           url,
@@ -144,7 +145,7 @@ export async function notifyRiderTrabajoState(input: {
     }
   } catch (error) {
     console.warn(
-      "Rider state API unavailable",
+      "Mock Rider state API unavailable",
       error,
     );
   }

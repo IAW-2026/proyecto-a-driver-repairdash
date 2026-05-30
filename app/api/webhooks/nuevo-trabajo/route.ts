@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { Prisma, TrabajoEstado } from "@prisma/client";
 import { validateInternalApiKey } from "@/lib/auth/internal-auth";
+import { getRiderCustomerMock } from "@/lib/mocks/rider.mock";
 
 type RequestBody = {
   id_trabajo: string;
@@ -10,6 +11,9 @@ type RequestBody = {
   tipoServicioId: string;
   direccion: string;
   descripcion?: string;
+  nombreRider?: string;
+  apellidoRider?: string;
+  valoracionRider?: number;
   fotos?: string[];
 };
 
@@ -31,6 +35,9 @@ export async function POST(req: NextRequest) {
       direccion,
       descripcion,
       fotos,
+      nombreRider,
+      apellidoRider,
+      valoracionRider,
     } = body;
 
     if (
@@ -74,10 +81,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const riderMock =
+      getRiderCustomerMock(
+        riderId,
+      );
+
     const trabajo = await prisma.trabajo.create({
       data: {
         id: id_trabajo,
         riderId,
+        nombreRider:
+          nombreRider?.trim() ||
+          riderMock.nombreCliente,
+        apellidoRider:
+          apellidoRider?.trim() ||
+          riderMock.apellidoCliente,
+        valoracionRider:
+          typeof valoracionRider ===
+          "number"
+            ? valoracionRider
+            : riderMock.ratingCliente,
         tipoServicioId,
         descripcion,
         direccion,

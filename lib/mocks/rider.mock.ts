@@ -1,5 +1,39 @@
 import type { RiderJobRequest } from "@/types/dashboard";
 
+export type RiderCustomerMock = {
+  idCliente: string;
+  nombreCliente: string;
+  apellidoCliente: string;
+  ratingCliente: number;
+};
+
+const riderCustomersMock: RiderCustomerMock[] = [
+  {
+    idCliente: "rider_demo_001",
+    nombreCliente: "Lucia",
+    apellidoCliente: "Ramos",
+    ratingCliente: 4.8,
+  },
+  {
+    idCliente: "rider_demo_002",
+    nombreCliente: "Mateo",
+    apellidoCliente: "Sosa",
+    ratingCliente: 4.5,
+  },
+  {
+    idCliente: "rider_demo_003",
+    nombreCliente: "Carla",
+    apellidoCliente: "Benitez",
+    ratingCliente: 4.9,
+  },
+  {
+    idCliente: "user_rider_test_001",
+    nombreCliente: "Juan",
+    apellidoCliente: "Perez",
+    ratingCliente: 4.8,
+  },
+];
+
 const repairPhotoMocks = {
   plomeria: [
     "https://picsum.photos/seed/repairdash-plumbing-1/900/675",
@@ -65,3 +99,20 @@ export const riderJobRequestsMock: RiderJobRequest[] = [
     estado: "PROGRAMADO",
   },
 ];
+
+export function getRiderCustomerMock(
+  riderId: string,
+): RiderCustomerMock {
+  return (
+    riderCustomersMock.find(
+      (customer) =>
+        customer.idCliente ===
+        riderId,
+    ) ?? {
+      idCliente: riderId,
+      nombreCliente: "Cliente",
+      apellidoCliente: "Demo",
+      ratingCliente: 4.6,
+    }
+  );
+}

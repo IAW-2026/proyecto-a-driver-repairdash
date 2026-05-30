@@ -38,7 +38,32 @@ const estadoMap: Record<
 export async function PUT(
   req: Request,
 ) {
+  const startedAt =
+    Date.now();
+
   try {
+    console.info(
+      "[Mock Rider statetravel] incoming request",
+      {
+        method:
+          req.method,
+        url:
+          req.url,
+        hasApiKey:
+          Boolean(
+            req.headers.get(
+              "x-api-key",
+            ),
+          ),
+        hasInternalApiKey:
+          Boolean(
+            req.headers.get(
+              "x-internal-api-key",
+            ),
+          ),
+      },
+    );
+
     // -----------------------
     // API KEY
     // -----------------------
@@ -77,6 +102,15 @@ export async function PUT(
       driver,
     } = body;
 
+    console.info(
+      "[Mock Rider statetravel] body",
+      {
+        id_viaje,
+        estado,
+        driver,
+      },
+    );
+
     // -----------------------
     // VALIDACIONES
     // -----------------------
@@ -85,6 +119,16 @@ export async function PUT(
       !id_viaje ||
       !estado
     ) {
+      console.warn(
+        "[Mock Rider statetravel] validation failed",
+        {
+          reason:
+            "missing_required_fields",
+          id_viaje,
+          estado,
+        },
+      );
+
       return NextResponse.json(
         {
           message:
@@ -124,6 +168,13 @@ export async function PUT(
       );
 
     if (!trabajo) {
+      console.warn(
+        "[Mock Rider statetravel] trabajo not found",
+        {
+          id_viaje,
+        },
+      );
+
       return NextResponse.json(
         {
           message:
@@ -144,6 +195,13 @@ if (
   "aceptado"
 ) {
   if (!driver) {
+    console.warn(
+      "[Mock Rider statetravel] accepted without driver",
+      {
+        id_viaje,
+      },
+    );
+
     return NextResponse.json(
       {
         message:
@@ -172,6 +230,13 @@ if (
   if (
     !driverExistente
   ) {
+    console.warn(
+      "[Mock Rider statetravel] driver not found",
+      {
+        driver,
+      },
+    );
+
     return NextResponse.json(
       {
         message:
@@ -202,6 +267,20 @@ if (
     },
   );
 
+  console.info(
+    "[Mock Rider statetravel] accepted updated",
+    {
+      id_viaje,
+      driverClerkId:
+        driver,
+      driverId:
+        driverExistente.id,
+      durationMs:
+        Date.now() -
+        startedAt,
+    },
+  );
+
   return NextResponse.json(
     {
       message:
@@ -224,6 +303,21 @@ if (
           ],
       },
     });
+
+    console.info(
+      "[Mock Rider statetravel] state updated",
+      {
+        id_viaje,
+        estado,
+        estadoPrisma:
+          estadoMap[
+            estado as EstadoViaje
+          ],
+        durationMs:
+          Date.now() -
+          startedAt,
+      },
+    );
 
     const responseMap =
       {
@@ -250,6 +344,7 @@ if (
     );
   } catch (error) {
     console.error(
+      "[Mock Rider statetravel] internal error",
       error,
     );
 

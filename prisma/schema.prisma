@@ -42,7 +42,11 @@ model Trabajo {
   driverId String?
   driver   Driver? @relation(fields: [driverId], references: [id])
 
-  riderId        String
+  riderId         String
+  nombreRider     String @default("Cliente")
+  apellidoRider   String @default("")
+  valoracionRider Float  @default(0)
+
   tipoServicioId String
   tipoServicio   TipoServicio @relation(fields: [tipoServicioId], references: [id])
 

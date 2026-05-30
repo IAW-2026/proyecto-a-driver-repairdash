@@ -129,6 +129,9 @@ async function main() {
     id: "rider_trabajo_dashboard_001",
     driverId: driver.id,
     riderId: "rider_demo_001",
+    nombreRider: "Lucia",
+    apellidoRider: "Ramos",
+    valoracionRider: 4.8,
     tipoServicioId: plomeria.id,
     precioBase: plomeria.precioBase,
     descripcion: "Perdida de agua debajo de la cocina.",
@@ -140,6 +143,9 @@ async function main() {
     id: "rider_trabajo_dashboard_002",
     driverId: driver.id,
     riderId: "rider_demo_002",
+    nombreRider: "Mateo",
+    apellidoRider: "Sosa",
+    valoracionRider: 4.5,
     tipoServicioId: electricidad.id,
     precioBase: electricidad.precioBase,
     descripcion: "Corte parcial de energia en departamento.",
@@ -156,6 +162,9 @@ async function main() {
     id: "rider_trabajo_dashboard_003",
     driverId: driver.id,
     riderId: "rider_demo_003",
+    nombreRider: "Carla",
+    apellidoRider: "Benitez",
+    valoracionRider: 4.9,
     tipoServicioId: gas.id,
     precioBase: gas.precioBase,
     descripcion: "Revision de calefon y conexion de gas.",
@@ -179,6 +188,9 @@ type CrearTrabajoDemoParams = {
   id: string;
   driverId: string;
   riderId: string;
+  nombreRider: string;
+  apellidoRider: string;
+  valoracionRider: number;
   tipoServicioId: string;
   precioBase: Prisma.Decimal;
   descripcion: string;
@@ -201,6 +213,9 @@ async function crearTrabajoDemo(params: CrearTrabajoDemoParams) {
       id: params.id,
       driverId: params.driverId,
       riderId: params.riderId,
+      nombreRider: params.nombreRider,
+      apellidoRider: params.apellidoRider,
+      valoracionRider: params.valoracionRider,
       tipoServicioId: params.tipoServicioId,
       descripcion: params.descripcion,
       direccion: params.direccion,

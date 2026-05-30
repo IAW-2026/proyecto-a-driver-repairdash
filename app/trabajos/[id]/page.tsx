@@ -73,9 +73,9 @@ export default async function TrabajoDetailPage({ params }: Props) {
       const request: DashboardJobRequest = {
         id: trabajo.id,
         idCliente: trabajo.riderId,
-        nombreCliente: "Cliente",
-        apellidoCliente: "",
-        ratingCliente: 0,
+        nombreCliente: trabajo.nombreRider,
+        apellidoCliente: trabajo.apellidoRider,
+        ratingCliente: trabajo.valoracionRider,
         ubicacion: {
           direccion: trabajo.direccion,
           barrio: "",
