@@ -4,7 +4,30 @@ import {
 
 export type AppRole =
   | "driver"
-  | "driver-admin";
+  | "driver-admin"
+  | "rider";
+
+export function normalizeAppRole(
+  role: unknown,
+): AppRole | null {
+  if (
+    role === "driver" ||
+    role === "driver-admin" ||
+    role === "rider"
+  ) {
+    return role;
+  }
+
+  return null;
+}
+
+export function isRiderRole(
+  role: unknown,
+) {
+  return normalizeAppRole(
+    role,
+  ) === "rider";
+}
 
 export async function getUserRole(): Promise<AppRole> {
   const user =
@@ -15,8 +38,10 @@ export async function getUserRole(): Promise<AppRole> {
       role?: string;
     };
 
-  return metadata.role ===
-    "driver-admin"
-    ? "driver-admin"
-    : "driver";
+  const role =
+    normalizeAppRole(
+      metadata.role,
+    );
+
+  return role ?? "driver";
 }

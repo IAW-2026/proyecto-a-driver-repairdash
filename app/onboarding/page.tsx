@@ -23,6 +23,15 @@ export default async function OnboardingPage() {
   // ADMIN nunca hace onboarding
   if (
     role ===
+      "rider"
+  ) {
+    redirect(
+      "/cuenta-rider",
+    );
+  }
+
+  if (
+    role ===
     "driver-admin"
   ) {
     redirect(

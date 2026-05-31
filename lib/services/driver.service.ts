@@ -4,6 +4,9 @@ import {
 } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import type { DriverDashboardProfile } from "@/types/dashboard";
+import {
+  isRiderRole,
+} from "@/lib/auth/get-user-role";
 
 function shouldSetDriverRole(
   role: unknown,
@@ -11,7 +14,8 @@ function shouldSetDriverRole(
   return (
     role !== "driver" &&
     role !== "driver-admin" &&
-    role !== "admin"
+    role !== "admin" &&
+    role !== "rider"
   );
 }
 
@@ -19,6 +23,16 @@ export async function getCurrentDriverProfile(): Promise<DriverDashboardProfile>
   const user = await currentUser();
 
   if (!user) throw new Error("Unauthorized");
+
+  if (
+    isRiderRole(
+      user.publicMetadata?.role,
+    )
+  ) {
+    throw new Error(
+      "Rider accounts cannot access DriverApp",
+    );
+  }
 
   if (
     shouldSetDriverRole(
