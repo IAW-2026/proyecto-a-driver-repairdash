@@ -8,9 +8,11 @@ import { AutoRefresh } from "@/components/auto-refresh";
 import { CancelledWorkScreen } from "@/components/trabajos/cancelled-work-screen";
 import {
   avanzarTrabajo,
-  comenzarReporte,
   finalizarTrabajo,
 } from "@/lib/actions/trabajo.actions";
+import {
+  ReportWorkButton,
+} from "@/components/trabajos/report-work-button";
 
 const ESTADOS = ["ACEPTADO", "EN_CAMINO", "EN_SERVICIO", "FINALIZADO"] as const;
 const STATUS_COPY = {
@@ -198,19 +200,9 @@ export default async function TrabajoActivoPage() {
         <div className="sticky bottom-0 px-6 py-6 bg-gradient-to-t from-[#160822] via-[#160822]/90 to-transparent">
           {currentState === "EN_SERVICIO" ? (
             <div className="grid grid-cols-2 gap-3">
-              <form
-                action={comenzarReporte.bind(
-                  null,
-                  trabajo.id,
-                )}
-              >
-                <button
-                  type="submit"
-                  className="h-16 w-full rounded-2xl bg-gradient-to-r from-[#F500F1] to-[#C392DD] text-lg font-black text-white shadow-lg shadow-[#F500F1]/25 transition hover:opacity-90"
-                >
-                  Comenzar reporte
-                </button>
-              </form>
+              <ReportWorkButton
+                trabajoId={trabajo.id}
+              />
 
               <form
                 action={finalizarTrabajo.bind(
