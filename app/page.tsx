@@ -149,6 +149,12 @@ export default async function HomePage() {
             driver.id,
           estado:
             "CANCELADO",
+          historialEstados: {
+            some: {
+              motivo:
+                "Cancelacion desde Rider App",
+            },
+          },
         },
         include: {
           tipoServicio: true,
