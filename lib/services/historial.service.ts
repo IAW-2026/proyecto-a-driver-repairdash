@@ -68,10 +68,10 @@ export async function getDriverHistorial(): Promise<DriverHistorialMetrics> {
     );
 
   const trabajos = driver.trabajos;
-  const totalTrabajos = trabajos.length;
   const completados = trabajos.filter((t) => t.estado === "FINALIZADO").length;
   const cancelados = trabajos.filter((t) => t.estado === "CANCELADO").length;
   const totalRechazos = driver.trabajosRechazados.length;
+  const totalTrabajos = trabajos.length + totalRechazos;
 
   const ingresosTotales =
     paymentMetrics.ingresosDelDia;
@@ -92,6 +92,7 @@ export async function getDriverHistorial(): Promise<DriverHistorialMetrics> {
     { estado: "EN_SERVICIO", cantidad: trabajos.filter((t) => t.estado === "EN_SERVICIO").length },
     { estado: "FINALIZADO", cantidad: completados },
     { estado: "CANCELADO", cantidad: cancelados },
+    { estado: "RECHAZADO", cantidad: totalRechazos },
   ].filter((e) => e.cantidad > 0);
 
   const servicioMap = new Map<string, ServicioCont>();
