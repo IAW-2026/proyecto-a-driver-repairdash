@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AutoRefresh } from "@/components/auto-refresh";
 import { getCancelledWorkNoticeKey } from "@/lib/utils/cancelled-work-notice";
 
 type CancelledWorkScreenProps = {
@@ -66,8 +65,6 @@ export function CancelledWorkScreen({
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#271033] via-[#271033] to-[#160822] px-6 text-center text-highlight">
-      <AutoRefresh intervalMs={3_000} />
-
       <div className="w-full max-w-md rounded-[32px] border border-highlight/10 bg-highlight/[0.05] p-7 shadow-2xl shadow-black/25">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">
           Trabajo cancelado
