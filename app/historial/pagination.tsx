@@ -17,6 +17,7 @@ const ESTADO_LABELS: Record<string, string> = {
   EN_SERVICIO: "En servicio",
   FINALIZADO: "Finalizado",
   CANCELADO: "Cancelado",
+  RECHAZADO: "Rechazado",
 };
 
 const ESTADO_DOT: Record<string, string> = {
@@ -26,6 +27,7 @@ const ESTADO_DOT: Record<string, string> = {
   EN_SERVICIO: "bg-magenta",
   FINALIZADO: "bg-green-500",
   CANCELADO: "bg-highlight/30",
+  RECHAZADO: "bg-red-500",
 };
 
 function Row({ t }: { t: TrabajoItem }) {
