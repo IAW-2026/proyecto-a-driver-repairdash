@@ -315,10 +315,53 @@ export async function comenzarReporte(
     idReportado: trabajo.riderId,
   });
 
+  await prisma.$transaction(async (tx) => {
+    await tx.trabajo.update({
+      where: {
+        id: trabajo.id,
+      },
+      data: {
+        estado:
+          TrabajoEstado.CANCELADO,
+      },
+    });
+
+    await tx.historialEstado.create({
+      data: {
+        trabajoId:
+          trabajo.id,
+        estadoAnterior:
+          trabajo.estado,
+        estadoNuevo:
+          TrabajoEstado.CANCELADO,
+        motivo:
+          "Cancelacion por reporte iniciado por el driver",
+      },
+    });
+
+    await tx.driver.update({
+      where: {
+        id: driver.id,
+      },
+      data: {
+        status: "ONLINE",
+      },
+    });
+  });
+
+  await notifyRiderTrabajoState({
+    trabajoId:
+      trabajo.id,
+    estado:
+      TrabajoEstado.CANCELADO,
+    driverId:
+      driver.clerkUserId,
+  });
+
   revalidatePath("/");
   revalidatePath("/trabajos/activo");
   revalidatePath("/admin/servicios");
-  redirect("/proximamente");
+  redirect("/");
 }
 
 export async function finalizarTrabajo(
