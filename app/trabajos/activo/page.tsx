@@ -5,7 +5,6 @@ import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/utils/format";
 import { getNextState } from "@/lib/state-machine/trabajo.states";
 import { AutoRefresh } from "@/components/auto-refresh";
-import { CancelledWorkScreen } from "@/components/trabajos/cancelled-work-screen";
 import {
   avanzarTrabajo,
   finalizarTrabajo,
@@ -80,37 +79,7 @@ export default async function TrabajoActivoPage() {
   });
 
   if (!trabajo) {
-    const trabajoCancelado = await prisma.trabajo.findFirst({
-      where: {
-        driverId: driver.id,
-        estado: "CANCELADO",
-        historialEstados: {
-          some: {
-            motivo:
-              "Cancelacion desde Rider App",
-          },
-        },
-      },
-      include: {
-        tipoServicio: true,
-      },
-      orderBy: {
-        actualizadoEn: "desc",
-      },
-    });
-
-    if (!trabajoCancelado) {
-      redirect("/");
-    }
-
-    return (
-      <CancelledWorkScreen
-        trabajoId={trabajoCancelado.id}
-        actualizadoEn={trabajoCancelado.actualizadoEn}
-        tipoServicioNombre={trabajoCancelado.tipoServicio.nombre}
-      />
-    );
-
+    redirect("/");
   }
 
   const currentState = trabajo.estado as keyof typeof STATUS_COPY;
