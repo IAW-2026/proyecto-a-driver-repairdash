@@ -56,8 +56,8 @@ export function ReportWorkButton({
             </h2>
 
             <p className="mt-3 text-sm leading-6 text-highlight/65">
-              Al iniciar el reporte se cancelara el trabajo, RiderApp sera
-              notificada y el caso quedara en revision por el tema del dinero.
+              Al iniciar el reporte se cancelara el trabajo 
+              y el caso quedara en revision. Si el reporte es aprobado, se te asignara una compensacion.
             </p>
 
             <div className="mt-7 grid grid-cols-2 gap-3">

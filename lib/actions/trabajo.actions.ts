@@ -361,7 +361,7 @@ export async function comenzarReporte(
   revalidatePath("/");
   revalidatePath("/trabajos/activo");
   revalidatePath("/admin/servicios");
-  redirect("/");
+  redirect("/proximamente");
 }
 
 export async function finalizarTrabajo(
