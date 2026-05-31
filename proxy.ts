@@ -2,12 +2,19 @@ import {
   clerkMiddleware,
   createRouteMatcher,
 } from "@clerk/nextjs/server";
+import {
+  NextResponse,
+} from "next/server";
+import {
+  isRiderRole,
+} from "@/lib/auth/get-user-role";
 
 const isPublicRoute =
   createRouteMatcher([
     "/",
     "/login(.*)",
     "/sign-up(.*)",
+    "/cuenta-rider",
     "/__clerk(.*)",
     "/api/webhooks(.*)",
     "/api/mocks/(.*)",
@@ -40,15 +47,37 @@ export default clerkMiddleware(
       return redirectToSignIn();
     }
 
-    const metadata =
-      sessionClaims?.metadata as
+    const claims =
+      sessionClaims as
         | {
-            role?: string;
+            metadata?: {
+              role?: string;
+            };
+            publicMetadata?: {
+              role?: string;
+            };
           }
         | undefined;
 
     const role =
-      metadata?.role;
+      claims?.metadata?.role ??
+      claims?.publicMetadata?.role;
+
+    if (
+      isRiderRole(
+        role,
+      ) &&
+      req.nextUrl.pathname !==
+        "/cuenta-rider"
+    ) {
+      return NextResponse.redirect(
+        new URL(
+          "/cuenta-rider",
+          req.url,
+        ),
+      );
+    }
+
     // Admin bypass
     if (
       role ===

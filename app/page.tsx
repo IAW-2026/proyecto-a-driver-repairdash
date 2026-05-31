@@ -12,14 +12,42 @@ import {
 import { getAvailableRiderRequestsForDriver } from "@/lib/services/external/rider.client";
 import type { DriverDailyStats } from "@/types/dashboard";
 import { isAdmin } from "@/lib/auth/roles";
+import {
+  isRiderRole,
+} from "@/lib/auth/get-user-role";
 
 export default async function HomePage() {
   const {
     userId,
+    sessionClaims,
   } = await auth();
 
   if (!userId) {
     return <PublicHome />;
+  }
+
+  const claims =
+    sessionClaims as
+      | {
+          metadata?: {
+            role?: string;
+          };
+          publicMetadata?: {
+            role?: string;
+          };
+        }
+      | undefined;
+
+  if (
+    isRiderRole(
+      claims?.metadata?.role ??
+        claims?.publicMetadata
+          ?.role,
+    )
+  ) {
+    redirect(
+      "/cuenta-rider",
+    );
   }
 
   const driver =
