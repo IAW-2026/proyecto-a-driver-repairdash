@@ -6,6 +6,10 @@ import { prisma } from "@/lib/prisma";
 import { uploadAvatar } from "@/lib/supabase";
 import { checkDriverOnboarding } from "@/lib/services/driver-onboarding.service";
 import { normalizePhone } from "@/lib/utils/prisma-normalizers";
+import {
+  isUniquePhoneError,
+  PHONE_UNAVAILABLE_MESSAGE,
+} from "@/lib/errors/profile-errors";
 
 export async function completeOnboarding(
   formData: FormData,
@@ -82,9 +86,15 @@ export async function completeOnboarding(
     if (
       existingDriver
     ) {
-      throw new Error(
-        "Ya existe un usuario con ese número de teléfono",
-      );
+      return {
+        success: false,
+        error:
+          PHONE_UNAVAILABLE_MESSAGE,
+        missingFields: [
+          "telefono",
+        ],
+      };
+
     }
   }
 
@@ -107,7 +117,8 @@ export async function completeOnboarding(
   // persistencia
   // =========================
 
-  await prisma.$transaction(
+  try {
+    await prisma.$transaction(
     async (tx) => {
       await tx.driver.update({
         where: {
@@ -154,7 +165,25 @@ export async function completeOnboarding(
         );
       }
     },
-  );
+    );
+  } catch (error) {
+    if (
+      isUniquePhoneError(
+        error,
+      )
+    ) {
+      return {
+        success: false,
+        error:
+          PHONE_UNAVAILABLE_MESSAGE,
+        missingFields: [
+          "telefono",
+        ],
+      };
+    }
+
+    throw error;
+  }
 
   // =========================
   // onboarding completo

@@ -252,9 +252,21 @@ export function OnboardingForm({
               ),
           );
 
-          await completeOnboarding(
-            formData,
-          );
+          const result =
+            await completeOnboarding(
+              formData,
+            );
+
+          if (
+            !result.success
+          ) {
+            setError(
+              result.error ??
+                "No pudimos completar el onboarding",
+            );
+
+            return;
+          }
 
           router.push(
             "/",

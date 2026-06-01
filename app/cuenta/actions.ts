@@ -9,6 +9,10 @@ import { prisma } from "@/lib/prisma";
 import { uploadAvatar } from "@/lib/supabase";
 import { syncDriverOnboarding } from "@/lib/services/update-onboarding";
 import { normalizePhone } from "@/lib/utils/prisma-normalizers";
+import {
+  isUniquePhoneError,
+  PHONE_UNAVAILABLE_MESSAGE,
+} from "@/lib/errors/profile-errors";
 
 export async function updateProfileData(
   formData: FormData,
@@ -85,9 +89,11 @@ export async function updateProfileData(
     if (
       existingDriver
     ) {
-      throw new Error(
-        "Ya existe un usuario con ese número de teléfono",
-      );
+      return {
+        success: false,
+        error:
+          PHONE_UNAVAILABLE_MESSAGE,
+      };
     }
   }
 
@@ -95,37 +101,53 @@ export async function updateProfileData(
   // UPDATE
   // =========================
 
-  await prisma.driver.update(
-    {
-      where: {
-        id:
-          driver.id,
+  try {
+    await prisma.driver.update(
+      {
+        where: {
+          id:
+            driver.id,
+        },
+        data: {
+          ...(nombre !==
+            null && {
+            nombre:
+              nombre.trim(),
+          }),
+
+          ...(telefono !==
+            null && {
+            telefono:
+              telefono.trim() ||
+              null,
+
+            telefonoNormalizado,
+          }),
+
+          ...(bio !==
+            null && {
+            bio:
+              bio.trim() ||
+              null,
+          }),
+        },
       },
-      data: {
-        ...(nombre !==
-          null && {
-          nombre:
-            nombre.trim(),
-        }),
+    );
+  } catch (error) {
+    if (
+      isUniquePhoneError(
+        error,
+      )
+    ) {
+      return {
+        success: false,
+        error:
+          PHONE_UNAVAILABLE_MESSAGE,
+      };
+    }
 
-        ...(telefono !==
-          null && {
-          telefono:
-            telefono.trim() ||
-            null,
-
-          telefonoNormalizado,
-        }),
-
-        ...(bio !==
-          null && {
-          bio:
-            bio.trim() ||
-            null,
-        }),
-      },
-    },
-  );
+    throw error;
+  }
 
   await syncDriverOnboarding(
     driver.id,
