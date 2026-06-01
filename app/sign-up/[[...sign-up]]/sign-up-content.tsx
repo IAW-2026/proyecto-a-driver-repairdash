@@ -14,6 +14,7 @@ export function SignUpContent() {
   const {
     isLoaded,
     isSignedIn,
+    user,
   } = useUser();
 
   const onboardingStarted =
@@ -56,6 +57,8 @@ export function SignUpContent() {
           );
         }
 
+        await user?.reload();
+
         window.location.href =
           "/";
       } catch (
@@ -77,6 +80,7 @@ export function SignUpContent() {
   }, [
     isLoaded,
     isSignedIn,
+    user,
   ]);
   
   if (!isLoaded) {

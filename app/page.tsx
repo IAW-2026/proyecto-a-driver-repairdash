@@ -1,5 +1,8 @@
 import { prisma } from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
+import {
+  auth,
+  currentUser,
+} from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { DashboardHome } from "@/components/dashboard/dashboard-home";
 import { PublicHome } from "@/components/landing/public-home";
@@ -39,12 +42,28 @@ export default async function HomePage() {
         }
       | undefined;
 
-  if (
-    !hasValidAppRole(
-      claims?.metadata?.role ??
-        claims?.publicMetadata
-          ?.role,
+  const sessionRole =
+    claims?.metadata?.role ??
+    claims?.publicMetadata
+      ?.role;
+
+  const liveUser =
+    hasValidAppRole(
+      sessionRole,
     )
+      ? null
+      : await currentUser();
+
+  const role =
+    hasValidAppRole(
+      sessionRole,
+    )
+      ? sessionRole
+      : liveUser?.publicMetadata
+          ?.role;
+
+  if (
+    !hasValidAppRole(role)
   ) {
     redirect(
       "/rol-invalido",
@@ -52,11 +71,7 @@ export default async function HomePage() {
   }
 
   if (
-    isRiderRole(
-      claims?.metadata?.role ??
-        claims?.publicMetadata
-          ?.role,
-    )
+    isRiderRole(role)
   ) {
     redirect(
       "/cuenta-rider",
