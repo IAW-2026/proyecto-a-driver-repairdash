@@ -1,12 +1,10 @@
 # RepairDash - Driver App
 
-Modulo de trabajadores de RepairDash, una aplicacion web orientada a gestionar disponibilidad, solicitudes de trabajo, estados de servicio, historial, perfil e ingresos de drivers/trabajadores tecnicos.
+Modulo de trabajadores de RepairDash, una aplicacion web orientada a gestionar disponibilidad, solicitudes, estados de servicio, historial, perfil e ingresos de drivers/trabajadores tecnicos.
 
 Proyecto desarrollado en Next.js para la materia Ingenieria de Aplicaciones Web - UNS, 2026.
 
-Para mayor informacion sobre las APIs, webhooks y mocks se puede consultar `docs/APIs.md`.
-
-## Deploy
+Deploy:
 
 ```txt
 https://driver-repairdash.vercel.app
@@ -14,22 +12,32 @@ https://driver-repairdash.vercel.app
 
 El proyecto se encuentra actualizado en rama `main`.
 
+## Indice
+
+- [Descripcion general](#descripcion-general)
+- [Stack](#stack)
+- [Arquitectura](#arquitectura)
+- [Flujos principales](#flujos-principales)
+- [Configuracion local](#configuracion-local)
+- [Datos de prueba y mocks](#datos-de-prueba-y-mocks)
+- [Como probar](#como-probar)
+- [APIs y pruebas manuales](#apis-y-pruebas-manuales)
+- [Accesos](#accesos)
+- [Scripts](#scripts)
+
 ## Descripcion general
 
 Driver App concentra la experiencia del trabajador dentro del ecosistema RepairDash:
 
-- Registro e inicio de sesion con Clerk.
-- Onboarding inicial del driver.
-- Seleccion de tipos de servicio ofrecidos.
-- Cambio de disponibilidad online/offline.
-- Recepcion de solicitudes de trabajo.
-- Aceptacion y rechazo de trabajos.
-- Seguimiento del estado del servicio.
-- Reporte de problemas durante un trabajo.
-- Historial de trabajos y estados.
-- Visualizacion de ingresos consultados a PaymentsApp o su mock.
-- Visualizacion de valoracion y reportes consultados a FeedbackApp o su mock.
-- Panel administrativo para gestionar tipos de servicio.
+- registro, login y onboarding con Clerk;
+- seleccion de tipos de servicio ofrecidos;
+- estado online/offline;
+- recepcion, aceptacion y rechazo de solicitudes;
+- seguimiento de estados de trabajo;
+- reportes hacia FeedbackApp/mock;
+- historial, ingresos, valoracion y reportes;
+- perfil editable con avatar en Supabase Storage;
+- panel admin para gestionar tipos de servicio.
 
 La app funciona de forma independiente para la Etapa 2. RiderApp, PaymentsApp y FeedbackApp se consideran servicios externos y se simulan mediante mocks locales o clientes con fallback, respetando los contratos definidos para integracion futura.
 
@@ -45,25 +53,25 @@ La app funciona de forma independiente para la Etapa 2. RiderApp, PaymentsApp y 
 - Supabase Storage
 - Vercel
 
-## Enfoque arquitectonico
+## Arquitectura
 
 Organizacion principal:
 
-- `app/`: rutas App Router, paginas, layouts, server actions y API routes.
-- `components/`: componentes visuales reutilizables para dashboard, perfil, onboarding y trabajos.
-- `lib/actions/`: server actions usadas por formularios y operaciones del dominio.
-- `lib/services/`: logica de negocio, consultas del historial, onboarding, drivers e integraciones externas.
-- `lib/services/external/`: clientes para RiderApp, PaymentsApp y FeedbackApp, actualmente con mocks/fallbacks.
-- `lib/mocks/`: datos y respuestas simuladas de servicios externos.
-- `lib/auth/`: helpers de roles, admin y validacion de API keys internas.
-- `lib/state-machine/`: reglas de transicion de estados de trabajo.
-- `prisma/`: schema, migraciones y seed de datos base.
-- `docs/`: documentacion de APIs, webhooks y comandos de prueba.
+- `app/`: rutas, paginas, layouts, server actions y API routes.
+- `components/`: UI de dashboard, trabajos, perfil y onboarding.
+- `lib/actions/`: server actions del dominio.
+- `lib/services/`: logica de negocio, historial, drivers e integraciones.
+- `lib/services/external/`: clientes para RiderApp, PaymentsApp y FeedbackApp.
+- `lib/mocks/`: respuestas simuladas de servicios externos.
+- `lib/auth/`: roles, admin y validacion de API keys.
+- `lib/state-machine/`: reglas de transicion de trabajos.
+- `prisma/`: schema, migraciones y seed.
+- `docs/`: documentacion de APIs y comandos de prueba.
 
-Reglas de arquitectura:
+Reglas:
 
 - DriverApp es duena de su propia base PostgreSQL.
-- Los IDs que cruzan entre apps son Clerk IDs.
+- Los IDs compartidos entre apps son Clerk IDs.
 - Los IDs internos de Prisma no se usan como identidad entre aplicaciones.
 - RiderApp, PaymentsApp y FeedbackApp no se implementan internamente.
 - PaymentsApp es la unica responsable de pagos reales; DriverApp solo consulta y muestra informacion.
@@ -71,90 +79,73 @@ Reglas de arquitectura:
 
 ## Flujos principales
 
-### Flujo de driver
+### Driver
 
-1. El usuario ingresa a DriverApp.
-2. Si no esta autenticado, puede iniciar sesion o crear cuenta.
-3. Si su cuenta tiene rol `driver`, accede al dashboard.
-4. Si todavia no completo onboarding, carga sus datos, telefono y servicios ofrecidos.
-5. Desde el dashboard cambia su estado a online.
-6. Al estar online, ve solicitudes compatibles con sus tipos de servicio.
-7. Puede aceptar o rechazar cada solicitud.
+1. El usuario entra, inicia sesion o crea cuenta.
+2. Si tiene rol `driver`, accede al dashboard.
+3. Si falta onboarding, completa datos y servicios ofrecidos.
+4. Cambia su disponibilidad a online.
+5. Recibe solicitudes compatibles.
+6. Acepta o rechaza cada solicitud.
 
-### Flujo de trabajo
+### Trabajo
 
 1. RiderApp, o el script mock, publica un trabajo mediante `POST /api/webhooks/nuevo-trabajo`.
-2. DriverApp guarda el trabajo en estado `PENDIENTE`.
-3. El driver acepta el trabajo.
-4. DriverApp asigna el trabajo al driver y lo pasa a `ACEPTADO`.
-5. DriverApp avisa el nuevo trabajo a FeedbackApp o a su mock.
-6. El driver cambia los estados del trabajo: `EN_CAMINO`, `EN_SERVICIO` y `FINALIZADO`.
-7. DriverApp notifica los cambios de estado hacia el mock de RiderApp.
-8. Al finalizar, se habilita el flujo de valoracion en FeedbackApp o mock.
+2. DriverApp guarda el trabajo como `PENDIENTE`.
+3. El driver acepta y el trabajo pasa a `ACEPTADO`.
+4. DriverApp avisa el alta del trabajo a FeedbackApp/mock.
+5. El driver avanza estados: `EN_CAMINO`, `EN_SERVICIO`, `FINALIZADO`.
+6. DriverApp notifica cambios de estado hacia RiderApp/mock.
+
+### Finalizacion y liquidacion futura
+
+En la version actual, `FINALIZADO` representa el fin del flujo operativo dentro de DriverApp: el driver termino el servicio y ya no debe seguir manipulando ese trabajo desde esta app.
+
+Para la integracion real, esto no necesariamente significa que el trabajo este liquidado o cerrado en todo el ecosistema. Luego de que el driver finaliza, el flujo continua en RiderApp: el rider podria aceptar el cierre del trabajo o iniciar un reporte. En base a esa decision, PaymentsApp deberia informar si el trabajo queda liquidado, retenido o pendiente de resolucion.
+
+Esto probablemente requiera una evolucion del contrato:
+
+- agregar un estado interno como `PENDIENTE_LIQUIDAR` o equivalente;
+- agregar un endpoint/callback desde PaymentsApp hacia DriverApp para informar liquidacion;
+- reflejar en historial e ingresos la diferencia entre "servicio finalizado" y "trabajo liquidado".
+
+No se implementa en Etapa 2 para no modificar el alcance de entrega, pero queda documentado como ajuste necesario para la integracion.
 
 ### Cancelacion desde RiderApp
 
-RiderApp puede cancelar un trabajo llamando a:
+RiderApp puede cancelar un trabajo llamando a `PUT /api/trabajos/state`. Esta API solo acepta `cancelado`.
 
-```txt
-PUT /api/trabajos/state
-```
+Efectos:
 
-Esta API solo acepta el estado `cancelado`. Cuando ocurre:
-
-- El trabajo pasa a `CANCELADO`.
-- Si habia driver asignado, vuelve a estar `ONLINE`.
-- El trabajo deja de estar visible como solicitud activa.
-- El dashboard muestra el aviso de cancelacion correspondiente.
+- el trabajo pasa a `CANCELADO`;
+- si habia driver asignado, vuelve a estar `ONLINE`;
+- el trabajo deja de estar visible como solicitud activa;
+- el dashboard muestra aviso de cancelacion.
 
 ### Reporte iniciado por driver
 
-Si el driver comienza un reporte:
+Si el driver inicia un reporte:
 
-- Se confirma la accion mediante un modal.
-- El trabajo pasa a `CANCELADO`.
-- Se notifica a RiderApp/mock con estado `cancelado`.
-- Se crea el reporte en FeedbackApp/mock.
-- El driver vuelve al flujo de la app.
-
-Este caso no muestra el aviso de "rider cancelo" en el dashboard, porque la cancelacion fue iniciada por el driver.
+- confirma la accion en un modal;
+- el trabajo pasa a `CANCELADO`;
+- se notifica a RiderApp/mock;
+- se crea el reporte en FeedbackApp/mock;
+- no se muestra el aviso de "rider cancelo", porque la cancelacion fue iniciada por el driver.
 
 ### Historial e ingresos
 
-El historial muestra trabajos recientes, estados, rechazos, cancelaciones, servicios usados y metricas de aceptacion.
+El historial muestra trabajos recientes, estados, rechazos, cancelaciones, servicios usados y metricas de aceptacion. La busqueda y paginacion usan URL params (`q` y `page`).
 
 Los ingresos no se calculan localmente desde trabajos finalizados. DriverApp consulta PaymentsApp o su mock y cachea la respuesta con revalidacion de 60 segundos.
 
 ## Configuracion local
 
-Instalar dependencias:
-
 ```bash
 npm install
-```
-
-Crear `.env` a partir de `.env.example` y completar las variables necesarias:
-
-```bash
 cp .env.example .env
-```
-
-Aplicar migraciones y generar Prisma Client:
-
-```bash
 npx prisma migrate deploy
 npx prisma generate
-```
-
-Cargar datos base:
-
-```bash
 npm run db:seed
-```
-
-Levantar la app:
-
-```bash
 npm run dev
 ```
 
@@ -166,119 +157,63 @@ http://localhost:3000
 
 ## Datos de prueba y mocks
 
-La app no depende de que RiderApp publique trabajos reales. Para simular solicitudes entrantes se usa:
+Para simular solicitudes entrantes desde RiderApp:
 
 ```bash
 npm run mock:rider-jobs
 ```
 
-El script llama al webhook real de DriverApp:
+El script llama al webhook real `POST /api/webhooks/nuevo-trabajo`, por lo que prueba el flujo sin escribir directo en la base.
 
-```txt
-POST /api/webhooks/nuevo-trabajo
-```
-
-Esto permite probar el flujo como si RiderApp estuviera enviando solicitudes, sin escribir directo en la base de datos.
-
-Variables utiles para el simulador:
+Variables utiles:
 
 ```txt
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 MOCK_RIDER_JOB_INTERVAL_MS=10000
 ```
 
-Ejemplo en Windows con intervalo custom:
+Windows con intervalo custom:
 
 ```bat
 set MOCK_RIDER_JOB_INTERVAL_MS=5000
 npm run mock:rider-jobs
 ```
 
-## Como probar casos de uso
+## Como probar
 
-### Flujo completo vista driver
+### Driver
 
-1. Iniciar sesion con una cuenta Clerk con rol `driver`.
-2. Completar onboarding si la cuenta es nueva.
-3. Elegir al menos un tipo de servicio.
-4. Ir al dashboard.
-5. Cambiar el estado a online.
-6. En otra terminal correr:
+1. Iniciar sesion con rol `driver`.
+2. Completar onboarding.
+3. Seleccionar al menos un tipo de servicio.
+4. Cambiar a online.
+5. Correr `npm run mock:rider-jobs`.
+6. Aceptar o rechazar solicitudes.
+7. Si se acepta, avanzar estados y finalizar.
+8. Revisar historial e ingresos.
 
-```bash
-npm run mock:rider-jobs
-```
+### Admin
 
-7. Esperar una solicitud compatible.
-8. Aceptar o rechazar la solicitud.
-9. Si se acepta, avanzar los estados del trabajo.
-10. Finalizar el trabajo.
-11. Revisar historial e ingresos.
+1. Iniciar sesion con rol `admin`.
+2. Entrar a `/admin/servicios`.
+3. Crear, editar o eliminar tipos de servicio.
+4. Revisar metricas de servicios.
 
-### Flujo vista administrador
+### Rider bloqueado
 
-1. Iniciar sesion con una cuenta Clerk con rol `admin`.
-2. Entrar a:
+1. Iniciar sesion con rol `rider`.
+2. La app redirige a la pantalla de cuenta perteneciente a RiderApp.
+3. Desde ahi se puede volver al login o ir a RiderApp.
+
+## APIs y pruebas manuales
+
+Documentacion completa:
 
 ```txt
-/admin/servicios
+docs/APIs.md
 ```
 
-3. Crear, editar o eliminar tipos de servicio.
-4. Revisar metricas de servicios, drivers asignados y trabajos activos.
-
-### Flujo cuenta rider bloqueada
-
-1. Iniciar sesion con una cuenta Clerk con rol `rider`.
-2. La app redirige a la pantalla de cuenta perteneciente a RiderApp.
-3. Desde esa pantalla se puede volver al login o ir a RiderApp.
-
-## Pruebas manuales rapidas
-
-Consultar tipos de servicio:
-
-```bat
-curl.exe -i "http://localhost:3000/api/tipos-servicios" ^
-  -H "x-api-key: driver-secret-key"
-```
-
-Publicar un trabajo nuevo:
-
-```bat
-curl.exe -i -X POST "http://localhost:3000/api/webhooks/nuevo-trabajo" ^
-  -H "Content-Type: application/json" ^
-  -H "x-api-key: driver-secret-key" ^
-  -d "{ \"id_trabajo\": \"trabajo-terminal-001\", \"riderId\": \"rider_demo_001\", \"nombreRider\": \"Lucia\", \"apellidoRider\": \"Ramos\", \"valoracionRider\": 4.8, \"tipoServicioId\": \"REEMPLAZAR_TIPO_SERVICIO_ID\", \"direccion\": \"Av. Corrientes 1234\", \"descripcion\": \"Perdida de agua bajo la cocina\", \"fotos\": [] }"
-```
-
-Cancelar un trabajo desde RiderApp/mock:
-
-```bat
-curl.exe -i -X PUT "http://localhost:3000/api/trabajos/state" ^
-  -H "Content-Type: application/json" ^
-  -H "x-api-key: driver-secret-key" ^
-  -d "{ \"id_trabajo\": \"trabajo-terminal-001\", \"estado\": \"cancelado\" }"
-```
-
-Consultar informacion publica de un driver por Clerk ID:
-
-```bat
-curl.exe -i "http://localhost:3000/api/drivers/CLERK_USER_ID_DEL_DRIVER" ^
-  -H "x-api-key: driver-secret-key"
-```
-
-Consultar wallet mock de PaymentsApp:
-
-```bat
-curl.exe -i "http://localhost:3000/api/mocks/payments/wallet/CLERK_USER_ID_DEL_DRIVER" ^
-  -H "x-api-key: dev-payments-key"
-```
-
-La documentacion completa de APIs y todos los comandos `curl` esta en `docs/APIs.md`.
-
-## APIs y mocks
-
-APIs principales expuestas por DriverApp:
+APIs principales de DriverApp:
 
 - `POST /api/webhooks/nuevo-trabajo`
 - `PUT /api/trabajos/state`
@@ -292,51 +227,60 @@ Mocks locales:
 - `/api/mocks/payments/wallet/[driverId]`
 - `/api/mocks/feedback/*`
 
+Consultar tipos de servicio:
+
+```bat
+curl.exe -i "http://localhost:3000/api/tipos-servicios" ^
+  -H "x-api-key: driver-secret-key"
+```
+
+Publicar trabajo:
+
+```bat
+curl.exe -i -X POST "http://localhost:3000/api/webhooks/nuevo-trabajo" ^
+  -H "Content-Type: application/json" ^
+  -H "x-api-key: driver-secret-key" ^
+  -d "{ \"id_trabajo\": \"trabajo-terminal-001\", \"riderId\": \"rider_demo_001\", \"nombreRider\": \"Lucia\", \"apellidoRider\": \"Ramos\", \"valoracionRider\": 4.8, \"tipoServicioId\": \"REEMPLAZAR_TIPO_SERVICIO_ID\", \"direccion\": \"Av. Corrientes 1234\", \"descripcion\": \"Perdida de agua bajo la cocina\", \"fotos\": [] }"
+```
+
+Cancelar desde RiderApp/mock:
+
+```bat
+curl.exe -i -X PUT "http://localhost:3000/api/trabajos/state" ^
+  -H "Content-Type: application/json" ^
+  -H "x-api-key: driver-secret-key" ^
+  -d "{ \"id_trabajo\": \"trabajo-terminal-001\", \"estado\": \"cancelado\" }"
+```
+
+Consultar driver por Clerk ID:
+
+```bat
+curl.exe -i "http://localhost:3000/api/drivers/CLERK_USER_ID_DEL_DRIVER" ^
+  -H "x-api-key: driver-secret-key"
+```
+
 ## Accesos
 
-El login se realiza desde `/login`. El registro se realiza desde `/sign-up`.
+Login: `/login`
 
-La autenticacion usa Clerk y la app redirige segun el rol del usuario.
-
-Roles disponibles:
+Registro: `/sign-up`
 
 | Rol | Acceso |
 |---|---|
-| Administrador | Cuenta con `publicMetadata.role = "admin"` |
-| Driver / trabajador | Cuenta con `publicMetadata.role = "driver"` |
-| Rider / usuario final | Cuenta con `publicMetadata.role = "rider"`; acceso bloqueado en DriverApp |
+| Administrador | `publicMetadata.role = "admin"` |
+| Driver / trabajador | `publicMetadata.role = "driver"` |
+| Rider / usuario final | `publicMetadata.role = "rider"`; acceso bloqueado en DriverApp |
 
-Para probar roles, configurar en Clerk:
+No se incluyen contrasenas reales ni secretos en el repositorio. Para la defensa, compartir por fuera del repo un usuario admin, un driver y un rider.
 
-```json
-{ "role": "driver" }
-```
-
-```json
-{ "role": "admin" }
-```
-
-```json
-{ "role": "rider" }
-```
-
-## Usuarios de prueba
-
-No se incluyen contrasenas reales ni secretos en el repositorio.
-
-Para la defensa, configurar o compartir por fuera del repositorio:
-
-- Usuario admin con rol `admin`.
-- Usuario driver con rol `driver`.
-- Usuario rider con rol `rider`, para demostrar bloqueo de acceso.
-
-## Scripts utiles
+## Scripts
 
 ```bash
-npm run dev              # Iniciar servidor de desarrollo
-npm run build            # Compilar para produccion
-npm run start            # Iniciar servidor de produccion
-npm run lint             # Ejecutar ESLint
-npm run db:seed          # Cargar datos base
-npm run mock:rider-jobs  # Simular solicitudes de RiderApp
+npm run dev              # Desarrollo
+npm run build            # Build de produccion
+npm run start            # Servidor de produccion
+npm run lint             # ESLint
+npm run db:seed          # Datos base
+npm run mock:rider-jobs  # Solicitudes simuladas
 ```
+
