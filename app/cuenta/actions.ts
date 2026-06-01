@@ -135,6 +135,11 @@ export async function updateProfileData(
     "/cuenta",
   );
 
+  revalidatePath(
+    "/",
+    "layout",
+  );
+
   return {
     success: true,
   };

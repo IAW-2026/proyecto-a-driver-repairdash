@@ -3,6 +3,9 @@ import { createClient } from "@supabase/supabase-js";
 export const AVATARS_BUCKET =
   "avatars";
 
+const SIGNED_AVATAR_TTL_SECONDS =
+  60 * 60 * 24 * 7;
+
 function getSupabaseAdmin() {
   const supabaseUrl =
     process.env
@@ -14,8 +17,6 @@ function getSupabaseAdmin() {
     process.env
       .SUPABASE_SERVICE_ROLE_KEY
       ?.trim();
-
-  
 
   if (
     !supabaseUrl ||
@@ -54,7 +55,6 @@ export async function uploadAvatar(
       ?.toLowerCase() ??
     "jpg";
 
-  // 🔥 Sanitizamos por seguridad
   const safeDriverId =
     driverId.replace(
       /[^a-zA-Z0-9-_]/g,
@@ -67,15 +67,6 @@ export async function uploadAvatar(
   const path =
     `drivers/${safeDriverId}/${fileName}`;
 
-  
-
-  // 🔥 Ver buckets reales
-  const buckets =
-    await supabaseAdmin.storage.listBuckets();
-
-  
-
-  // 🔥 Convertir File → Buffer
   const arrayBuffer =
     await file.arrayBuffer();
 
@@ -84,10 +75,7 @@ export async function uploadAvatar(
       arrayBuffer,
     );
 
-  const {
-    data,
-    error,
-  } =
+  const { error } =
     await supabaseAdmin.storage
       .from(
         AVATARS_BUCKET,
@@ -102,26 +90,106 @@ export async function uploadAvatar(
         },
       );
 
-  
-
   if (error) {
     throw new Error(
       `Error subiendo imagen: ${error.message}`,
     );
   }
 
-  const {
-    data: {
-      publicUrl,
-    },
-  } =
-    supabaseAdmin.storage
+  return path;
+}
+
+export async function getAvatarDisplayUrl(
+  storedAvatar:
+    | string
+    | null
+    | undefined,
+): Promise<string | null> {
+  if (!storedAvatar?.trim()) {
+    return null;
+  }
+
+  const trimmedAvatar =
+    storedAvatar.trim();
+
+  const avatarPath =
+    extractAvatarPath(
+      trimmedAvatar,
+    );
+
+  if (!avatarPath) {
+    return trimmedAvatar;
+  }
+
+  const supabaseAdmin =
+    getSupabaseAdmin();
+
+  const { data, error } =
+    await supabaseAdmin.storage
       .from(
         AVATARS_BUCKET,
       )
-      .getPublicUrl(
-        path,
+      .createSignedUrl(
+        avatarPath,
+        SIGNED_AVATAR_TTL_SECONDS,
       );
 
-  return `${publicUrl}?t=${Date.now()}`;
+  if (error) {
+    console.error(
+      "Error generando URL firmada de avatar:",
+      error,
+    );
+
+    return null;
+  }
+
+  return data.signedUrl;
+}
+
+function extractAvatarPath(
+  storedAvatar: string,
+) {
+  if (
+    !storedAvatar.startsWith(
+      "http://",
+    ) &&
+    !storedAvatar.startsWith(
+      "https://",
+    )
+  ) {
+    return storedAvatar;
+  }
+
+  try {
+    const url =
+      new URL(storedAvatar);
+
+    const publicMarker =
+      `/storage/v1/object/public/${AVATARS_BUCKET}/`;
+
+    const signedMarker =
+      `/storage/v1/object/sign/${AVATARS_BUCKET}/`;
+
+    const marker =
+      url.pathname.includes(
+        publicMarker,
+      )
+        ? publicMarker
+        : url.pathname.includes(
+              signedMarker,
+            )
+          ? signedMarker
+          : null;
+
+    if (!marker) {
+      return null;
+    }
+
+    return decodeURIComponent(
+      url.pathname.split(marker)[1] ??
+        "",
+    );
+  } catch {
+    return null;
+  }
 }

@@ -7,6 +7,9 @@ import type { DriverDashboardProfile } from "@/types/dashboard";
 import {
   isRiderRole,
 } from "@/lib/auth/get-user-role";
+import {
+  getAvatarDisplayUrl,
+} from "@/lib/supabase";
 
 function shouldSetDriverRole(
   role: unknown,
@@ -104,6 +107,11 @@ export async function getCurrentDriverProfile(): Promise<DriverDashboardProfile>
     }
   }
 
+  const avatarUrl =
+    await getAvatarDisplayUrl(
+      driver.imagenURL,
+    );
+
   return {
   id: driver.id,
   clerkUserId: driver.clerkUserId,
@@ -118,8 +126,7 @@ export async function getCurrentDriverProfile(): Promise<DriverDashboardProfile>
     driver.bio ??
     null,
   imagenURL:
-    driver.imagenURL ??
-    null,
+    avatarUrl,
   status:
     driver.status,
   role:

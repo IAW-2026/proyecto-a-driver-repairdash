@@ -98,7 +98,6 @@ export async function POST() {
         nombre,
         email,
         telefono,
-        imagenURL,
         role:
           UserRole.DRIVER,
         status:

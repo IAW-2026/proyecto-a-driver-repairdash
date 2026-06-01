@@ -197,7 +197,6 @@ export async function POST(
           nombre,
           email,
           telefono,
-          imagenURL,
         },
 
         create: {
