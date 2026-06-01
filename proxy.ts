@@ -18,6 +18,7 @@ const isPublicRoute =
     "/cuenta-rider",
     "/rol-invalido",
     "/__clerk(.*)",
+    "/api/onboarding/driver",
     "/api/webhooks(.*)",
     "/api/mocks/(.*)",
     "/api/trabajos/state",
