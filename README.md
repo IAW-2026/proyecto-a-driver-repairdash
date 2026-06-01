@@ -22,7 +22,7 @@ iawuser#
 | Driver | `driver+clerktest@iaw.com` | Usar dashboard, recibir solicitudes, gestionar trabajos, historial e ingresos. |
 | Rider | `rider+clerktest@iaw.com` | Verificar que una cuenta rider no puede ingresar a Driver App. |
 
-Los roles se configuran en Clerk mediante `publicMetadata.role` con los valores `admin`, `driver` o `rider`.
+Los roles se configuran en Clerk mediante `publicMetadata.role` con los valores `driver-admin`, `driver` o `rider`.
 
 ## Instrucciones para evaluar
 
