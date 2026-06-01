@@ -61,7 +61,13 @@ async function fetchWithFallback<T>({
 export async function getDriverFeedback(
   userId: string,
 ): Promise<FeedbackReviewResponse> {
-  return fetchWithFallback({
+  const fallback =
+    getFeedbackUserRatingMock(
+      userId,
+    );
+
+  const feedback =
+    await fetchWithFallback({
     url: `${getFeedbackBaseUrl()}/reviews/user/${userId}`,
     init: {
       headers: getFeedbackHeaders(),
@@ -69,8 +75,27 @@ export async function getDriverFeedback(
         revalidate: 60,
       },
     },
-    fallback: () => getFeedbackUserRatingMock(userId),
+    fallback: () => fallback,
   });
+
+  const valoracion =
+    Number(
+      feedback.valoracion,
+    );
+
+  if (
+    !Number.isFinite(
+      valoracion,
+    ) ||
+    valoracion <= 0
+  ) {
+    return fallback;
+  }
+
+  return {
+    ...feedback,
+    valoracion,
+  };
 }
 
 export async function getFeedbackPublicReports(
