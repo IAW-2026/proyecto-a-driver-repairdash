@@ -68,7 +68,7 @@ const payments =
           {/* TRABAJOS LIQUIDADOS */}
           <div className="rounded-2xl border border-highlight/10 bg-highlight/[0.04] p-5 shadow-2xl shadow-black/20 sm:rounded-[28px] sm:p-6">
             <p className="text-[11px] uppercase tracking-[0.2em] text-highlight/40 sm:text-xs">
-              Trabajos liquidados
+              Trabajos liquidados hoy
             </p>
 
             <p className="mt-2 text-3xl font-bold text-highlight sm:mt-3 sm:text-4xl">
