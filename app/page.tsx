@@ -13,6 +13,7 @@ import { getAvailableRiderRequestsForDriver } from "@/lib/services/external/ride
 import type { DriverDailyStats } from "@/types/dashboard";
 import { isAdmin } from "@/lib/auth/roles";
 import {
+  hasValidAppRole,
   isRiderRole,
 } from "@/lib/auth/get-user-role";
 
@@ -37,6 +38,18 @@ export default async function HomePage() {
           };
         }
       | undefined;
+
+  if (
+    !hasValidAppRole(
+      claims?.metadata?.role ??
+        claims?.publicMetadata
+          ?.role,
+    )
+  ) {
+    redirect(
+      "/rol-invalido",
+    );
+  }
 
   if (
     isRiderRole(

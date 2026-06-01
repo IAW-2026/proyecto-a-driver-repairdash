@@ -56,24 +56,7 @@ export async function getCurrentRole() {
     return UserRole.DRIVER;
   }
 
-  // fallback temporal
-  const driver =
-    await prisma.driver.findUnique(
-      {
-        where: {
-          clerkUserId:
-            user.id,
-        },
-        select: {
-          role: true,
-        },
-      },
-    );
-
-  return (
-    driver?.role ??
-    UserRole.DRIVER
-  );
+  return null;
 }
 
 export async function requireAdmin() {

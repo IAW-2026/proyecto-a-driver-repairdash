@@ -15,15 +15,9 @@ import {
 import {
   NextResponse,
 } from "next/server";
-
-function shouldSetDriverRole(
-  role: unknown,
-) {
-  return (
-    role !== "driver" &&
-    role !== "driver-admin"
-  );
-}
+import {
+  hasValidAppRole,
+} from "@/lib/auth/get-user-role";
 
 export async function POST() {
   const { userId } =
@@ -54,18 +48,17 @@ export async function POST() {
       ?.role;
 
   if (
-    shouldSetDriverRole(
+    !hasValidAppRole(
       role,
     )
   ) {
-    await clerk.users.updateUser(
-      userId,
+    return NextResponse.json(
       {
-        publicMetadata: {
-          ...user.publicMetadata,
-          role:
-            "driver",
-        },
+        message:
+          "Rol de usuario invalido",
+      },
+      {
+        status: 403,
       },
     );
   }
