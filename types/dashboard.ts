@@ -67,6 +67,6 @@ export type DashboardJobRequest = RiderJobRequest & {
 
 export type DriverDailyStats = {
   trabajosCompletados: number;
-  ingresosDelDia: number;
+  balanceARetirar: number;
   ratingPromedio: number;
 };

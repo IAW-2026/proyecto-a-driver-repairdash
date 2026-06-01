@@ -138,9 +138,9 @@ export default async function HomePage() {
       trabajosCompletados:
         paymentMetrics
           .trabajosLiquidados,
-      ingresosDelDia:
+      balanceARetirar:
         paymentMetrics
-          .ingresosDelDia,
+          .balanceDisponible,
       ratingPromedio:
         feedback.valoracion,
     };

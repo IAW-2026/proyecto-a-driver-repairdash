@@ -11,12 +11,12 @@ export function StatsGrid({ stats }: StatsGridProps) {
     {
       label: "Completados",
       value: stats.trabajosCompletados.toString(),
-      detail: "Payment App mock",
+      detail: "Trabajos liquidados",
     },
     {
-      label: "Ingresos",
-      value: formatCurrency(stats.ingresosDelDia),
-      detail: "Payment App mock",
+      label: "Balance a retirar",
+      value: formatCurrency(stats.balanceARetirar),
+      detail: "Saldo disponible a retirar",
     },
     {
       label: "Calificacion",
@@ -39,7 +39,7 @@ export function StatsGrid({ stats }: StatsGridProps) {
             key={item.label}
             className="min-h-[76px] rounded-2xl border border-highlight/10 bg-highlight/[0.045] p-3 shadow-xl shadow-black/15 sm:min-h-32 sm:p-4"
           >
-            <p className="truncate text-[10px] font-bold leading-none text-accent sm:text-xs">
+            <p className="text-[9px] font-bold leading-tight text-accent sm:text-xs">
               {item.label}
             </p>
             <div className="mt-2 flex min-w-0 items-center gap-1.5 sm:mt-3 sm:gap-2">
@@ -50,9 +50,12 @@ export function StatsGrid({ stats }: StatsGridProps) {
                 {item.value}
               </p>
             </div>
-            <p className="mt-2 hidden text-xs leading-5 text-highlight/55 sm:block">
-              {item.detail}
-            </p>
+            {"detail" in item &&
+            item.detail ? (
+              <p className="mt-2 hidden text-xs leading-5 text-highlight/55 sm:block">
+                {item.detail}
+              </p>
+            ) : null}
           </article>
         );
       })}
