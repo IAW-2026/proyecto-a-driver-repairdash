@@ -17,6 +17,7 @@ import {
 } from "next/server";
 import {
   hasValidAppRole,
+  isRiderRole,
 } from "@/lib/auth/get-user-role";
 
 export async function POST() {
@@ -47,10 +48,25 @@ export async function POST() {
     user.publicMetadata
       ?.role;
 
+  const hasConfiguredRole =
+    typeof role === "string" &&
+    role.trim().length > 0;
+
+  if (isRiderRole(role)) {
+    return NextResponse.json(
+      {
+        message:
+          "Esta cuenta pertenece a RiderApp",
+      },
+      {
+        status: 403,
+      },
+    );
+  }
+
   if (
-    !hasValidAppRole(
-      role,
-    )
+    hasConfiguredRole &&
+    !hasValidAppRole(role)
   ) {
     return NextResponse.json(
       {
@@ -59,6 +75,36 @@ export async function POST() {
       },
       {
         status: 403,
+      },
+    );
+  }
+
+  if (
+    role === "driver-admin"
+  ) {
+    return NextResponse.json(
+      {
+        message:
+          "La cuenta admin no requiere onboarding de driver",
+      },
+      {
+        status: 403,
+      },
+    );
+  }
+
+  if (!hasConfiguredRole) {
+    // El alta propia de DriverApp crea usuarios sin rol y los inicializa como driver.
+    // Si el rol existe pero es invalido, se trata como una mala configuracion manual.
+    // No se autocorrige para que /rol-invalido pueda exponer el problema.
+    await clerk.users.updateUserMetadata(
+      userId,
+      {
+        publicMetadata: {
+          ...user.publicMetadata,
+          role:
+            "driver",
+        },
       },
     );
   }
