@@ -24,6 +24,11 @@ export function EditablePhoneField({
       value ?? undefined,
     );
 
+  const [error, setError] =
+    useState<string | null>(
+      null,
+    );
+
   const [
     isPending,
     startTransition,
@@ -50,10 +55,13 @@ export function EditablePhoneField({
       value ?? undefined,
     );
 
+    setError(null);
     setEditing(false);
   }
 
   function savePhone() {
+    setError(null);
+
     startTransition(
       async () => {
         try {
@@ -65,9 +73,21 @@ export function EditablePhoneField({
             phone ?? "",
           );
 
-          await updateProfileData(
-            formData,
-          );
+          const result =
+            await updateProfileData(
+              formData,
+            );
+
+          if (
+            !result.success
+          ) {
+            setError(
+              result.error ??
+                "No pudimos guardar el telefono",
+            );
+
+            return;
+          }
 
           setEditing(false);
 
@@ -75,6 +95,10 @@ export function EditablePhoneField({
         } catch (error) {
           console.error(
             error,
+          );
+
+          setError(
+            "No pudimos guardar el telefono",
           );
         }
       },
@@ -133,6 +157,12 @@ export function EditablePhoneField({
               className="text-sm text-highlight sm:text-base"
             />
           </div>
+
+          {error && (
+            <p className="mt-2 text-sm text-red-400">
+              {error}
+            </p>
+          )}
 
           <div className="mt-3 flex flex-col gap-2 sm:mt-4 sm:flex-row sm:gap-3">
             <button
