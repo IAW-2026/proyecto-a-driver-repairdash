@@ -29,6 +29,16 @@ export function isRiderRole(
   ) === "rider";
 }
 
+export function hasValidAppRole(
+  role: unknown,
+) {
+  return (
+    normalizeAppRole(
+      role,
+    ) !== null
+  );
+}
+
 export async function getUserRole(): Promise<AppRole> {
   const user =
     await currentUser();

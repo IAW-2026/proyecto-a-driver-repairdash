@@ -1,30 +1,30 @@
 import {
-  clerkClient,
   currentUser,
 } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import type { DriverDashboardProfile } from "@/types/dashboard";
 import {
+  hasValidAppRole,
   isRiderRole,
 } from "@/lib/auth/get-user-role";
 import {
   getAvatarDisplayUrl,
 } from "@/lib/supabase";
 
-function shouldSetDriverRole(
-  role: unknown,
-) {
-  return (
-    role !== "driver" &&
-    role !== "driver-admin" &&
-    role !== "rider"
-  );
-}
-
 export async function getCurrentDriverProfile(): Promise<DriverDashboardProfile> {
   const user = await currentUser();
 
   if (!user) throw new Error("Unauthorized");
+
+  if (
+    !hasValidAppRole(
+      user.publicMetadata?.role,
+    )
+  ) {
+    throw new Error(
+      "Invalid user role",
+    );
+  }
 
   if (
     isRiderRole(
@@ -33,25 +33,6 @@ export async function getCurrentDriverProfile(): Promise<DriverDashboardProfile>
   ) {
     throw new Error(
       "Rider accounts cannot access DriverApp",
-    );
-  }
-
-  if (
-    shouldSetDriverRole(
-      user.publicMetadata?.role,
-    )
-  ) {
-    const clerk =
-      await clerkClient();
-
-    await clerk.users.updateUser(
-      user.id,
-      {
-        publicMetadata: {
-          ...user.publicMetadata,
-          role: "driver",
-        },
-      },
     );
   }
 

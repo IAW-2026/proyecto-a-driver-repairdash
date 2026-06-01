@@ -6,6 +6,7 @@ import {
   NextResponse,
 } from "next/server";
 import {
+  hasValidAppRole,
   isRiderRole,
 } from "@/lib/auth/get-user-role";
 
@@ -15,6 +16,7 @@ const isPublicRoute =
     "/login(.*)",
     "/sign-up(.*)",
     "/cuenta-rider",
+    "/rol-invalido",
     "/__clerk(.*)",
     "/api/webhooks(.*)",
     "/api/mocks/(.*)",
@@ -62,6 +64,21 @@ export default clerkMiddleware(
     const role =
       claims?.metadata?.role ??
       claims?.publicMetadata?.role;
+
+    if (
+      !hasValidAppRole(
+        role,
+      ) &&
+      req.nextUrl.pathname !==
+        "/rol-invalido"
+    ) {
+      return NextResponse.redirect(
+        new URL(
+          "/rol-invalido",
+          req.url,
+        ),
+      );
+    }
 
     if (
       isRiderRole(
