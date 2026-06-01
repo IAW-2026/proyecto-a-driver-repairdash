@@ -81,7 +81,7 @@ export default clerkMiddleware(
     // Admin bypass
     if (
       role ===
-      "admin"
+      "driver-admin"
     ) {
       return;
     }

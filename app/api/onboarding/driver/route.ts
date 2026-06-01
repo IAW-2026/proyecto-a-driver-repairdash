@@ -21,8 +21,7 @@ function shouldSetDriverRole(
 ) {
   return (
     role !== "driver" &&
-    role !== "driver-admin" &&
-    role !== "admin"
+    role !== "driver-admin"
   );
 }
 
