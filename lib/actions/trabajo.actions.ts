@@ -236,7 +236,7 @@ export async function avanzarTrabajo(trabajoId: string, nuevoEstado: TrabajoEsta
   revalidatePath("/admin/servicios");
 
   if (nuevoEstado === "FINALIZADO") {
-    redirect("/");
+    redirect("/"); //TODO redireccionar a una página de feedback 
   }
 
   redirect("/trabajos/activo");
@@ -438,5 +438,5 @@ export async function finalizarTrabajo(
   revalidatePath("/trabajos/activo");
   revalidatePath("/admin/servicios");
 
-  redirect("/");
+  redirect("https://proyecto-a-feedback-repairdash.vercel.app/reviews");
 }
