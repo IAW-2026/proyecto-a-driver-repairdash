@@ -35,7 +35,7 @@ export async function POST(
 ) {
   const WEBHOOK_SECRET =
     process.env
-      .CLERK_WEBHOOK_SECRET;
+      .CLERK_WEBHOOK_SECRET?.trim();
 
   if (!WEBHOOK_SECRET) {
     return NextResponse.json(
@@ -84,14 +84,14 @@ export async function POST(
   const payload =
     await req.text();
 
-  const wh =
-    new Webhook(
-      WEBHOOK_SECRET,
-    );
-
   let evt: ClerkEvent;
 
   try {
+    const wh =
+      new Webhook(
+        WEBHOOK_SECRET,
+      );
+
     evt = wh.verify(
       payload,
       {
