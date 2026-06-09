@@ -111,6 +111,20 @@ function getRiderStateUrl() {
     return baseUrl;
   }
 
+  if (
+    baseUrl.endsWith(
+      "/api/repairdash",
+    )
+  ) {
+    return `${baseUrl}/statetravel`;
+  }
+
+  if (
+    baseUrl.endsWith("/api")
+  ) {
+    return `${baseUrl}/repairdash/statetravel`;
+  }
+
   return `${baseUrl}/api/repairdash/statetravel`;
 }
 

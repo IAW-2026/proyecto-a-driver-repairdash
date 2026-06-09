@@ -7,7 +7,8 @@ Este documento describe las APIs que expone DriverApp y los mocks locales que us
 - DriverApp funciona de forma independiente.
 - Las solicitudes nuevas se simulan con `npm run mock:rider-jobs`.
 - Ese script no escribe directo en la base: llama al webhook `POST /api/webhooks/nuevo-trabajo`, igual que haria RiderApp.
-- Los cambios de estado salientes hacia RiderApp se envian a `RIDER_APP_URL/api/repairdash/statetravel`.
+- Los cambios de estado salientes hacia RiderApp se envian a `/api/repairdash/statetravel`.
+- `RIDER_APP_URL` puede ser la base de RiderApp, terminar en `/api`, terminar en `/api/repairdash` o ser el endpoint completo.
 - Si `RIDER_APP_URL` no esta configurada, DriverApp usa el mock local `/api/mocks/repairdash/statetravel`.
 - Los IDs de usuarios que cruzan apps son Clerk IDs.
 - Los IDs internos de Prisma solo se usan dentro de DriverApp.
@@ -17,7 +18,7 @@ Este documento describe las APIs que expone DriverApp y los mocks locales que us
 | Variable | Uso |
 |---|---|
 | `DRIVER_API_KEY` | Clave esperada por las APIs expuestas por DriverApp. Header: `x-api-key`. |
-| `RIDER_APP_URL` | Base URL de RiderApp. DriverApp le agrega `/api/repairdash/statetravel` si no viene incluido. |
+| `RIDER_APP_URL` | URL de RiderApp. Puede ser base, `/api`, `/api/repairdash` o el endpoint completo; DriverApp la normaliza. |
 | `RIDER_INTERNAL_API_KEY` | Clave enviada a RiderApp o al mock local. Headers: `x-api-key` y `x-internal-api-key`. |
 | `FEEDBACK_APP_URL` | Base URL de FeedbackApp real. Si no esta configurada o falla, se usa fallback local. |
 | `FEEDBACK_INTERNAL_API_KEY` | Clave enviada a FeedbackApp o a sus mocks. Header: `x-api-key`. |
