@@ -71,6 +71,6 @@ Para Etapa 2, RiderApp, PaymentsApp y FeedbackApp estan simuladas mediante mocks
 - La aplicacion no debe evaluarse como vacia: se incluyen seed de tipos de servicio y un script para generar solicitudes sin escribir directo en la base.
 - `FINALIZADO` representa el fin del flujo operativo en Driver App. En una integracion completa, el cierre definitivo dependeria de RiderApp y PaymentsApp: el rider podria aceptar el cierre o iniciar un reporte, y PaymentsApp deberia informar si el trabajo queda liquidado, retenido o pendiente de resolucion.
 - Como evolucion futura se espera agregar un estado como `PENDIENTE_LIQUIDAR` y un callback desde PaymentsApp hacia DriverApp para diferenciar "servicio finalizado" de "trabajo liquidado".
-- Los ingresos mostrados no se calculan localmente desde trabajos finalizados; se consultan desde PaymentsApp o su mock/fallback con cache de 60 segundos.
+- Los ingresos mostrados no se calculan localmente desde trabajos finalizados; se consultan desde PaymentsApp con cache de 60 segundos. Su mock/fallback quedan en el codigo, pero se utilizaron en desarrollo.
 - Las APIs y mocks disponibles estan documentados en `docs/APIs.md`.
 
