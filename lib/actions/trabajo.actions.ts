@@ -361,7 +361,7 @@ export async function comenzarReporte(
   revalidatePath("/");
   revalidatePath("/trabajos/activo");
   revalidatePath("/admin/servicios");
-  redirect("/proximamente");
+  redirect("https://proyecto-a-feedback-repairdash.vercel.app/reportes");
 }
 
 export async function finalizarTrabajo(
