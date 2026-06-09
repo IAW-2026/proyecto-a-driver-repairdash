@@ -14,10 +14,34 @@ import type {
 import type { FeedbackReviewResponse } from "@/types/dashboard";
 
 function getFeedbackBaseUrl() {
-  return (
-    process.env.FEEDBACK_APP_URL ??
-    `${getBaseUrl()}/api/mocks/feedback`
-  ).replace(/\/+$/, "");
+  const configuredUrl =
+    process.env.FEEDBACK_APP_URL;
+
+  if (!configuredUrl) {
+    return `${getBaseUrl()}/api/mocks/feedback`;
+  }
+
+  const baseUrl =
+    configuredUrl.replace(
+      /\/+$/,
+      "",
+    );
+
+  if (
+    baseUrl.endsWith("/api")
+  ) {
+    return baseUrl;
+  }
+
+  if (
+    baseUrl.endsWith(
+      "/api/mocks/feedback",
+    )
+  ) {
+    return baseUrl;
+  }
+
+  return `${baseUrl}/api`;
 }
 
 function getFeedbackHeaders() {

@@ -20,7 +20,7 @@ Este documento describe las APIs que expone DriverApp y los mocks locales que us
 | `DRIVER_API_KEY` | Clave esperada por las APIs expuestas por DriverApp. Header: `x-api-key`. |
 | `RIDER_APP_URL` | URL de RiderApp. Puede ser base, `/api`, `/api/repairdash` o el endpoint completo; DriverApp la normaliza. |
 | `RIDER_INTERNAL_API_KEY` | Clave enviada a RiderApp o al mock local. Headers: `x-api-key` y `x-internal-api-key`. |
-| `FEEDBACK_APP_URL` | Base URL de FeedbackApp real. Si no esta configurada o falla, se usa fallback local. |
+| `FEEDBACK_APP_URL` | URL de FeedbackApp real. Puede ser base o terminar en `/api`; si no esta configurada o falla, se usa fallback local. |
 | `FEEDBACK_INTERNAL_API_KEY` | Clave enviada a FeedbackApp o a sus mocks. Header: `x-api-key`. |
 | `PAYMENTS_APP_URL` | Base URL de PaymentsApp real. |
 | `PAYMENTS_INTERNAL_API_KEY` | Clave enviada a PaymentsApp o a su mock. |
@@ -397,6 +397,8 @@ curl.exe -i "http://localhost:3000/api/mocks/feedback/reports/public/CLERK_USER_
 Representa: FeedbackApp.
 
 Objetivo: simular alta de trabajo en FeedbackApp cuando un driver acepta.
+
+En integracion real, DriverApp llama este contrato automaticamente al aceptar un trabajo. Si `FEEDBACK_APP_URL` es la URL base de la app, DriverApp normaliza el destino a `{FEEDBACK_APP_URL}/api/trabajos`. Si ya termina en `/api`, usa `{FEEDBACK_APP_URL}/trabajos`.
 
 Auth: `x-api-key` contra `FEEDBACK_INTERNAL_API_KEY`.
 
