@@ -3,7 +3,7 @@ import { createReviewsUserMock } from "@/lib/mocks/feedback.mock";
 
 const VALID_API_KEY = process.env.FEEDBACK_INTERNAL_API_KEY;
 
-export async function PUT(req: Request) {
+export async function POST(req: Request) {
   try {
     const apiKey = req.headers.get("x-api-key");
 

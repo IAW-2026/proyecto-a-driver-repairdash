@@ -190,9 +190,9 @@ export async function requestFeedbackReview(
   idTrabajo: string,
 ) {
   return fetchWithFallback({
-    url: `${getFeedbackBaseUrl()}/reviews`,
+    url: `${getFeedbackBaseUrl()}/reviews/user`,
     init: {
-      method: "PUT",
+      method: "POST",
       headers: getFeedbackHeaders(),
       body: JSON.stringify({
         idTrabajo,
