@@ -6,14 +6,25 @@ import { validateInternalApiKey } from "@/lib/auth/internal-auth";
 import { getRiderCustomerMock } from "@/lib/mocks/rider.mock";
 
 type RequestBody = {
-  id_trabajo: string;
-  riderId: string;
-  tipoServicioId: string;
-  direccion: string;
+  id_trabajo?: string;
+  idTrabajo?: string;
+  id_viaje?: string;
+  riderId?: string;
+  idCliente?: string;
+  IdCliente?: string;
+  tipoServicioId?: string;
+  idTipoServicio?: string;
+  direccion?: string;
+  ubicacion?: {
+    direccion?: string;
+  };
   descripcion?: string;
   nombreRider?: string;
+  nombreCliente?: string;
   apellidoRider?: string;
+  apellidoCliente?: string;
   valoracionRider?: number;
+  ratingCliente?: number;
   fotos?: string[];
 };
 
@@ -28,17 +39,40 @@ export async function POST(req: NextRequest) {
       return authError;
 
     const body: RequestBody = await req.json();
+    const id_trabajo =
+      body.id_trabajo ??
+      body.idTrabajo ??
+      body.id_viaje;
+
+    const riderId =
+      body.riderId ??
+      body.idCliente ??
+      body.IdCliente;
+
+    const tipoServicioId =
+      body.tipoServicioId ??
+      body.idTipoServicio;
+
+    const direccion =
+      body.direccion ??
+      body.ubicacion?.direccion;
+
     const {
-      id_trabajo,
-      riderId,
-      tipoServicioId,
-      direccion,
       descripcion,
       fotos,
-      nombreRider,
-      apellidoRider,
-      valoracionRider,
     } = body;
+
+    const nombreRider =
+      body.nombreRider ??
+      body.nombreCliente;
+
+    const apellidoRider =
+      body.apellidoRider ??
+      body.apellidoCliente;
+
+    const valoracionRider =
+      body.valoracionRider ??
+      body.ratingCliente;
 
     if (
       !id_trabajo ||

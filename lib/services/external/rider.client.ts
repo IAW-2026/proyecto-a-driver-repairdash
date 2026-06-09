@@ -90,7 +90,28 @@ const riderStateMap: Partial<Record<TrabajoEstado, RiderTravelState>> = {
 };
 
 function getRiderStateUrl() {
-  return `${getBaseUrl()}/api/mocks/repairdash/statetravel`;
+  const configuredUrl =
+    process.env.RIDER_APP_URL;
+
+  if (!configuredUrl) {
+    return `${getBaseUrl()}/api/mocks/repairdash/statetravel`;
+  }
+
+  const baseUrl =
+    configuredUrl.replace(
+      /\/+$/,
+      "",
+    );
+
+  if (
+    baseUrl.endsWith(
+      "/api/repairdash/statetravel",
+    )
+  ) {
+    return baseUrl;
+  }
+
+  return `${baseUrl}/api/repairdash/statetravel`;
 }
 
 export async function notifyRiderTrabajoState(input: {
@@ -115,6 +136,18 @@ export async function notifyRiderTrabajoState(input: {
       driver: input.driverId,
     };
 
+    console.info(
+      "[RiderApp] notifying state",
+      {
+        url,
+        trabajoId:
+          input.trabajoId,
+        estado,
+        driverId:
+          input.driverId,
+      },
+    );
+
     const response = await fetch(
       url,
       {
@@ -135,7 +168,7 @@ export async function notifyRiderTrabajoState(input: {
 
     if (!response.ok) {
       console.warn(
-        "Mock Rider state API returned",
+        "Rider state API returned",
         response.status,
         {
           url,
@@ -145,7 +178,7 @@ export async function notifyRiderTrabajoState(input: {
     }
   } catch (error) {
     console.warn(
-      "Mock Rider state API unavailable",
+      "Rider state API unavailable",
       error,
     );
   }

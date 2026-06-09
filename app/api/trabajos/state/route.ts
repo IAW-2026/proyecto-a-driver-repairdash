@@ -6,7 +6,9 @@ import { validateInternalApiKey } from "@/lib/auth/internal-auth";
 import { prisma } from "@/lib/prisma";
 
 type RequestBody = {
-  id_trabajo: string;
+  id_trabajo?: string;
+  idTrabajo?: string;
+  id_viaje?: string;
   estado: string;
 };
 
@@ -24,8 +26,12 @@ export async function PUT(req: NextRequest) {
     const body: RequestBody =
       await req.json();
 
+    const id_trabajo =
+      body.id_trabajo ??
+      body.idTrabajo ??
+      body.id_viaje;
+
     const {
-      id_trabajo,
       estado,
     } = body;
 

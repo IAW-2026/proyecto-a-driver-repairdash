@@ -7,8 +7,8 @@ Este documento describe las APIs que expone DriverApp y los mocks locales que us
 - DriverApp funciona de forma independiente.
 - Las solicitudes nuevas se simulan con `npm run mock:rider-jobs`.
 - Ese script no escribe directo en la base: llama al webhook `POST /api/webhooks/nuevo-trabajo`, igual que haria RiderApp.
-- Los cambios de estado salientes hacia RiderApp se envian al mock local `/api/mocks/repairdash/statetravel`.
-- `RIDER_APP_URL` puede quedar configurada en `.env`, pero no se usa en el modo actual.
+- Los cambios de estado salientes hacia RiderApp se envian a `RIDER_APP_URL/api/repairdash/statetravel`.
+- Si `RIDER_APP_URL` no esta configurada, DriverApp usa el mock local `/api/mocks/repairdash/statetravel`.
 - Los IDs de usuarios que cruzan apps son Clerk IDs.
 - Los IDs internos de Prisma solo se usan dentro de DriverApp.
 
@@ -17,8 +17,8 @@ Este documento describe las APIs que expone DriverApp y los mocks locales que us
 | Variable | Uso |
 |---|---|
 | `DRIVER_API_KEY` | Clave esperada por las APIs expuestas por DriverApp. Header: `x-api-key`. |
-| `RIDER_APP_URL` | URL futura de RiderApp. Actualmente no se usa. |
-| `RIDER_INTERNAL_API_KEY` | Clave enviada al mock local de RiderApp. Header: `x-api-key`. |
+| `RIDER_APP_URL` | Base URL de RiderApp. DriverApp le agrega `/api/repairdash/statetravel` si no viene incluido. |
+| `RIDER_INTERNAL_API_KEY` | Clave enviada a RiderApp o al mock local. Headers: `x-api-key` y `x-internal-api-key`. |
 | `FEEDBACK_APP_URL` | Base URL de FeedbackApp real. Si no esta configurada o falla, se usa fallback local. |
 | `FEEDBACK_INTERNAL_API_KEY` | Clave enviada a FeedbackApp o a sus mocks. Header: `x-api-key`. |
 | `PAYMENTS_APP_URL` | Base URL de PaymentsApp real. |
@@ -116,6 +116,18 @@ Obligatorios:
 | `tipoServicioId` | `string` | ID de `TipoServicio`. |
 | `direccion` | `string` | Direccion del trabajo. |
 
+Aliases aceptados para integracion con RiderApp:
+
+| Dato | Campos aceptados |
+|---|---|
+| ID de trabajo | `id_trabajo`, `idTrabajo`, `id_viaje` |
+| Clerk ID del rider | `riderId`, `idCliente`, `IdCliente` |
+| Tipo de servicio | `tipoServicioId`, `idTipoServicio` |
+| Direccion | `direccion`, `ubicacion.direccion` |
+| Nombre | `nombreRider`, `nombreCliente` |
+| Apellido | `apellidoRider`, `apellidoCliente` |
+| Valoracion | `valoracionRider`, `ratingCliente` |
+
 Opcionales:
 
 | Campo | Tipo | Descripcion |
@@ -173,6 +185,8 @@ Campos:
 |---|---|---:|---|
 | `id_trabajo` | `string` | Si | ID compartido del trabajo, el mismo recibido en `POST /api/webhooks/nuevo-trabajo`. |
 | `estado` | `"cancelado"` | Si | Unico estado aceptado por esta API. |
+
+Para compatibilidad con RiderApp, el ID tambien puede llegar como `idTrabajo` o `id_viaje`.
 
 Efectos:
 
@@ -260,6 +274,38 @@ svix-id: ...
 svix-timestamp: ...
 svix-signature: ...
 ```
+
+## APIs Reales Consumidas por DriverApp
+
+### PUT `{RIDER_APP_URL}/api/repairdash/statetravel`
+
+Origen: DriverApp.
+
+Objetivo: notificar a RiderApp cada cambio de estado realizado por el driver.
+
+Auth: `x-api-key` y `x-internal-api-key` con `RIDER_INTERNAL_API_KEY`.
+
+Request:
+
+```json
+{
+  "id_viaje": "trabajo_id_compartido",
+  "estado": "en camino",
+  "driver": "clerk_user_id_del_driver"
+}
+```
+
+Estados enviados:
+
+| Estado DriverApp | Estado RiderApp |
+|---|---|
+| `ACEPTADO` | `aceptado` |
+| `CANCELADO` | `cancelado` |
+| `EN_CAMINO` | `en camino` |
+| `EN_SERVICIO` | `ha llegado` |
+| `FINALIZADO` | `finalizado` |
+
+Si `RIDER_APP_URL` no esta configurada, DriverApp usa el mock local documentado abajo.
 
 ## Mocks Locales Consumidos por DriverApp
 
