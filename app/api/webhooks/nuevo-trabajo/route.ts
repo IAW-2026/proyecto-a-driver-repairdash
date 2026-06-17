@@ -3,7 +3,6 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { Prisma, TrabajoEstado } from "@prisma/client";
 import { validateInternalApiKey } from "@/lib/auth/internal-auth";
-import { getRiderCustomerMock } from "@/lib/mocks/rider.mock";
 
 type RequestBody = {
   id_trabajo?: string;
@@ -115,18 +114,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const riderMock =
-      getRiderCustomerMock(
-        riderId,
-      );
-
     const riderSnapshot = {
       nombre:
         nombreRider?.trim() ||
-        riderMock.nombreCliente,
+        "No disponible",
       apellido:
         apellidoRider?.trim() ||
-        riderMock.apellidoCliente,
+        "",
       valoracion:
         typeof valoracionRider ===
           "number" &&
@@ -134,7 +128,7 @@ export async function POST(req: NextRequest) {
           valoracionRider,
         )
           ? valoracionRider
-          : riderMock.ratingCliente,
+          : 0,
     };
 
     const trabajo =

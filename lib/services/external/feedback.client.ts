@@ -1,24 +1,51 @@
-import { getBaseUrl } from "@/lib/config/get-base-url";
-import {
-  createFeedbackReportMock,
-  createFeedbackTrabajoMock,
-  createReviewsUserMock,
-  getFeedbackPublicReportsMock,
-  getFeedbackUserRatingMock,
-} from "@/lib/mocks/feedback.mock";
-import type {
-  FeedbackPublicReportsResponse,
-  FeedbackReportResponse,
-  FeedbackTrabajoResponse,
-} from "@/lib/mocks/feedback.mock";
 import type { FeedbackReviewResponse } from "@/types/dashboard";
+
+type FeedbackPublicReportsResponse = {
+  idUsuario: string;
+  reportesAbiertos: number;
+  reportesConFalloEnContra: number;
+};
+
+type FeedbackTrabajoResponse = {
+  Idtrabajo: string;
+  IdCliente: string;
+  IdTrabajador: string;
+  tipodeTrabajo: string;
+  fechaDeInicio: string;
+};
+
+type FeedbackReportResponse = {
+  message: string;
+  idReporte: number;
+  vinculos: {
+    reportante: string;
+    reportado: string;
+  };
+  estado: "SinResolver" | "Resuelto";
+};
+
+type ReviewsUserResponse = {
+  status: "ReadyToRate";
+  datosDelTrabajo: {
+    idTrabajo: string;
+    tipoDeTrabajo: string;
+    cliente: {
+      id: number;
+      nombre: string;
+    };
+    trabajador: {
+      id: number;
+      nombre: string;
+    };
+  };
+};
 
 function getFeedbackBaseUrl() {
   const configuredUrl =
     process.env.FEEDBACK_APP_URL;
 
   if (!configuredUrl) {
-    return `${getBaseUrl()}/api/mocks/feedback`;
+    return null;
   }
 
   const baseUrl =
@@ -29,14 +56,6 @@ function getFeedbackBaseUrl() {
 
   if (
     baseUrl.endsWith("/api")
-  ) {
-    return baseUrl;
-  }
-
-  if (
-    baseUrl.endsWith(
-      "/api/mocks/feedback",
-    )
   ) {
     return baseUrl;
   }
@@ -58,8 +77,16 @@ async function fetchWithFallback<T>({
 }: {
   fallback: () => T;
   init?: RequestInit;
-  url: string;
+  url: string | null;
 }): Promise<T> {
+  if (!url) {
+    console.warn(
+      "FEEDBACK_APP_URL is not configured; using safe fallback",
+    );
+
+    return fallback();
+  }
+
   try {
     const response = await fetch(url, init);
 
@@ -70,11 +97,11 @@ async function fetchWithFallback<T>({
     console.warn(
       "Feedback API returned",
       response.status,
-      "using local fallback",
+      "using safe fallback",
     );
   } catch (error) {
     console.warn(
-      "Feedback API unavailable, using local fallback",
+      "Feedback API unavailable, using safe fallback",
       error,
     );
   }
@@ -82,25 +109,42 @@ async function fetchWithFallback<T>({
   return fallback();
 }
 
+function unavailableFeedback(
+  userId: string,
+): FeedbackReviewResponse {
+  return {
+    id: Number.isNaN(Number(userId))
+      ? 0
+      : Number(userId),
+    nombre: "No disponible",
+    apellido: "",
+    valoracion: 0,
+    reviews: [],
+  };
+}
+
 export async function getDriverFeedback(
   userId: string,
 ): Promise<FeedbackReviewResponse> {
   const fallback =
-    getFeedbackUserRatingMock(
-      userId,
-    );
+    unavailableFeedback(userId);
+
+  const baseUrl =
+    getFeedbackBaseUrl();
 
   const feedback =
     await fetchWithFallback({
-    url: `${getFeedbackBaseUrl()}/reviews/user/${userId}`,
-    init: {
-      headers: getFeedbackHeaders(),
-      next: {
-        revalidate: 60,
+      url: baseUrl
+        ? `${baseUrl}/reviews/user/${userId}`
+        : null,
+      init: {
+        headers: getFeedbackHeaders(),
+        next: {
+          revalidate: 60,
+        },
       },
-    },
-    fallback: () => fallback,
-  });
+      fallback: () => fallback,
+    });
 
   const valoracion =
     Number(
@@ -125,15 +169,24 @@ export async function getDriverFeedback(
 export async function getFeedbackPublicReports(
   userId: string,
 ): Promise<FeedbackPublicReportsResponse> {
+  const baseUrl =
+    getFeedbackBaseUrl();
+
   return fetchWithFallback({
-    url: `${getFeedbackBaseUrl()}/reports/public/${userId}`,
+    url: baseUrl
+      ? `${baseUrl}/reports/public/${userId}`
+      : null,
     init: {
       headers: getFeedbackHeaders(),
       next: {
         revalidate: 60,
       },
     },
-    fallback: () => getFeedbackPublicReportsMock(userId),
+    fallback: () => ({
+      idUsuario: userId,
+      reportesAbiertos: 0,
+      reportesConFalloEnContra: 0,
+    }),
   });
 }
 
@@ -143,8 +196,13 @@ export async function createFeedbackTrabajo(input: {
   idTrabajador: string;
   tipoDeTrabajo: string;
 }): Promise<FeedbackTrabajoResponse> {
+  const baseUrl =
+    getFeedbackBaseUrl();
+
   return fetchWithFallback({
-    url: `${getFeedbackBaseUrl()}/trabajos`,
+    url: baseUrl
+      ? `${baseUrl}/trabajos`
+      : null,
     init: {
       method: "POST",
       headers: getFeedbackHeaders(),
@@ -155,13 +213,13 @@ export async function createFeedbackTrabajo(input: {
         tipodeTrabajo: input.tipoDeTrabajo,
       }),
     },
-    fallback: () =>
-      createFeedbackTrabajoMock({
-        Idtrabajo: input.idTrabajo,
-        IdCliente: input.idCliente,
-        IdTrabajador: input.idTrabajador,
-        tipodeTrabajo: input.tipoDeTrabajo,
-      }),
+    fallback: () => ({
+      Idtrabajo: input.idTrabajo,
+      IdCliente: input.idCliente,
+      IdTrabajador: input.idTrabajador,
+      tipodeTrabajo: input.tipoDeTrabajo,
+      fechaDeInicio: "",
+    }),
   });
 }
 
@@ -170,27 +228,43 @@ export async function createFeedbackReport(input: {
   idReportante: string;
   idReportado: string;
 }): Promise<FeedbackReportResponse> {
+  const baseUrl =
+    getFeedbackBaseUrl();
+
   return fetchWithFallback({
-    url: `${getFeedbackBaseUrl()}/reports`,
+    url: baseUrl
+      ? `${baseUrl}/reports`
+      : null,
     init: {
       method: "POST",
       headers: getFeedbackHeaders(),
       body: JSON.stringify(input),
     },
-    fallback: () =>
-      createFeedbackReportMock(
-        input.idTrabajo,
-        input.idReportante,
-        input.idReportado,
-      ),
+    fallback: () => ({
+      message:
+        "FeedbackApp no disponible; reporte no confirmado externamente",
+      idReporte: 0,
+      vinculos: {
+        reportante:
+          input.idReportante,
+        reportado:
+          input.idReportado,
+      },
+      estado: "SinResolver",
+    }),
   });
 }
 
 export async function requestFeedbackReview(
   idTrabajo: string,
-) {
+): Promise<ReviewsUserResponse> {
+  const baseUrl =
+    getFeedbackBaseUrl();
+
   return fetchWithFallback({
-    url: `${getFeedbackBaseUrl()}/reviews/user`,
+    url: baseUrl
+      ? `${baseUrl}/reviews/user`
+      : null,
     init: {
       method: "POST",
       headers: getFeedbackHeaders(),
@@ -198,6 +272,20 @@ export async function requestFeedbackReview(
         idTrabajo,
       }),
     },
-    fallback: () => createReviewsUserMock(idTrabajo),
+    fallback: () => ({
+      status: "ReadyToRate",
+      datosDelTrabajo: {
+        idTrabajo,
+        tipoDeTrabajo: "No disponible",
+        cliente: {
+          id: 0,
+          nombre: "No disponible",
+        },
+        trabajador: {
+          id: 0,
+          nombre: "No disponible",
+        },
+      },
+    }),
   });
 }

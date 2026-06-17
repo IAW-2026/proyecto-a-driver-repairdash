@@ -107,7 +107,7 @@ function MetricsGrid({ data }: { data: DriverHistorialMetrics }) {
         <StatCard
           label="Ingresos del día"
           value={`$${data.ingresosTotales.toLocaleString()}`}
-          sub="Payment App mock"
+          sub="PaymentsApp"
           accent
         />
         <StatCard

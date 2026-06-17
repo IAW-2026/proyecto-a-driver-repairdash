@@ -21,7 +21,7 @@ export function StatsGrid({ stats }: StatsGridProps) {
     {
       label: "Calificacion",
       value: stats.ratingPromedio.toFixed(1),
-      detail: "Feedback App mock",
+      detail: "FeedbackApp",
       icon: Star,
     },
   ];

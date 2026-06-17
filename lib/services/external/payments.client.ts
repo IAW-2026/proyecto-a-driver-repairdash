@@ -1,5 +1,3 @@
-import { getBaseUrl } from "@/lib/config/get-base-url";
-import { getPaymentWalletMock } from "@/lib/mocks/payments.mock";
 import type { PaymentDailySummary } from "@/types/dashboard";
 
 function getPaymentsBaseUrl() {
@@ -11,13 +9,6 @@ function getPaymentsBaseUrl() {
       /\/+$/,
       "",
     );
-  }
-
-  if (
-    process.env.NODE_ENV !==
-    "production"
-  ) {
-    return `${getBaseUrl()}/api/mocks/payments`;
   }
 
   return null;
@@ -45,9 +36,6 @@ function getPaymentsWalletUrl(
   const walletBaseUrl =
     baseUrl.endsWith(
       "/payments",
-    ) ||
-    baseUrl.endsWith(
-      "/mocks/payments",
     )
       ? baseUrl
       : `${baseUrl}/payments`;
@@ -103,29 +91,18 @@ export async function getPaymentDailySummary(
     console.warn(
       "Payments API returned",
       response.status,
-      process.env.NODE_ENV === "production"
-        ? "using empty summary"
-        : "using local fallback",
+      "using empty summary",
     );
   } catch (error) {
     console.warn(
-      process.env.NODE_ENV === "production"
-        ? "Payments API unavailable, using empty summary"
-        : "Payments API unavailable, using local fallback",
+      "Payments API unavailable, using empty summary",
       error,
     );
   }
 
-  if (
-    process.env.NODE_ENV ===
-    "production"
-  ) {
-    return getEmptyPaymentSummary(
-      driverId,
-    );
-  }
-
-  return getPaymentWalletMock(driverId);
+  return getEmptyPaymentSummary(
+    driverId,
+  );
 }
 
 export function getPaymentMetrics(payments: PaymentDailySummary) {

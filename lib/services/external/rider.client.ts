@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import { getBaseUrl } from "@/lib/config/get-base-url";
 import { TrabajoEstado } from "@prisma/client";
 import type {
   DashboardJobRequest,
@@ -94,7 +93,7 @@ function getRiderStateUrl() {
     process.env.RIDER_APP_URL;
 
   if (!configuredUrl) {
-    return `${getBaseUrl()}/api/mocks/repairdash/statetravel`;
+    return null;
   }
 
   const baseUrl =
@@ -143,6 +142,14 @@ export async function notifyRiderTrabajoState(input: {
   try {
     const url =
       getRiderStateUrl();
+
+    if (!url) {
+      console.warn(
+        "RIDER_APP_URL is not configured; RiderApp state notification skipped",
+      );
+
+      return;
+    }
 
     const requestBody = {
       id_viaje: input.trabajoId,

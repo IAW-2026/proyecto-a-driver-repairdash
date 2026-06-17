@@ -1,15 +1,15 @@
-# APIs, Webhooks y Mocks de DriverApp
+# APIs y Webhooks de DriverApp
 
-Este documento describe las APIs que expone DriverApp y los mocks locales que usa para simular RiderApp, PaymentsApp y FeedbackApp.
+Este documento describe las APIs que expone DriverApp y los contratos que consume de RiderApp, PaymentsApp y FeedbackApp.
 
 ## Estado Actual
 
 - DriverApp funciona de forma independiente.
-- Las solicitudes nuevas se simulan con `npm run mock:rider-jobs`.
+- En desarrollo se pueden generar solicitudes con `npm run dev:simulate-rider-jobs`.
 - Ese script no escribe directo en la base: llama al webhook `POST /api/webhooks/nuevo-trabajo`, igual que haria RiderApp.
 - Los cambios de estado salientes hacia RiderApp se envian a `/api/repairdash/statetravel`.
 - `RIDER_APP_URL` puede ser la base de RiderApp, terminar en `/api`, terminar en `/api/repairdash` o ser el endpoint completo.
-- Si `RIDER_APP_URL` no esta configurada, DriverApp usa el mock local `/api/mocks/repairdash/statetravel`.
+- Si `RIDER_APP_URL` no esta configurada, DriverApp omite la notificacion externa y registra un warning.
 - Los IDs de usuarios que cruzan apps son Clerk IDs.
 - Los IDs internos de Prisma solo se usan dentro de DriverApp.
 
@@ -19,11 +19,11 @@ Este documento describe las APIs que expone DriverApp y los mocks locales que us
 |---|---|
 | `DRIVER_API_KEY` | Clave esperada por las APIs expuestas por DriverApp. Header: `x-api-key`. |
 | `RIDER_APP_URL` | URL de RiderApp. Puede ser base, `/api`, `/api/repairdash` o el endpoint completo; DriverApp la normaliza. |
-| `RIDER_INTERNAL_API_KEY` | Clave enviada a RiderApp o al mock local. Headers: `x-api-key` y `x-internal-api-key`. |
-| `FEEDBACK_APP_URL` | URL de FeedbackApp real. Puede ser base o terminar en `/api`; si no esta configurada o falla, se usa fallback local. |
-| `FEEDBACK_INTERNAL_API_KEY` | Clave enviada a FeedbackApp o a sus mocks. Header: `x-api-key`. |
+| `RIDER_INTERNAL_API_KEY` | Clave enviada a RiderApp. Headers: `x-api-key` y `x-internal-api-key`. |
+| `FEEDBACK_APP_URL` | URL de FeedbackApp real. Puede ser base o terminar en `/api`; si no esta configurada o falla, se usa fallback seguro no ficticio. |
+| `FEEDBACK_INTERNAL_API_KEY` | Clave enviada a FeedbackApp. Header: `x-api-key`. |
 | `PAYMENTS_APP_URL` | Base URL de PaymentsApp real. |
-| `PAYMENTS_INTERNAL_API_KEY` | Clave enviada a PaymentsApp o a su mock. |
+| `PAYMENTS_INTERNAL_API_KEY` | Clave enviada a PaymentsApp. |
 
 ## Setup Local
 
@@ -52,18 +52,18 @@ Opcional: crear datos base de servicios/driver demo, sin trabajos:
 npm run db:seed
 ```
 
-## Script de Solicitudes Mock
+## Script de Solicitudes de Desarrollo
 
 Comando:
 
 ```bat
-npm run mock:rider-jobs
+npm run dev:simulate-rider-jobs
 ```
 
 Que hace:
 
 - Consulta `GET /api/tipos-servicios` para obtener IDs reales de tipos de servicio.
-- Cada `MOCK_RIDER_JOB_INTERVAL_MS` milisegundos publica una solicitud nueva.
+- Cada `SIMULATED_RIDER_JOB_INTERVAL_MS` milisegundos publica una solicitud nueva.
 - Publica usando `POST /api/webhooks/nuevo-trabajo`.
 - Envia `riderId`, `nombreRider`, `apellidoRider`, `valoracionRider`, direccion, descripcion y fotos.
 - Genera un `id_trabajo` unico por solicitud.
@@ -73,20 +73,20 @@ Variables opcionales:
 | Variable | Default | Uso |
 |---|---:|---|
 | `NEXT_PUBLIC_APP_URL` | `http://localhost:3000` | Base URL contra la que corre el script. |
-| `MOCK_RIDER_JOB_INTERVAL_MS` | `10000` | Intervalo entre solicitudes. |
+| `SIMULATED_RIDER_JOB_INTERVAL_MS` | `10000` | Intervalo entre solicitudes. |
 
 Ejemplo con intervalo custom:
 
 ```bat
-set MOCK_RIDER_JOB_INTERVAL_MS=5000
-npm run mock:rider-jobs
+set SIMULATED_RIDER_JOB_INTERVAL_MS=5000
+npm run dev:simulate-rider-jobs
 ```
 
 ## APIs Expuestas por DriverApp
 
 ### POST `/api/webhooks/nuevo-trabajo`
 
-Origen esperado: RiderApp o script `mock:rider-jobs`.
+Origen esperado: RiderApp o script `dev:simulate-rider-jobs`.
 
 Objetivo: publicar un trabajo nuevo en DriverApp.
 
@@ -133,9 +133,9 @@ Opcionales:
 
 | Campo | Tipo | Descripcion |
 |---|---|---|
-| `nombreRider` | `string` | Nombre del rider. Si no llega, se toma del mock local por `riderId`. |
-| `apellidoRider` | `string` | Apellido del rider. Si no llega, se toma del mock local por `riderId`. |
-| `valoracionRider` | `number` | Valoracion del rider. Si no llega, se toma del mock local por `riderId`. |
+| `nombreRider` | `string` | Nombre del rider. Si no llega, se guarda `No disponible`. |
+| `apellidoRider` | `string` | Apellido del rider. Si no llega, se guarda string vacio. |
+| `valoracionRider` | `number` | Valoracion del rider. Si no llega, se guarda `0`. |
 | `descripcion` | `string` | Descripcion del problema. |
 | `fotos` | `string[]` | Fotos del problema. |
 
@@ -258,7 +258,7 @@ Notas:
 
 - `[id]` es `Driver.clerkUserId`.
 - No acepta el ID interno de Prisma.
-- `rating_promedio` se obtiene desde FeedbackApp o fallback mock.
+- `rating_promedio` se obtiene desde FeedbackApp o fallback seguro no ficticio.
 
 ### POST `/api/webhooks/clerk`
 
@@ -306,144 +306,19 @@ Estados enviados:
 | `EN_SERVICIO` | `ha llegado` |
 | `FINALIZADO` | `finalizado` |
 
-Si `RIDER_APP_URL` no esta configurada, DriverApp usa el mock local documentado abajo.
+Si `RIDER_APP_URL` no esta configurada, DriverApp no llama a endpoints locales de prueba; registra un warning y continua el flujo interno.
 
-## Mocks Locales Consumidos por DriverApp
+## Integraciones Consumidas por DriverApp
 
-### PUT `/api/mocks/repairdash/statetravel`
-
-Representa: RiderApp.
-
-Objetivo: simular que RiderApp recibe cambios de estado desde DriverApp.
-
-Auth: `x-api-key` contra `RIDER_INTERNAL_API_KEY`.
-
-Request:
-
-```json
-{
-  "id_viaje": "trabajo_id_compartido",
-  "estado": "en camino",
-  "driver": "clerk_user_id_del_driver"
-}
-```
-
-Estados aceptados:
-
-| Estado externo | Estado DriverApp |
-|---|---|
-| `aceptado` | `ACEPTADO` |
-| `cancelado` | `CANCELADO` |
-| `en camino` | `EN_CAMINO` |
-| `ha llegado` | `EN_SERVICIO` |
-| `finalizado` | `FINALIZADO` |
-
-Test por terminal:
-
-```bat
-curl.exe -i -X PUT "http://localhost:3000/api/mocks/repairdash/statetravel" ^
-  -H "Content-Type: application/json" ^
-  -H "x-api-key: 12345" ^
-  -d "{ \"id_viaje\": \"trabajo-terminal-001\", \"estado\": \"en camino\", \"driver\": \"CLERK_USER_ID_DEL_DRIVER\" }"
-```
-
-### GET `/api/mocks/payments/wallet/[driverId]`
-
-Representa: PaymentsApp.
-
-Objetivo: simular wallet e ingresos del driver.
-
-Auth: `x-api-key` contra `PAYMENTS_INTERNAL_API_KEY`.
-
-Test por terminal:
-
-```bat
-curl.exe -i "http://localhost:3000/api/mocks/payments/wallet/CLERK_USER_ID_DEL_DRIVER" ^
-  -H "x-api-key: dev-payments-key"
-```
-
-### GET `/api/mocks/feedback/reviews/user/[userId]`
-
-Representa: FeedbackApp.
-
-Objetivo: obtener valoracion de un usuario.
-
-Auth: `x-api-key` contra `FEEDBACK_INTERNAL_API_KEY`.
-
-Test por terminal:
-
-```bat
-curl.exe -i "http://localhost:3000/api/mocks/feedback/reviews/user/CLERK_USER_ID" ^
-  -H "x-api-key: repairdash-feedback-secret"
-```
-
-### GET `/api/mocks/feedback/reports/public/[userId]`
-
-Representa: FeedbackApp.
-
-Objetivo: obtener reportes publicos de un usuario.
-
-Auth: `x-api-key` contra `FEEDBACK_INTERNAL_API_KEY`.
-
-Test por terminal:
-
-```bat
-curl.exe -i "http://localhost:3000/api/mocks/feedback/reports/public/CLERK_USER_ID" ^
-  -H "x-api-key: repairdash-feedback-secret"
-```
-
-### POST `/api/mocks/feedback/trabajos`
-
-Representa: FeedbackApp.
-
-Objetivo: simular alta de trabajo en FeedbackApp cuando un driver acepta.
-
-En integracion real, DriverApp llama este contrato automaticamente al aceptar un trabajo. Si `FEEDBACK_APP_URL` es la URL base de la app, DriverApp normaliza el destino a `{FEEDBACK_APP_URL}/api/trabajos`. Si ya termina en `/api`, usa `{FEEDBACK_APP_URL}/trabajos`.
-
-Auth: `x-api-key` contra `FEEDBACK_INTERNAL_API_KEY`.
-
-Test por terminal:
-
-```bat
-curl.exe -i -X POST "http://localhost:3000/api/mocks/feedback/trabajos" ^
-  -H "Content-Type: application/json" ^
-  -H "x-api-key: repairdash-feedback-secret" ^
-  -d "{ \"Idtrabajo\": \"trabajo-terminal-001\", \"IdCliente\": \"rider_demo_001\", \"IdTrabajador\": \"CLERK_USER_ID_DEL_DRIVER\", \"tipodeTrabajo\": \"Electricidad\" }"
-```
-
-### PUT `/api/mocks/feedback/reviews`
-
-Representa: FeedbackApp.
-
-Objetivo: simular que un trabajo finalizado queda listo para reviews.
-
-Auth: `x-api-key` contra `FEEDBACK_INTERNAL_API_KEY`.
-
-Test por terminal:
-
-```bat
-curl.exe -i -X PUT "http://localhost:3000/api/mocks/feedback/reviews" ^
-  -H "Content-Type: application/json" ^
-  -H "x-api-key: repairdash-feedback-secret" ^
-  -d "{ \"idTrabajo\": \"trabajo-terminal-001\" }"
-```
-
-### POST `/api/mocks/feedback/reports`
-
-Representa: FeedbackApp.
-
-Objetivo: simular reporte de un usuario hacia otro.
-
-Auth: `x-api-key` contra `FEEDBACK_INTERNAL_API_KEY`.
-
-Test por terminal:
-
-```bat
-curl.exe -i -X POST "http://localhost:3000/api/mocks/feedback/reports" ^
-  -H "Content-Type: application/json" ^
-  -H "x-api-key: repairdash-feedback-secret" ^
-  -d "{ \"idTrabajo\": \"trabajo-terminal-001\", \"idReportante\": \"CLERK_USER_ID_DEL_DRIVER\", \"idReportado\": \"rider_demo_001\" }"
-```
+| App | Endpoint esperado | Fallback |
+|---|---|---|
+| RiderApp | `PUT {RIDER_APP_URL}/api/repairdash/statetravel` | Se omite la notificacion externa y se registra warning. |
+| PaymentsApp | `GET {PAYMENTS_APP_URL}/payments/wallet/[driverId]` | Resumen vacio seguro. |
+| FeedbackApp | `GET {FEEDBACK_APP_URL}/reviews/user/[userId]` | Valoracion no disponible. |
+| FeedbackApp | `GET {FEEDBACK_APP_URL}/reports/public/[userId]` | Reportes en cero. |
+| FeedbackApp | `POST {FEEDBACK_APP_URL}/trabajos` | Respuesta local no ficticia con IDs enviados. |
+| FeedbackApp | `POST {FEEDBACK_APP_URL}/reports` | Respuesta local no ficticia indicando que no fue confirmado externamente. |
+| FeedbackApp | `POST {FEEDBACK_APP_URL}/reviews/user` | Respuesta local no ficticia indicando datos no disponibles. |
 
 ## Resumen de Endpoints
 
@@ -451,16 +326,9 @@ APIs expuestas por DriverApp:
 
 | Endpoint | Consumidor | Proposito |
 |---|---|---|
-| `POST /api/webhooks/nuevo-trabajo` | RiderApp/script mock | Publicar trabajo nuevo. |
+| `POST /api/webhooks/nuevo-trabajo` | RiderApp/script dev | Publicar trabajo nuevo. |
 | `PUT /api/trabajos/state` | RiderApp | Cancelar trabajo. No acepta otros estados. |
 | `GET /api/tipos-servicios` | RiderApp | Consultar tipos de servicio. |
 | `GET /api/drivers/[id]` | RiderApp/FeedbackApp | Consultar driver por Clerk ID. |
 | `POST /api/webhooks/clerk` | Clerk | Sincronizar usuarios. |
 
-Mocks locales:
-
-| Endpoint | Representa |
-|---|---|
-| `/api/mocks/repairdash/statetravel` | RiderApp |
-| `/api/mocks/payments/wallet/[driverId]` | PaymentsApp |
-| `/api/mocks/feedback/*` | FeedbackApp |

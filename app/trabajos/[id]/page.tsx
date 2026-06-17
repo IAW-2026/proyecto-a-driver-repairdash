@@ -1,8 +1,6 @@
 import { redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
-import { riderJobRequestsMock } from "@/lib/mocks/rider.mock";
-import { serviceTypesMock } from "@/lib/mocks/service-types.mock";
 import { JobRequestDetail } from "@/components/dashboard/job-request-detail";
 import type { DashboardJobRequest } from "@/types/dashboard";
 
@@ -16,7 +14,6 @@ export default async function TrabajoDetailPage({ params }: Props) {
   const user = await currentUser();
   if (!user) redirect("/login");
 
-  // 1. Buscar primero en la DB (trabajos reales creados por el webhook)
   const driver = await prisma.driver.findUnique({
     where: { clerkUserId: user.id },
     select: {
@@ -91,18 +88,5 @@ export default async function TrabajoDetailPage({ params }: Props) {
     }
   }
 
-  // 2. Fallback al mock (desarrollo local)
-  const mockRequest = riderJobRequestsMock.find((r) => r.id === id);
-  if (!mockRequest) redirect("/");
-
-  const serviceType = serviceTypesMock.find(
-    (s) => s.nombre === mockRequest.tipoServicio,
-  );
-
-  const request: DashboardJobRequest = {
-    ...mockRequest,
-    precioEstimado: serviceType?.precioBase ?? 0,
-  };
-
-  return <JobRequestDetail request={request} />;
+  redirect("/");
 }

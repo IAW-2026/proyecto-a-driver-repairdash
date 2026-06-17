@@ -9,7 +9,7 @@
     "lint": "eslint",
     "db:seed": "tsx prisma/seeds/seed.ts",
     "postinstall": "prisma generate",
-    "mock:rider-jobs": "tsx app/scripts/mock-rider-jobs.ts"
+    "dev:simulate-rider-jobs": "tsx app/scripts/simulate-rider-jobs.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.3.3",

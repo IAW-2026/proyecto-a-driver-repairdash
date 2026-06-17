@@ -11,11 +11,11 @@ const API_KEY =
 
 const JOB_INTERVAL_MS =
   Number(
-    process.env.MOCK_RIDER_JOB_INTERVAL_MS ??
+    process.env.SIMULATED_RIDER_JOB_INTERVAL_MS ??
       10_000,
   );
 
-const MOCK_TRABAJOS = [
+const SIMULATED_TRABAJOS = [
   {
     riderId: "rider_demo_001",
     nombreRider: "Lucia",
@@ -109,21 +109,21 @@ async function main() {
   let index = 0;
 
   while (true) {
-    const mock =
-      MOCK_TRABAJOS[
-        index % MOCK_TRABAJOS.length
+    const simulatedJob =
+      SIMULATED_TRABAJOS[
+        index % SIMULATED_TRABAJOS.length
       ];
 
     const tipoServicio =
       tipos.find(
         (tipo) =>
           tipo.nombre.toLowerCase() ===
-          mock.tipoServicioNombre.toLowerCase(),
+          simulatedJob.tipoServicioNombre.toLowerCase(),
       );
 
     if (!tipoServicio) {
       console.warn(
-        `⚠️ Tipo de servicio no encontrado: ${mock.tipoServicioNombre}`,
+        `⚠️ Tipo de servicio no encontrado: ${simulatedJob.tipoServicioNombre}`,
       );
 
       index++;
@@ -135,27 +135,27 @@ async function main() {
     }
 
     const idTrabajo =
-      `rider_mock_${Date.now()}_${index}`;
+      `rider_dev_${Date.now()}_${index}`;
 
     const body = {
       id_trabajo:
         idTrabajo,
       riderId:
-        mock.riderId,
+        simulatedJob.riderId,
       nombreRider:
-        mock.nombreRider,
+        simulatedJob.nombreRider,
       apellidoRider:
-        mock.apellidoRider,
+        simulatedJob.apellidoRider,
       valoracionRider:
-        mock.valoracionRider,
+        simulatedJob.valoracionRider,
       tipoServicioId:
         tipoServicio.id,
       direccion:
-        mock.direccion,
+        simulatedJob.direccion,
       descripcion:
-        mock.descripcion,
+        simulatedJob.descripcion,
       fotos:
-        mock.fotos,
+        simulatedJob.fotos,
     };
 
     const response =
@@ -181,7 +181,7 @@ async function main() {
 
     if (response.ok) {
       console.log(
-        `✅ Trabajo publicado: ${idTrabajo} (${mock.tipoServicioNombre})`,
+        `✅ Trabajo publicado: ${idTrabajo} (${simulatedJob.tipoServicioNombre})`,
       );
     } else {
       console.error(
