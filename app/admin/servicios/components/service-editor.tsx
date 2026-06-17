@@ -189,7 +189,7 @@ export function ServiceEditor({
               min="1"
               step="0.01"
               defaultValue={service.precioBase}
-              className="h-16 w-full rounded-[24px] border border-magenta/25 bg-primary/45 px-5 text-2xl font-black text-highlight outline-none transition placeholder:text-highlight/25 focus:border-magenta/70 focus:bg-primary/65"
+              className="no-number-spinner h-16 w-full rounded-[24px] border border-magenta/25 bg-primary/45 px-5 text-2xl font-black text-highlight outline-none transition placeholder:text-highlight/25 focus:border-magenta/70 focus:bg-primary/65"
               required
             />
             <div className="rounded-[22px] border border-highlight/10 bg-highlight/[0.04] px-5 py-4 text-sm font-bold text-highlight/65">

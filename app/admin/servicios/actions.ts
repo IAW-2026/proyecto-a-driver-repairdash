@@ -107,11 +107,25 @@ export async function createServiceType(formData: FormData) {
 export async function deleteServiceType(id: string) {
   await requireAdmin();
 
-  await prisma.tipoServicio.delete({
-    where: {
-      id,
-    },
-  });
+  try {
+    await prisma.tipoServicio.delete({
+      where: {
+        id,
+      },
+    });
+  } catch (error) {
+    if (
+      error instanceof
+        Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2003"
+    ) {
+      throw new Error(
+        "No se puede eliminar este servicio porque tiene trabajos o conductores asociados. Podés editarlo, pero no borrarlo sin limpiar sus relaciones.",
+      );
+    }
+
+    throw error;
+  }
 
   revalidatePath("/admin/servicios");
 
