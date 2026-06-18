@@ -20,6 +20,7 @@ const isPublicRoute =
     "/__clerk(.*)",
     "/api/onboarding/driver",
     "/api/webhooks(.*)",
+    "/api/analytics(.*)",
     "/api/control-plane(.*)",
     "/api/trabajos/state",
     "/api/tipos-servicios",
