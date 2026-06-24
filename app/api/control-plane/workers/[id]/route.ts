@@ -51,7 +51,6 @@ export async function GET(
               select: {
                 id: true,
                 nombre: true,
-                apellido: true,
               },
             },
           },
